@@ -3,17 +3,32 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 from stntools.distempirical import norm_sample, uniform_sample
+from structs.task import Task
 
 
 class Node(object):
     """Represents a timepoint in the STN """
 
-    def __init__(self, id, executed=False):
-            # The unique ID number of the node in the STN.
-            self.id = id
-            # Flag that indicates if the timepoint has been
-            # executed.
-            self.executed = False
+    def __init__(self, id, task=None, executed=False, transportation_task=True, **kwargs):
+        # The unique ID number of the node in the STN.
+        self.id = id
+        # Flag that indicates if the timepoint has been
+        # executed.
+        self.executed = False
+        # # Earliest time at which the node should be executed
+        # self.earliest_execution_time = None
+        # # Lastest time at which the node should be executed
+        # self.latest_execution_time = None
+        # # Time at which the node will be executed
+        # self.execution_time = None
+        # # Task represented by this node
+        self.task = task
+
+        if transportation_task:
+            # The node represents the start of the transportation task
+            self.is_task_start = kwargs.pop('start_task', None)
+            # The node represents the end of the transportation task
+            self.is_task_end = kwargs.pop('end_task', None)
 
     def __repr__(self):
         """ String represenation """
@@ -43,9 +58,9 @@ class Edge(object):
 
     def __init__(self, starting_node, ending_node, weight, distribution=None):
         # node where the constraint starts
-        self.starting_node = starting_node
+        self.starting_node_id = starting_node
         # node where the constraint ends
-        self.ending_node = ending_node
+        self.ending_node_id = ending_node
         # Time allotted between the starting and ending node
         self.weight = weight
         # Probability distribution (for contingent edges)
@@ -59,16 +74,16 @@ class Edge(object):
         self.is_requirement = distribution is None
 
     def __repr__(self):
-        return "Edge {} => {} []".format(self.starting_node.id, self.ending_node.id, self.weight)
+        return "Edge {} => {} []".format(self.starting_node_id, self.ending_node_id, str(self.weight))
 
     def __hash__(self):
-        return hash((self.starting_node, self.ending_node, self.weight, self.distribution, self.sampled_duration, self.is_contingent, self.is_requirement))
+        return hash((self.starting_node_id, self.ending_node_id, self.weight, self.distribution, self.sampled_duration, self.is_contingent, self.is_requirement))
 
     def __eq__(self, other):
         if other is None:
             return False
-        return (self.starting_node == other.starting_node
-        and self.ending_node == other.ending_node
+        return (self.starting_node_id == other.starting_node_id
+        and self.ending_node_id == other.ending_node_id
         and self.weight == other.weight
         and self.distribution == other.distribution
         and self.sampled_duration == other.sampled_duration
@@ -146,10 +161,11 @@ class STN(nx.DiGraph):
 
     def add_constraint(self, constraint):
         """Adds a temporal constraint to the STN"""
-        self.add_edge(constraint.starting_node, constraint.ending_node, attr_dict=constraint.get_attr_dict())
+        # self.add_edge(constraint.starting_node_id, constraint.ending_node_id, data=constraint)
+        self.add_edge(constraint.starting_node_id, constraint.ending_node_id, attr_dict=constraint.get_attr_dict())
 
-    def get_minimal_stn(self):
-        return nx.floyd_warshall(stn)
+    # def get_minimal_stn(self):
+    #     return nx.floyd_warshall(stn)
 
     def is_consistent(self, minimal_stn):
         """The STN is not consistent if it has negative cycles"""
@@ -166,27 +182,32 @@ class STN(nx.DiGraph):
         stn_str = ""
         return stn_str
 
-if __name__ == "__main__":
-    node0 = Node(0)
-    node1 = Node(1)
+    # def draw_stn(self):
+    #     nx.draw(self, with_labels=True, font_weight='bold')
+    #     plt.show()
 
-    stn = STN()
+# if __name__ == "__main__":
+#     node0 = Node(0)
+#     node1 = Node(1)
+#
+#     stn = STN()
+#
+#     constraint1 = Edge(node0, node1, 46)
+#     constraint2 = Edge(node1, node0, -41)
+#
+#     stn.add_constraint(constraint1)
+#     stn.add_constraint(constraint2)
+#     minimal_stn = stn.get_minimal_stn()
+#
+#     edges = stn.edges.data()
+#     print("Nodes:", stn.nodes.data())
+#     print("Edges:", edges)
+#
+#     print("Minimal STN")
+#     print(minimal_stn)
+#     print(stn.is_consistent(minimal_stn))
+#
+#     stn.draw_stn()
 
-    constraint1 = Edge(node0, node1, 46)
-    constraint2 = Edge(node1, node0, -41)
-
-    stn.add_constraint(constraint1)
-    stn.add_constraint(constraint2)
-    minimal_stn = stn.get_minimal_stn()
-
-    edges = stn.edges.data()
-    print("Nodes:", stn.nodes.data())
-    print("Edges:", edges)
-
-    print("Minimal STN")
-    print(minimal_stn)
-    print(stn.is_consistent(minimal_stn))
-
-
-    nx.draw(stn, with_labels=True, font_weight='bold')
-    plt.show()
+    # nx.draw(stn, with_labels=True, font_weight='bold')
+    # plt.show()
