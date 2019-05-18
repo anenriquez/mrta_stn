@@ -2,6 +2,8 @@
 
 import networkx as nx
 import matplotlib.pyplot as plt
+from stntools.distempirical import norm_sample, uniform_sample
+
 
 class Node(object):
     """Represents a timepoint in the STN """
@@ -15,7 +17,10 @@ class Node(object):
 
     def __repr__(self):
         """ String represenation """
-        return "Node {} executed {}".format(self.id, self.executed)
+        if self.executed:
+            return "node_{} executed ".format(self.id)
+        else:
+            return "node_{} ".format(self.id)
 
     def __hash__(self):
         return hash((self.id, self.executed))
@@ -26,16 +31,6 @@ class Node(object):
         return (self.id == other.id and
                 self.executed == other.executed)
 
-    def copy(self):
-        """ Return a copy of this node """
-        new_node = Node(self.id, self.executed)
-        return new_node
-
-    def for_json(self):
-        """ Returns a dictionary in json format """
-        return {"node_id": self.id,
-                "executed": self.executed}
-
     def execute(self):
         self.executed = True
 
@@ -43,88 +38,155 @@ class Node(object):
         return self.executed
 
 
-class Constraint(object):
-    """ Represents a temporal constraint in the STN
-    Consists of two edges:
-    edge_earliest_time:  starting_node -----> ending_node,    weight = latest time
-    edge_latest_time:   ending_node  <------ starting_node,  weight = -earliest time"""
+class Edge(object):
+    """ Represents a temporal constraint in the STN """
 
-    def __init__(self, stn, starting_node, ending_node, earliest_time, latest_time, distribution=None):
-        # STN (networkx object) to which the constraint will be added
-        self.stn = stn
+    def __init__(self, starting_node, ending_node, weight, distribution=None):
         # node where the constraint starts
         self.starting_node = starting_node
         # node where the constraint ends
         self.ending_node = ending_node
-        # Minimum time allotted between the starting and ending node
-        self.earliest_time = -earliest_time
-        # Maximum time allotted between the starting and the ending node
-        self.latest_time = latest_time
+        # Time allotted between the starting and ending node
+        self.weight = weight
         # Probability distribution (for contingent edges)
         self.distribution = distribution
-        # Duration (used for conringent edges)
+        # Duration (for contingent edges)
         # The duration is sampled from the probability distribution
-        self._sampled_duration = 0
+        self.sampled_duration = 0
+        # The edge is a contingent edge if it has a probability distribution
+        self.is_contingent = distribution is not None
+        # The edge is a requirement edge if it does not have a probability distribution
+        self.is_requirement = distribution is None
 
-        self.add_constraint_to_stn()
-
-    def add_constraint_to_stn(self):
-        self.stn.add_weighted_edges_from([(self.starting_node, self.ending_node, self.latest_time),
-                                          (self.ending_node, self.starting_node, self.earliest_time)])
+    def __repr__(self):
+        return "Edge {} => {} []".format(self.starting_node.id, self.ending_node.id, self.weight)
 
     def __hash__(self):
-        return hash((self.starting_node, self.ending_node, self.earliest_time, self.latest_time, self.distribution, self._sampled_duration))
+        return hash((self.starting_node, self.ending_node, self.weight, self.distribution, self.sampled_duration, self.is_contingent, self.is_requirement))
 
     def __eq__(self, other):
         if other is None:
             return False
         return (self.starting_node == other.starting_node
         and self.ending_node == other.ending_node
-        and self.earliest_time == other.earliest_time
-        and self.latest_time == other.latest_time
+        and self.weight == other.weight
         and self.distribution == other.distribution
-        and self._sampled_duration == other._sampled_duration)
+        and self.sampled_duration == other.sampled_duration
+        and self.is_contingent == other.is_contingent
+        and self.is_requirement == other.is_requirement)
 
-    def for_json(self):
-        """ Returns a dictionary in json format """
-        json = {"starting_node": self.starting_node.id,
-                "ending_node": self.ending_node.id}
+    def get_attr_dict(self):
+        """Returns the edge attributes as a dictionary"""
+        attr_dict = {'weight': self.weight,
+                    'distribution': self.distribution,
+                    'sampled_duration': self.sampled_duration,
+                    'is_contingent': self.is_contingent,
+                    'is_requirement': self.is_requirement}
+        return attr_dict
 
-        if self.distribution is not None:
-            json["distribution"] = {self.distribution}
+    def resample(self, random_state):
+        """ Retrieves a new sample from a contingent constraint.
+        Raises an exception if this is a requirement constraint.
 
-        if self.earliest_time == float('inf'):
-            json['earliest_time'] = '-inf'
-        else:
-            json['earliest_time'] = -self.earliest_time
+        Returns:
+            A float selected from this constraint's contingent distribution.
+        """
+        sample = None
+        if not self.is_contingent():
+            raise TypeError("Cannot sample requirement constraint")
+        if self.distribution[0] == "N":
+            sample = norm_sample(self.mu, self.sigma, random_state)
+        elif self.distribution[0] == "U":
+            sample = uniform_sample(self.dist_lb, self.dist_ub, random_state)
+        # We have to use integers because of rounding errors.
+        self.sampled_duration = round(sample)
+        return self.sampled_duration
 
-        if self.latest_time == float('inf'):
-            json['latest_time'] = 'inf'
-        else:
-            json["latest_time"] = self.latest_time
+    @property
+    def mu(self):
+        name_split = self.distribution.split("_")
+        if len(name_split) != 3 or name_split[0] != "N":
+            raise ValueError("No mu for non-normal dist")
+        return float(name_split[1])
 
-        return json
+    @property
+    def sigma(self):
+        name_split = self.distribution.split("_")
+        if len(name_split) != 3 or name_split[0] != "N":
+            raise ValueError("No sigma for non-normal dist")
+        return float(name_split[2])
 
+    @property
+    def dist_ub(self):
+        name_split = self.distribution.split("_")
+        if len(name_split) != 3 or name_split[0] != "U":
+            raise ValueError("No upper bound for non-uniform dist")
+        return float(name_split[2]) * 1000
+
+    @property
+    def dist_lb(self):
+        name_split = self.distribution.split("_")
+        if len(name_split) != 3 or name_split[0] != "U":
+            raise ValueError("No lower bound for non-uniform dist")
+        return float(name_split[1]) * 1000
+
+
+class STN(nx.DiGraph):
+    """ A Simple Temporal Network (STN) is represented using networkx """
+    def __init__(self):
+        nx.DiGraph.__init__(self)
+        # List of node ids of received contingent timepoints
+        self.received_timepoints = []
+        # {(starting_node, ending_node): Constraint object}
+        self.contingent_constraints = {}
+        # {(starting_node, ending_node): Constraint object}
+        self.requirement_constraints = {}
+        # Time difference between the finish time of the last timepoint and the start time of the first timepoint in the STN
+        self.completion_time = 0
+
+    def add_constraint(self, constraint):
+        """Adds a temporal constraint to the STN"""
+        self.add_edge(constraint.starting_node, constraint.ending_node, attr_dict=constraint.get_attr_dict())
+
+    def get_minimal_stn(self):
+        return nx.floyd_warshall(stn)
+
+    def is_consistent(self, minimal_stn):
+        """The STN is not consistent if it has negative cycles"""
+        consistent = True
+        for node, nodes in minimal_stn.items():
+            if nodes[node] != 0:
+                consistent = False
+        return consistent
+
+    def get_completion_time(self, minimal_stn):
+        pass
+
+    def __str__(self):
+        stn_str = ""
+        return stn_str
 
 if __name__ == "__main__":
+    node0 = Node(0)
     node1 = Node(1)
-    node2 = Node(2)
 
-    stn = nx.DiGraph()
-    stn.add_node(node1)
-    stn.add_node(node2)
+    stn = STN()
 
-    constraint = Constraint(stn, node1, node2, 41, 46)
+    constraint1 = Edge(node0, node1, 46)
+    constraint2 = Edge(node1, node0, -41)
 
-    # stn.add_edge(node1, node2, )
+    stn.add_constraint(constraint1)
+    stn.add_constraint(constraint2)
+    minimal_stn = stn.get_minimal_stn()
 
-    # stn.add_edge(node1, node2, object=Constraint(node1, node2, 0, 0))
-    # stn.edges[node1, node2]['weight'] = 7
+    edges = stn.edges.data()
+    print("Nodes:", stn.nodes.data())
+    print("Edges:", edges)
 
-    print("Nodes:", list(stn.nodes))
-    print("Edges:", list(stn.edges))
-    print(stn.edges[node1, node2]['weight'])
-    print(stn.edges[node2, node1]['weight'])
+    print("Minimal STN")
+    print(minimal_stn)
+    print(stn.is_consistent(minimal_stn))
+
 
     nx.draw(stn, with_labels=True, font_weight='bold')
     plt.show()
