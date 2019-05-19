@@ -20,7 +20,7 @@ def create_stn_from_dict(stn_dict):
         task = Task.from_dict(node['task'])
         new_node_id = node['id']
 
-        new_node = Node(new_node_id, task, is_task_start=node['is_task_start'], is_task_end=node['is_task_end'])
+        new_node = Node(new_node_id, task, start_task=node['is_task_start'], end_task=node['is_task_end'])
 
         stn.add_node(new_node_id, data=new_node)
 
@@ -33,6 +33,7 @@ def create_stn_from_dict(stn_dict):
         elif node['is_task_end']:
             earliest_finish_time = Edge(new_node.id, zero_timepoint.id, -task.earliest_finish_time)
             latest_finish_time = Edge(zero_timepoint.id, new_node.id, task.latest_start_time)
+
             stn.add_constraint(earliest_finish_time)
             stn.add_constraint(latest_finish_time)
 
@@ -53,15 +54,20 @@ if __name__ == "__main__":
     stn = create_stn_from_dict(stn_dict)
 
     print("Nodes:", stn.nodes.data())
-    print("Edges:", stn.edges.data())
+    # print("Edges:", stn.edges.data())
+    print("Edges: ", stn.edges.data())
 
-    print("Minimal STN")
+    print("Calculating the minimal STN...")
     minimal_stn = nx.floyd_warshall(stn)
     print(minimal_stn)
-    print(stn.is_consistent(minimal_stn))
 
-    nx.draw(stn, with_labels=True, font_weight='bold')
-    plt.show()
+    if stn.is_consistent(minimal_stn):
+        stn.update_time_schedule(minimal_stn)
+
+    print("Completion time: ", stn.get_completion_time())
+    print("Makespan: ", stn.get_makespan())
+    # nx.draw(stn, with_labels=True, font_weight='bold')
+    # plt.show()
 
 
 

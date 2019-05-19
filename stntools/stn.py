@@ -92,8 +92,7 @@ class Edge(object):
 
     def get_attr_dict(self):
         """Returns the edge attributes as a dictionary"""
-        attr_dict = {'weight': self.weight,
-                    'distribution': self.distribution,
+        attr_dict = {'distribution': self.distribution,
                     'sampled_duration': self.sampled_duration,
                     'is_contingent': self.is_contingent,
                     'is_requirement': self.is_requirement}
@@ -161,8 +160,7 @@ class STN(nx.DiGraph):
 
     def add_constraint(self, constraint):
         """Adds a temporal constraint to the STN"""
-        # self.add_edge(constraint.starting_node_id, constraint.ending_node_id, data=constraint)
-        self.add_edge(constraint.starting_node_id, constraint.ending_node_id, attr_dict=constraint.get_attr_dict())
+        self.add_edge(constraint.starting_node_id, constraint.ending_node_id, weight=constraint.weight, data=constraint.get_attr_dict())
 
     # def get_minimal_stn(self):
     #     return nx.floyd_warshall(stn)
@@ -175,12 +173,66 @@ class STN(nx.DiGraph):
                 consistent = False
         return consistent
 
-    def get_completion_time(self, minimal_stn):
-        pass
+    def update_time_schedule(self, minimal_stn):
+        """Updates the start time, finish time and pickup_start_time of scheduled takes"""
+        # Contains latest start and finish times
+        first_row = list(minimal_stn[0].values())
+        # Contains earliest start and finish times
+        first_column = list()
+
+        for node, nodes in minimal_stn.items():
+            first_column.append(nodes[0])
+
+        print("First row: ", first_row)
+        print("First column: ", first_column)
+
+        # Remove first element of the list
+        first_column.pop(0)
+        first_row.pop(0)
+
+        e_s_times = [first_column[i] for i in range(0, len(first_column)) if int(i) % 2 == 0]
+        e_f_times = [first_column[i] for i in range(0, len(first_column)) if int(i) % 2 != 0]
+
+        l_s_times = [first_row[i] for i in range(0, len(first_row)) if int(i) % 2 == 0]
+        l_f_times = [first_row[i] for i in range(0, len(first_row)) if int(i) % 2 != 0]
+
+        # Updating start time, pickup start time and finish time of tasks in the STN
+        task_idx = -1
+        for i, node in enumerate(self.nodes()):
+            task = self.node[node]['data'].task
+            # if the node is not the zero_timepoint
+            if task is not None:
+                # TODO start_time = e_s_t - travel_time
+                task.start_time = -e_s_times[task_idx]
+                task.pickup_start_time = -e_s_times[task_idx]
+                task.finish_time = -e_f_times[task_idx]
+            if i % 2 == 0:
+                task_idx += 1
+            self.node[node]['data'].task = task
+
+    def get_completion_time(self):
+        nodes = list(self.nodes())
+        node_first_task = nodes[1]
+        node_last_task = nodes[-1]
+
+        first_task_start_time = self.node[node_first_task]['data'].task.start_time
+        last_task_finish_time = self.node[node_last_task]['data'].task.finish_time
+
+        completion_time = round(last_task_finish_time - first_task_start_time)
+
+        return completion_time
+
+    def get_makespan(self):
+        nodes = list(self.nodes())
+        node_last_task = nodes[-1]
+        last_task_finish_time = self.node[node_last_task]['data'].task.finish_time
+        return last_task_finish_time
 
     def __str__(self):
         stn_str = ""
         return stn_str
+
+
 
     # def draw_stn(self):
     #     nx.draw(self, with_labels=True, font_weight='bold')
