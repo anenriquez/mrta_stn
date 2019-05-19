@@ -199,22 +199,22 @@
   ],
   "edges":[
     {
-      "starting_node":1,
-      "ending_node":2,
+      "starting_node":2,
+      "ending_node":1,
       "weight":4,
       "distribution": "N_4_1"
     },
     {
-      "starting_node":3,
-      "ending_node":4,
+      "starting_node":4,
+      "ending_node":3,
       "weight":4,
       "max_duration":"inf",
       "distribution": "N_4_1"
     },
 
     {
-      "starting_node":2,
-      "ending_node":3,
+      "starting_node":3,
+      "ending_node":2,
       "weight":6,
       "distribution": "N_6_1"
     }
