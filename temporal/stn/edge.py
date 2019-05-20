@@ -69,7 +69,7 @@ class Edge(object):
             A float selected from this constraint's contingent distribution.
         """
         sample = None
-        if not self.is_contingent():
+        if not self.is_contingent:
             raise TypeError("Cannot sample requirement constraint")
         if self.distribution[0] == "N":
             sample = norm_sample(self.mu, self.sigma, random_state)
