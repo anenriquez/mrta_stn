@@ -37,13 +37,17 @@ def create_stn_from_dict(stn_dict):
 
         elif node['is_task_end']:
             earliest_finish_time = Edge(new_node.id, zero_timepoint.id, -task.earliest_finish_time)
-            latest_finish_time = Edge(zero_timepoint.id, new_node.id, task.latest_start_time)
+            latest_finish_time = Edge(zero_timepoint.id, new_node.id, task.latest_finish_time)
 
             stn.add_constraint(earliest_finish_time)
             stn.add_constraint(latest_finish_time)
 
     for edge in stn_dict['edges']:
-        new_constraint = Edge(edge['starting_node'], edge['ending_node'], edge['weight'], edge['distribution'])
+        if int(edge['starting_node']) > int(edge['ending_node']):
+            new_constraint = Edge(edge['starting_node'], edge['ending_node'], -edge['weight'], edge['distribution'])
+        else:
+            new_constraint = Edge(edge['starting_node'], edge['ending_node'], edge['weight'], edge['distribution'])
+
         stn.add_constraint(new_constraint)
 
     return stn
@@ -77,9 +81,11 @@ if __name__ == "__main__":
     stn_dict = get_stn_dict()
     stn = create_stn_from_dict(stn_dict)
 
-    print("Nodes:", stn.nodes.data())
-    print("Edges: ", stn.edges())
+    print("Nodes: {}\n".format(stn.nodes.data()))
+    print("Edges: {}\n".format(stn.edges.data()))
 
+    print("STN:")
+    print(stn)
 
     # print("Edge data:", stn[1][0])
     # dict_edges = dict()
@@ -95,10 +101,10 @@ if __name__ == "__main__":
     print("Calculating the minimal STN...")
     minimal_stn = nx.floyd_warshall(stn)
     print(minimal_stn)
+    print('')
 
     if stn.is_consistent(minimal_stn):
-        print("Updating the stn")
-        stn.update_edges(minimal_stn)
+        # stn.update_edges(minimal_stn)
         stn.update_time_schedule(minimal_stn)
 
     print("Completion time: ", stn.get_completion_time())
@@ -106,6 +112,7 @@ if __name__ == "__main__":
     # nx.draw(stn, with_labels=True, font_weight='bold')
     # plt.show()
 
+    print('')
     print("Simulating execution of STN")
     simulate(stn, 'srea')
 

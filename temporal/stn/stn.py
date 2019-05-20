@@ -16,6 +16,33 @@ class STN(nx.DiGraph):
         # Time difference between the finish time of the last timepoint and the start time of the first timepoint in the STN
         self.completion_time = 0
 
+    def __str__(self):
+        to_print = ""
+        for edge in self.edges():
+            # if the edge is connected to the zero_timepoint
+            if edge[0] == 0:
+                timepoint = self.node[edge[1]]['data']
+                lower_bound = -self[edge[1]][edge[0]]['weight']
+                upper_bound = self[edge[0]][edge[1]]['weight']
+
+                to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
+            else:
+                # ignore edges connected to zero_timepoint
+                if edge[1] != 0:
+                    starting_node_id = edge[0]
+                    ending_node_id = edge[1]
+                    lower_bound = -self[starting_node_id][ending_node_id]['weight']
+                    sampled_value = self[starting_node_id][ending_node_id]['data'].sampled_duration
+
+                    if self.has_edge(ending_node_id, starting_node_id):
+                        upper_bound = self[ending_node_id][starting_node_id]['weight']
+                    else:
+                        upper_bound = 'inf'
+
+                    to_print += "Edge {} => {}: [{}, {}], Sampled value: [{}]".format(starting_node_id, ending_node_id, lower_bound, upper_bound, sampled_value)
+            to_print += "\n"
+        return to_print
+
     def add_constraint(self, constraint):
         """Adds a temporal constraint to the STN"""
         i = constraint.starting_node_id
@@ -117,10 +144,6 @@ class STN(nx.DiGraph):
         node_last_task = nodes[-1]
         last_task_finish_time = self.node[node_last_task]['data'].task.finish_time
         return last_task_finish_time
-
-    def __str__(self):
-        stn_str = ""
-        return stn_str
 
 
 

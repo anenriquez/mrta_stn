@@ -42,7 +42,6 @@ class Simulator(object):
         self.num_reschedules = 0
         self.num_sent_schedules = 0
 
-        print("Original STN: {}".format(self.stn))
         # Resample the contingent edges.
         # Super important!
         print("Resampling contingent edges of stored STN")
