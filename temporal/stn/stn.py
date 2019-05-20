@@ -40,18 +40,22 @@ class STN(nx.DiGraph):
                 consistent = False
         return consistent
 
-    def update_edges(self, minimal_stn):
+    def update_edges(self, minimal_stn, create=False):
         """Update edges in the STN to reflect the distances in the minimal stn"""
         for column, row in minimal_stn.items():
             nodes = dict(row)
             for n in nodes:
-                if self.has_edge(column, n):
-                    # Updating edge
-                    # self[column][n]['weight'] = minimal_stn[column][n]
-                    self.update_edge_weight(column, n, minimal_stn[column][n])
+                # if self.has_edge(column, n):
+                # Updating edge
+                self.update_edge_weight(column, n, minimal_stn[column][n])
 
-    def update_edge_weight(self, starting_node_id, ending_node_id, weight):
-        self[starting_node_id][ending_node_id]['weight'] = weight
+    def update_edge_weight(self, starting_node_id, ending_node_id, weight, create=False):
+        if self.has_edge(starting_node_id, ending_node_id):
+            self[starting_node_id][ending_node_id]['weight'] = weight
+        else:
+            if create:
+                new_edge = Edge(starting_node_id, ending_node_id, weight)
+                self.add_constraint(new_edge)
 
     def update_time_schedule(self, minimal_stn):
         """Updates the start time, finish time and pickup_start_time of scheduled takes"""
@@ -62,9 +66,6 @@ class STN(nx.DiGraph):
 
         for node, nodes in minimal_stn.items():
             first_column.append(nodes[0])
-
-        print("First row: ", first_row)
-        print("First column: ", first_column)
 
         # Remove first element of the list
         first_column.pop(0)
@@ -89,6 +90,15 @@ class STN(nx.DiGraph):
             if i % 2 == 0:
                 task_idx += 1
             self.node[node]['data'].task = task
+
+    def get_assigned_time(self, node_id):
+        """ Returns to assigned time to a timepoint (node) in the STN"""
+        if node_id == 0:
+            # This is the zero_timepoint
+            return 0.0
+        if stn.get_edge_data(0, node_id)['weight'] != -stn.get_edge_data(node_id, 0)['weight']:
+            return None
+        return stn.get_edge_data(0, node_id)['weight']
 
     def get_completion_time(self):
         nodes = list(self.nodes())
