@@ -1,13 +1,19 @@
 import json
 import networkx as nx
+import numpy as np
 from structs.task import Task
 from temporal.stn import Node, Edge, STN
+from temporal.simulator import Simulator
+
+MAX_SEED = 2 ** 31 - 1
+"""The maximum number a random seed can be."""
 
 def get_stn_dict():
     """Reads an STN from a json file and returns it as a dict"""
     with open('data/stn_two_tasks.py') as json_file:
         stn_dict = json.load(json_file)
     return stn_dict
+
 
 def create_stn_from_dict(stn_dict):
     stn = STN()
@@ -37,45 +43,34 @@ def create_stn_from_dict(stn_dict):
             stn.add_constraint(latest_finish_time)
 
     for edge in stn_dict['edges']:
-
-        # print("Getting some info..")
-        # print(stn.node[edge['starting_node']]['data'].task)
-
         new_constraint = Edge(edge['starting_node'], edge['ending_node'], edge['weight'], edge['distribution'])
         stn.add_constraint(new_constraint)
 
     return stn
 
 
-# def get_execution_guide(execution_strat, previous_alpha, previous_guide):
-#     """ Retrieve a guide STN (dispatch) based on the execution strategy
-#
-#         Args:
-#             execution_strat (str): String representing the execution strategy.
-#             previous_alpha (float): The previously used guide STN's alpha.
-#             previous_guide (STN): The previously used guide STN.
-#
-#         Return:
-#             Returns a tuple with format:
-#             | [0]: Alpha of the guide.
-#             | [1]: dispatch (type STN) which the simulator should follow,
-#         """
-#     if execution_strat == "early":
-#         return 1.0, self.stn
-#     elif execution_strat == "srea":
-#         return self.srea_algorithm(previous_alpha,
-#                                     previous_guide)
-#
-#
-# def srea_algorithm(previous_alpha, previous_guide):
-#     result = srea.srea(self.stn)
-#         if result is not None:
-#             self.num_sent_schedules += 1
-#             return result[0], result[1]
-#         # Our guide was inconsistent... um. Well.
-#         # This is not great.
-#         # Follow the previous guide?
-#         return previous_alpha, previous_guide
+def simulate(starting_stn, execution_strategy, random_seed=None):
+    if random_seed is None:
+        random_seed = np.random.randint(MAX_SEED)
+    else:
+        random_seed = int(random_seed)
+
+    seed_gen = np.random.RandomState(random_seed)
+    seed = seed_gen.randint(MAX_SEED)
+    simulator = Simulator(seed)
+
+    simulator.simulate(starting_stn, execution_strategy)
+    reschedule_count = simulator.num_reschedules
+    sent_count = simulator.num_sent_schedules
+
+    # print("Assigned Times: {}".format(simulator.get_assigned_times()))
+    # print("Successful?: {}".format(ans))
+
+    # response_dict = {"sample_results": [ans], "reschedules":
+    #                  [reschedule_count], "sent_schedules": [sent_count]}
+    # return response_dict
+
+
 
 if __name__ == "__main__":
 
@@ -83,8 +78,8 @@ if __name__ == "__main__":
     stn = create_stn_from_dict(stn_dict)
 
     print("Nodes:", stn.nodes.data())
-    # print("Edges:", stn.edges.data())
-    print("Edges: ", stn.edges.data())
+    print("Edges: ", stn.edges())
+
 
     # print("Edge data:", stn[1][0])
     # dict_edges = dict()
@@ -96,8 +91,6 @@ if __name__ == "__main__":
     #     constraint_obj = stn[constraint[0]][constraint[1]]['data']
     #     print("Distribution type: ", constraint_obj.dtype())
     #
-    # for edge in stn.edges():
-    #     print("Edge: ", edge[0], edge[1])
 
     print("Calculating the minimal STN...")
     minimal_stn = nx.floyd_warshall(stn)
@@ -105,7 +98,7 @@ if __name__ == "__main__":
 
     if stn.is_consistent(minimal_stn):
         print("Updating the stn")
-        # stn.update_edges(minimal_stn)
+        stn.update_edges(minimal_stn)
         stn.update_time_schedule(minimal_stn)
 
     print("Completion time: ", stn.get_completion_time())
@@ -113,6 +106,8 @@ if __name__ == "__main__":
     # nx.draw(stn, with_labels=True, font_weight='bold')
     # plt.show()
 
+    print("Simulating execution of STN")
+    simulate(stn, 'srea')
 
 
     #https://stackoverflow.com/questions/48543460/how-to-use-user-defined-class-object-as-a-networkx-node
