@@ -13,8 +13,8 @@ import pulp
 import copy
 import networkx
 
-from .stntools import STN
-from .stntools.distempirical import invcdf_norm, invcdf_uniform
+from temporal.stn import STN
+from temporal.distempirical import invcdf_norm, invcdf_uniform
 
 # \file SREA.py
 #
