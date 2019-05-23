@@ -199,23 +199,23 @@
   ],
   "constraints":[
     {
-      "starting_node": 2,
-      "ending_node": 1,
+      "starting_node": 1,
+      "ending_node": 2,
       "min_time": 4,
       "max_time": "inf",
       "distribution": "N_4_1"
     },
     {
-      "starting_node":4,
-      "ending_node":3,
+      "starting_node":3,
+      "ending_node":4,
       "min_time":4,
-      "max_time":"inf",
+      "max_time": "inf",
       "distribution": "N_4_1"
     },
 
     {
-      "starting_node":3,
-      "ending_node":2,
+      "starting_node":2,
+      "ending_node":3,
       "min_time":6,
       "max_time": "inf",
       "distribution": "N_6_1"

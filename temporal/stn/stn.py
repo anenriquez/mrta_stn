@@ -86,16 +86,13 @@ class STN(nx.DiGraph):
         i = constraint.i
         j = constraint.j
 
-        print("Starting node: ", i)
-        print("Ending node: ", j)
-
-        # Only add the edges if their weight is not infinity
-        if constraint.wij != 'inf':
-            self.add_edge(i, j, weight=constraint.wij)
-        if constraint.wji != 'inf':
+        # If the constraint has an infinite max_time
+        if constraint.wij == 'inf':
+            # just add the edge with the min_time
             self.add_edge(j, i, weight=constraint.wji)
-
-        print("Added edges: ", self.edges())
+        else:
+            self.add_edge(i, j, weight=constraint.wij)
+            self.add_edge(j, i, weight=constraint.wji)
 
         self.constraints[(i, j)] = constraint
 
