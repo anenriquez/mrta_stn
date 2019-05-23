@@ -38,7 +38,7 @@ class STN(nx.DiGraph):
                     to_print += " Ex"
             else:
                 to_print += "Constraint {} => {}: [{}, {}], Sampled value: [{}]".format(
-                    constraint.i, constraint.j, -constraint.wji, constraint.wij, constraint.sampled_duration)
+                    constraint.i, constraint.j, -self[j][i]['weight'], self[i][j]['weight'], constraint.sampled_duration)
                 if constraint.distribution is not None:
                     to_print += " ({})".format(constraint.distribution)
             to_print += "\n"
@@ -83,16 +83,23 @@ class STN(nx.DiGraph):
         i --- wij ---> j
         i <--- -wji --- j
         """
-        i = constraint.i
-        j = constraint.j
-
         # If the constraint has an infinite max_time
-        if constraint.wij == 'inf':
-            # just add the edge with the min_time
-            self.add_edge(j, i, weight=constraint.wji)
-        else:
-            self.add_edge(i, j, weight=constraint.wij)
-            self.add_edge(j, i, weight=constraint.wji)
+        # if constraint.wij == float('inf'):
+        #     # just add the edge with the min_time
+        #     self.add_edge(constraint.j, constraint.i, weight=constraint.wji)
+        #     starting_node = constraint.j
+        #     ending_node = constraint.i
+        # else:
+        #     self.add_edge(constraint.i, constraint.j, weight=constraint.wij)
+        #     self.add_edge(constraint.j, constraint.i, weight=constraint.wji)
+        #     starting_node = constraint.i
+        #     ending_node = constraint.j
+
+        i = constraint.i  # starting node
+        j = constraint.j  # ending_node
+
+        self.add_edge(i, j, weight=constraint.wij)
+        self.add_edge(j, i, weight=constraint.wji)
 
         self.constraints[(i, j)] = constraint
 
@@ -127,6 +134,7 @@ class STN(nx.DiGraph):
     def update_edges(self, minimal_stn, create=False):
         """Update edges in the STN to reflect the distances in the minimal stn
         """
+        print("Minimal stn: ", minimal_stn)
         for column, row in minimal_stn.items():
             nodes = dict(row)
             for n in nodes:
@@ -138,14 +146,42 @@ class STN(nx.DiGraph):
         :parma j: ending_node_id
         """
         if self.has_edge(i, j):
+            print("Updating edge ({}, {})".format(i, j))
             self[i][j]['weight'] = weight
-            # TODO: update wij and wji in constraint object
-            # self[i][j]['data'].weight = weight
         else:
-            if create:
-                self.add_edge(i, j, weight)
-                # new_edge = Edge(i, j, weight)
-                # self.add_constraint(new_edge)
+            print("Not Updating edge ({}, {})".format(i, j))
+        # self.constraints[(i, j)]
+
+            # if weight < self.constraints[(i, j)].wij:
+            #     self.constraints[(i, j)].wij = weight
+            # elif weight < self.constraints[(i, j)].wji:
+            #         self.constraints[(i, j)].wji = weight
+
+
+        # if self.has_edge(i, j):
+        # if (i, j) in self.constraints:
+        #     if self.has_edge(i, j):
+        #         self[i][j]['weight'] = weight
+        #     else:
+        #         self[j][i]['weight'] = weight
+        #
+        #     if weight < self.constraints[(i, j)].wij:
+        #         self.constraints[(i, j)].wij = weight
+        #     elif weight < self.constraints[(i, j)].wji:
+        #             self.constraints[(i, j)].wji = weight
+
+
+        #     if (i, j) in self.contingent_constraints:
+        #         print("Contingent constraints before: ", self.contingent_constraints)
+        #         self.contingent_constraints[(i, j)].wij = weight
+        #         print("Contingent constraints after: ", self.contingent_constraints)
+        #     # TODO: update wij and wji in constraint object
+        #     # self[i][j]['data'].weight = weight
+        # else:
+        #     if create:
+        #         self.add_edge(i, j, weight)
+        #         # new_edge = Edge(i, j, weight)
+        #         # self.add_constraint(new_edge)
 
     def get_edge_weight(self, i, j):
         """ Returns the weight of the edge between node i and node j

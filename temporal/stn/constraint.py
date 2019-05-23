@@ -31,6 +31,8 @@ class Constraint(object):
         # Minimum allocated time between i and j
         self.wji = -min_time
         # Maximum allocated time between i and j
+        if max_time == 'inf':
+            max_time = float('inf')
         self.wij = max_time
         # Probability distribution (for contingent constraints)
         self.distribution = distribution

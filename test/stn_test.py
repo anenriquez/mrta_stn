@@ -97,17 +97,6 @@ if __name__ == "__main__":
     print("STN:")
     print(stn)
 
-    # print("Edge data:", stn[1][0])
-    # dict_edges = dict()
-    # dict_edges[(1, 0)] = stn[1][0]
-    # print("Dict of edges: ", dict_edges)
-
-    # for constraint, attr in stn.contingent_constraints.items():
-    #     print("Constant: ", constraint)
-    #     constraint_obj = stn[constraint[0]][constraint[1]]['data']
-    #     print("Distribution type: ", constraint_obj.dtype())
-    #
-
     print("Calculating the minimal STN...")
     minimal_stn = nx.floyd_warshall(stn)
     print(minimal_stn)
