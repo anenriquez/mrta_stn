@@ -146,42 +146,7 @@ class STN(nx.DiGraph):
         :parma j: ending_node_id
         """
         if self.has_edge(i, j):
-            print("Updating edge ({}, {})".format(i, j))
             self[i][j]['weight'] = weight
-        else:
-            print("Not Updating edge ({}, {})".format(i, j))
-        # self.constraints[(i, j)]
-
-            # if weight < self.constraints[(i, j)].wij:
-            #     self.constraints[(i, j)].wij = weight
-            # elif weight < self.constraints[(i, j)].wji:
-            #         self.constraints[(i, j)].wji = weight
-
-
-        # if self.has_edge(i, j):
-        # if (i, j) in self.constraints:
-        #     if self.has_edge(i, j):
-        #         self[i][j]['weight'] = weight
-        #     else:
-        #         self[j][i]['weight'] = weight
-        #
-        #     if weight < self.constraints[(i, j)].wij:
-        #         self.constraints[(i, j)].wij = weight
-        #     elif weight < self.constraints[(i, j)].wji:
-        #             self.constraints[(i, j)].wji = weight
-
-
-        #     if (i, j) in self.contingent_constraints:
-        #         print("Contingent constraints before: ", self.contingent_constraints)
-        #         self.contingent_constraints[(i, j)].wij = weight
-        #         print("Contingent constraints after: ", self.contingent_constraints)
-        #     # TODO: update wij and wji in constraint object
-        #     # self[i][j]['data'].weight = weight
-        # else:
-        #     if create:
-        #         self.add_edge(i, j, weight)
-        #         # new_edge = Edge(i, j, weight)
-        #         # self.add_constraint(new_edge)
 
     def get_edge_weight(self, i, j):
         """ Returns the weight of the edge between node i and node j

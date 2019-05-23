@@ -42,8 +42,20 @@ class Constraint(object):
         self.is_contingent = distribution is not None
 
     def __repr__(self):
-        return "Constraint {} => {} [{}, {}]".format(self.i, self.j, -self.wji,
-                                               self.wij)
+        return "Constraint {} => {} [{}, {}]".format(self.i, self.j, -self.wji, self.wij)
+
+    def dtype(self):
+        """Returns the distribution edge type as a String. If no there is
+            distribution for this edge, return None.
+        """
+        if self.distribution is None:
+            return None
+        if self.distribution[0] == "U":
+            return "uniform"
+        elif self.distribution[0] == "N":
+            return "gaussian"
+        else:
+            return "unknown"
 
     def resample(self, random_state):
         """ Retrieves a new sample from a contingent constraint.

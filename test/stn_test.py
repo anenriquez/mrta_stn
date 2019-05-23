@@ -97,23 +97,23 @@ if __name__ == "__main__":
     print("STN:")
     print(stn)
 
-    print("Calculating the minimal STN...")
-    minimal_stn = nx.floyd_warshall(stn)
-    print(minimal_stn)
-    print('')
-
-    if stn.is_consistent(minimal_stn):
-        stn.update_edges(minimal_stn)
-        stn.update_time_schedule(minimal_stn)
-
-    print("Completion time: ", stn.get_completion_time())
-    print("Makespan: ", stn.get_makespan())
+    # print("Calculating the minimal STN...")
+    # minimal_stn = nx.floyd_warshall(stn)
+    # print(minimal_stn)
+    # print('')
+    #
+    # if stn.is_consistent(minimal_stn):
+    #     stn.update_edges(minimal_stn)
+    #     stn.update_time_schedule(minimal_stn)
+    #
+    # print("Completion time: ", stn.get_completion_time())
+    # print("Makespan: ", stn.get_makespan())
     # nx.draw(stn, with_labels=True, font_weight='bold')
     # plt.show()
 
     # print('')
-    # print("Simulating execution of STN")
-    # simulate(stn, 'srea')
+    print("Simulating execution of STN")
+    simulate(stn, 'srea')
 
 
         #print(stn.get_edge_data(0, i)['weight'])

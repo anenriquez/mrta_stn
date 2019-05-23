@@ -44,10 +44,12 @@ class Simulator(object):
 
         print("Original STN: {}".format(self.stn))
 
+        print("Contingent constraints: ", self.stn.contingent_constraints)
+
         for edge in self.stn.edges():
             i, j = edge
             if (i, j) in self.stn.contingent_constraints:
-                print("Contingent edge: ", self.stn.contingent_constraints[(i, j)])
+                print("Contingent constraint: ", self.stn.contingent_constraints[(i, j)])
 
         # Resample the contingent edges.
         # Super important!
@@ -82,6 +84,7 @@ class Simulator(object):
                                                   options=options)
         print("GUIDE")
         print(guide_stn)
+        print("Alpha: ", current_alpha)
 
         # Loop until all timepoints (nodes) have been executed
         # while not self.all_executed():
@@ -281,10 +284,12 @@ class Simulator(object):
 
     def resample_stored_stn(self) -> None:
         """Resample the stored STN contingent edges (self.stn)"""
-        for edge, attr in self.stn.contingent_constraints.items():
-            # print("Edge: ", edge)
-            # print(self.stn[edge[0]][edge[1]])
-            constraint = self.stn[edge[0]][edge[1]]['data']
+        #for edge, attr in self.stn.contingent_constraints.items():
+        # print("Edge: ", edge)
+        # print(self.stn[edge[0]][edge[1]])
+        # constraint = self.stn[edge[0]][edge[1]]['data']
+        # constraint.resample(self._rand_state)
+        for constraint in self.stn.contingent_constraints.values():
             constraint.resample(self._rand_state)
 
     def get_assigned_times(self) -> dict:
@@ -329,7 +334,7 @@ class Simulator(object):
             consistent.
         """
         self.num_reschedules += 1
-        result = srea(self.stn)
+        result = srea(self.stn, debug=True)
         if result is not None:
             self.num_sent_schedules += 1
             return result[0], result[1]

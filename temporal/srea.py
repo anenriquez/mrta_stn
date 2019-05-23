@@ -76,8 +76,10 @@ def setUpLP(stn, decouple):
 
     for edge in stn.edges():
         i, j = edge
+        print("Edge ({}, {})".format(i, j))
         if (i, j) in stn.contingent_constraints:
-            print("Contingent edge: ", stn.contingent_constraints[(i, j)])
+            print("Contingent constraint: ", stn[i][j])
+            print("{}, {}".format(i, j))
             deltas[(i, j)] = pulp.LpVariable('delta_%d_%d' %
                                              (i, j), lowBound=0, upBound=None)
             deltas[(j, i)] = pulp.LpVariable('delta_%d_%d' %
@@ -86,7 +88,9 @@ def setUpLP(stn, decouple):
         else:
             # ignore edges from z. these edges are implicitly handled
             # with the bounds on the LP variables
-            if i != 0 and not decouple:
+            # also ignore complementary edges of contingent constraints
+            if i != 0 and j != 0 and (j, i) not in stn.contingent_constraints and not decouple:
+                print("Adding extra constraints ({}, {})".format(i, j))
                 addConstraint(bounds[(j, '+')] - bounds[(i, '-')]
                               <= stn.get_edge_weight(i, j), prob)
                 addConstraint(bounds[(i, '+')] - bounds[(j, '-')]
@@ -123,7 +127,7 @@ def srea(inputstn,
          lb=0.0,
          ub=0.999):
     # inputstn = inputstn.copy()
-    # inputstn = copy.deepcopy(inputstn)
+    inputstn = copy.deepcopy(inputstn)
     # dictionary of alphas for binary search
     alphas = {i: i / 1000.0 for i in range(1001)}
 
@@ -152,55 +156,55 @@ def srea(inputstn,
         print("")
     print("probBase: ", probBase)
 
-    #First run binary search on alpha
-    # while upper - lower > 1:
-    #     alpha = alphas[(upper + lower) // 2]
-    #     if debug:
-    #         print('trying alpha = {}'.format(alpha))
-    #
-    #     # run the LP
-    #     probContainer = (bounds, deltas, probBase.copy())
-    #     LPbounds = srea_LP(inputstn,
-    #                        alpha,
-    #                        decouple,
-    #                        debug=debugLP,
-    #                        probContainer=probContainer)
-    #
-    #     # LP was feasible, try lower alpha
-    #     if LPbounds is not None:
-    #         upper = (upper + lower) // 2
-    #         result = (alpha, LPbounds)
-    #     # LP was infeasable, try higher alpha
-    #     else:
-    #         lower = (upper + lower) // 2
-    #
-    #     # finished our search, load the smallest alpha decoupling
-    #     if upper - lower <= 1:
-    #         if result is not None:
-    #             alpha, LPbounds = result
-    #             if debug:
-    #                 print(
-    #                     'modifying STN with lowest good alpha, {}'.format(alpha))
-    #             for i, sign in LPbounds:
-    #                 if sign == '+':
-    #                     inputstn.update_edge_weight(
-    #                         0, i, ceil(bounds[(i, '+')].varValue))
-    #                 else:
-    #                     inputstn.update_edge_weight(
-    #                         i, 0, ceil(-bounds[(i, '-')].varValue))
-    #
-    #             if returnAlpha:
-    #                 return alpha, inputstn
-    #             else:
-    #                 return inputstn
-    # # skip the rest if there was no decoupling at all
-    # if result is None:
-    #     if debug:
-    #         print('could not produce feasible LP.')
-    #     return None
-    #
-    # # Fail here
-    # assert(False)
+    # First run binary search on alpha
+    while upper - lower > 1:
+        alpha = alphas[(upper + lower) // 2]
+        if debug:
+            print('trying alpha = {}'.format(alpha))
+
+        # run the LP
+        probContainer = (bounds, deltas, probBase.copy())
+        LPbounds = srea_LP(inputstn,
+                           alpha,
+                           decouple,
+                           debug=debugLP,
+                           probContainer=probContainer)
+
+        # LP was feasible, try lower alpha
+        if LPbounds is not None:
+            upper = (upper + lower) // 2
+            result = (alpha, LPbounds)
+        # LP was infeasable, try higher alpha
+        else:
+            lower = (upper + lower) // 2
+
+        # finished our search, load the smallest alpha decoupling
+        if upper - lower <= 1:
+            if result is not None:
+                alpha, LPbounds = result
+                if debug:
+                    print(
+                        'modifying STN with lowest good alpha, {}'.format(alpha))
+                for i, sign in LPbounds:
+                    if sign == '+':
+                        inputstn.update_edge_weight(
+                            0, i, ceil(bounds[(i, '+')].varValue))
+                    else:
+                        inputstn.update_edge_weight(
+                            i, 0, ceil(-bounds[(i, '-')].varValue))
+
+                if returnAlpha:
+                    return alpha, inputstn
+                else:
+                    return inputstn
+    # skip the rest if there was no decoupling at all
+    if result is None:
+        if debug:
+            print('could not produce feasible LP.')
+        return None
+
+    # Fail here
+    assert(False)
 
 
 # \fn srea_LP(inputstn,alpha,debug=False,probContainer=None)
@@ -238,9 +242,9 @@ def srea_LP(inputstn,
     else:
         bounds, deltas, prob = probContainer
 
-    for edge, attr in inputstn.contingent_constraints.items():
-        i, j = edge
-        constraint = inputstn[i][j]['data']
+    for (i, j), constraint in inputstn.contingent_constraints.items():
+        # i, j = edge
+        # constraint = inputstn[i][j]['data']
         if constraint.dtype() == "gaussian":
             p_ij = invcdf_norm(1.0 - alpha * 0.5, constraint.mu, constraint.sigma)
             p_ji = -invcdf_norm(alpha * 0.5, constraint.mu, constraint.sigma)
