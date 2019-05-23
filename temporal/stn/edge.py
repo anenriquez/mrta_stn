@@ -12,7 +12,7 @@ class Edge(object):
         # node where the constraint ends
         self.ending_node_id = ending_node
         # Time allotted between the starting and ending node
-        self.weight = weight
+        self.weight = float(weight)
         # Probability distribution (for contingent edges)
         self.distribution = distribution
         # Duration (for contingent edges)

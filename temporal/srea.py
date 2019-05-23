@@ -11,7 +11,7 @@ Authors: Jordan R Abrahams, Kyle Lund, Sam Dietrich
 from math import floor, ceil
 import pulp
 import copy
-import networkx
+import networkx as nx
 
 from temporal.stn import STN
 from temporal.distempirical import invcdf_norm, invcdf_uniform
@@ -51,36 +51,46 @@ def setUpLP(stn, decouple):
 
     prob = pulp.LpProblem('PSTN Robust Execution LP', pulp.LpMaximize)
 
+    print("Input STN: ", stn)
+
     # ##
     # Store Original STN edges and objective variables for easy access.
     # Not part of LP yet
     # ##
 
     for i in stn.nodes():
+        print("SREA verts: ", i)
         bounds[(i, '+')] = pulp.LpVariable('t_%d_hi' % i,
-                                           lowBound=-stn.get_edge_data(1, 0)['weight'],
-                                           upBound=stn.get_edge_data(0, i)['weight'])
+                                           lowBound=-stn.get_edge_weight(i, 0),
+                                           upBound=stn.get_edge_weight(0, i))
+        print("Lower bound + : ", -stn.get_edge_weight(i, 0))
+        print("Upper bound + : ", stn.get_edge_weight(0, i))
         bounds[(i, '-')] = pulp.LpVariable('t_%d_lo' % i,
-                                           lowBound=-stn.get_edge_data(i, 0)['weight'],
-                                           upBound=stn.get_edge_data(0, i)['weight'])
+                                           lowBound=-stn.get_edge_weight(i, 0),
+                                           upBound=stn.get_edge_weight(0, i))
+        print("Lower bound - : ", -stn.get_edge_weight(i, 0))
+        print("Upper bound - : ", stn.get_edge_weight(0, i))
+
         condition = bounds[(i, '+')] >= bounds[(i, '-')]
         addConstraint(condition, prob)
 
     for edge in stn.edges():
-        if (edge[0], edge[1]) in stn.contingent_edges:
-            deltas[(edge[0], edge[1])] = pulp.LpVariable('delta_%d_%d' %
+        i, j = edge
+        if (i, j) in stn.contingent_constraints:
+            print("Contingent edge: ", stn.contingent_constraints[(i, j)])
+            deltas[(i, j)] = pulp.LpVariable('delta_%d_%d' %
                                              (i, j), lowBound=0, upBound=None)
-            deltas[(edge[1], edge[0])] = pulp.LpVariable('delta_%d_%d' %
+            deltas[(j, i)] = pulp.LpVariable('delta_%d_%d' %
                                              (j, i), lowBound=0, upBound=None)
 
         else:
             # ignore edges from z. these edges are implicitly handled
             # with the bounds on the LP variables
-            if edge[0] != 0 and not decouple:
+            if i != 0 and not decouple:
                 addConstraint(bounds[(j, '+')] - bounds[(i, '-')]
-                              <= stn.get_edge_data(edge[0], edges[1])['weight'], prob)
+                              <= stn.get_edge_weight(i, j), prob)
                 addConstraint(bounds[(i, '+')] - bounds[(j, '-')]
-                              <= stn.get_edge_data(edge[1], edge[0])['weight'], prob)
+                              <= stn.get_edge_weight(j, i), prob)
 
             # For now, we dont have interagentEdges
             # elif edge[0] != 0 and (i, j) in stn.interagentEdges:
@@ -131,55 +141,66 @@ def srea(inputstn,
         inputstn.update_edges(minimal_stn)
     bounds, deltas, probBase = setUpLP(inputstn, decouple)
 
-    # First run binary search on alpha
-    while upper - lower > 1:
-        alpha = alphas[(upper + lower) // 2]
-        if debug:
-            print('trying alpha = {}'.format(alpha))
+    print("Bounds:")
+    for bound in bounds:
+        print("{}:{}".format(bound, bounds[bound]))
+        print("")
 
-        # run the LP
-        probContainer = (bounds, deltas, probBase.copy())
-        LPbounds = srea_LP(inputstn,
-                           alpha,
-                           decouple,
-                           debug=debugLP,
-                           probContainer=probContainer)
+    print("Deltas:")
+    for delta in deltas:
+        print("{}:{}".format(delta, deltas[delta]))
+        print("")
+    print("probBase: ", probBase)
 
-        # LP was feasible, try lower alpha
-        if LPbounds is not None:
-            upper = (upper + lower) // 2
-            result = (alpha, LPbounds)
-        # LP was infeasable, try higher alpha
-        else:
-            lower = (upper + lower) // 2
-
-        # finished our search, load the smallest alpha decoupling
-        if upper - lower <= 1:
-            if result is not None:
-                alpha, LPbounds = result
-                if debug:
-                    print(
-                        'modifying STN with lowest good alpha, {}'.format(alpha))
-                for i, sign in LPbounds:
-                    if sign == '+':
-                        inputstn.update_edge_weight(
-                            0, i, ceil(bounds[(i, '+')].varValue))
-                    else:
-                        inputstn.update_edge_weight(
-                            i, 0, ceil(-bounds[(i, '-')].varValue))
-
-                if returnAlpha:
-                    return alpha, inputstn
-                else:
-                    return inputstn
-    # skip the rest if there was no decoupling at all
-    if result is None:
-        if debug:
-            print('could not produce feasible LP.')
-        return None
-
-    # Fail here
-    assert(False)
+    #First run binary search on alpha
+    # while upper - lower > 1:
+    #     alpha = alphas[(upper + lower) // 2]
+    #     if debug:
+    #         print('trying alpha = {}'.format(alpha))
+    #
+    #     # run the LP
+    #     probContainer = (bounds, deltas, probBase.copy())
+    #     LPbounds = srea_LP(inputstn,
+    #                        alpha,
+    #                        decouple,
+    #                        debug=debugLP,
+    #                        probContainer=probContainer)
+    #
+    #     # LP was feasible, try lower alpha
+    #     if LPbounds is not None:
+    #         upper = (upper + lower) // 2
+    #         result = (alpha, LPbounds)
+    #     # LP was infeasable, try higher alpha
+    #     else:
+    #         lower = (upper + lower) // 2
+    #
+    #     # finished our search, load the smallest alpha decoupling
+    #     if upper - lower <= 1:
+    #         if result is not None:
+    #             alpha, LPbounds = result
+    #             if debug:
+    #                 print(
+    #                     'modifying STN with lowest good alpha, {}'.format(alpha))
+    #             for i, sign in LPbounds:
+    #                 if sign == '+':
+    #                     inputstn.update_edge_weight(
+    #                         0, i, ceil(bounds[(i, '+')].varValue))
+    #                 else:
+    #                     inputstn.update_edge_weight(
+    #                         i, 0, ceil(-bounds[(i, '-')].varValue))
+    #
+    #             if returnAlpha:
+    #                 return alpha, inputstn
+    #             else:
+    #                 return inputstn
+    # # skip the rest if there was no decoupling at all
+    # if result is None:
+    #     if debug:
+    #         print('could not produce feasible LP.')
+    #     return None
+    #
+    # # Fail here
+    # assert(False)
 
 
 # \fn srea_LP(inputstn,alpha,debug=False,probContainer=None)
@@ -218,29 +239,26 @@ def srea_LP(inputstn,
         bounds, deltas, prob = probContainer
 
     for edge, attr in inputstn.contingent_constraints.items():
-        # if edge.dtype() == "gaussian":
-        constraint = inputstn[edge[0]][edge[1]]['data']
+        i, j = edge
+        constraint = inputstn[i][j]['data']
         if constraint.dtype() == "gaussian":
-            p_ij = invcdf_norm(1.0 - alpha * 0.5, edge.mu, edge.sigma)
-            p_ji = -invcdf_norm(alpha * 0.5, edge.mu, edge.sigma)
-            limit_ij = invcdf_norm(0.997, edge.mu, edge.sigma)
-            limit_ji = -invcdf_norm(0.003, edge.mu, edge.sigma)
-            # p_ij = 1000*invCDF_map[edge.distribution][one_minus_alpha]
-            # p_ji = -1000*invCDF_map[edge.distribution][alpha]
-            # limit_ij = 1000*invCDF_map[edge.distribution]['1.0']
-            # limit_ji = -1000*invCDF_map[edge.distribution]['0.0']
+            p_ij = invcdf_norm(1.0 - alpha * 0.5, constraint.mu, constraint.sigma)
+            p_ji = -invcdf_norm(alpha * 0.5, constraint.mu, constraint.sigma)
+            limit_ij = invcdf_norm(0.997, constraint.mu, constraint.sigma)
+            limit_ji = -invcdf_norm(0.003, constraint.mu, constraint.sigma)
+
         elif constraint.dtype() == "uniform":
-            p_ij = invcdf_uniform(1.0 - alpha * 0.5, edge.dist_lb,
-                                  edge.dist_ub)
-            p_ji = -invcdf_uniform(alpha * 0.5, edge.dist_lb, edge.dist_ub)
-            limit_ij = invcdf_uniform(0.0, edge.dist_lb, edge.dist_ub)
-            limit_ji = -invcdf_uniform(1.0, edge.dist_lb, edge.dist_ub)
+            p_ij = invcdf_uniform(1.0 - alpha * 0.5, constraint.dist_lb,
+                                  constraint.dist_ub)
+            p_ji = -invcdf_uniform(alpha * 0.5, constraint.dist_lb, constraint.dist_ub)
+            limit_ij = invcdf_uniform(0.0, constraint.dist_lb, constraint.dist_ub)
+            limit_ji = -invcdf_uniform(1.0, constraint.dist_lb, constraint.dist_ub)
 
-        deltas[(edge[0], edge[1])].upBound = limit_ij - p_ij
-        deltas[(edge[0], edge[1])].upBound = limit_ji - p_ji
+        deltas[(i, j)].upBound = limit_ij - p_ij
+        deltas[(i, j)].upBound = limit_ji - p_ji
 
-        cons1 = bounds[(j, "+")] - bounds[(i, "+")] == p_ij + deltas[(edge[0], edge[1])]
-        cons2 = bounds[(j, "-")] - bounds[(i, "-")] == -p_ji - deltas[(edge[1], edge[0])]
+        cons1 = bounds[(j, "+")] - bounds[(i, "+")] == p_ij + deltas[(i, j)]
+        cons2 = bounds[(j, "-")] - bounds[(i, "-")] == -p_ji - deltas[(j, i)]
         # Lund et al. LP (3)
         addConstraint(cons1, prob)
         # Lund et al. LP (4)

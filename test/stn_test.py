@@ -2,7 +2,7 @@ import json
 import networkx as nx
 import numpy as np
 from structs.task import Task
-from temporal.stn import Node, Edge, STN
+from temporal.stn import Node, Constraint, STN
 from temporal.simulator import Simulator
 
 MAX_SEED = 2 ** 31 - 1
@@ -10,7 +10,7 @@ MAX_SEED = 2 ** 31 - 1
 
 def get_stn_dict():
     """Reads an STN from a json file and returns it as a dict"""
-    with open('data/stn_two_tasks.py') as json_file:
+    with open('data/stn_two_tasks.json') as json_file:
         stn_dict = json.load(json_file)
     return stn_dict
 
@@ -23,32 +23,42 @@ def create_stn_from_dict(stn_dict):
 
     for node in stn_dict['nodes']:
         task = Task.from_dict(node['task'])
-        new_node_id = node['id']
+        id = node['id']
 
-        new_node = Node(new_node_id, task, start_task=node['is_task_start'], end_task=node['is_task_end'])
+        new_node = Node(id, task, start_task=node['is_task_start'], end_task=node['is_task_end'])
 
-        stn.add_node(new_node_id, data=new_node)
+        stn.add_node(id, data=new_node)
 
         if node['is_task_start']:
-            earliest_start_time = Edge(new_node.id, zero_timepoint.id, -task.earliest_start_time)
-            latest_start_time = Edge(zero_timepoint.id, new_node.id, task.latest_start_time)
-            stn.add_constraint(earliest_start_time)
-            stn.add_constraint(latest_start_time)
+            start_time = Constraint(zero_timepoint.id, new_node.id, task.earliest_start_time, task.latest_start_time)
+            stn.add_constraint(start_time)
+            # earliest_start_time = Edge(new_node.id, zero_timepoint.id, -task.earliest_start_time)
+            # latest_start_time = Edge(zero_timepoint.id, new_node.id, task.latest_start_time)
+            # stn.add_constraint(earliest_start_time)
+            # stn.add_constraint(latest_start_time)
 
         elif node['is_task_end']:
-            earliest_finish_time = Edge(new_node.id, zero_timepoint.id, -task.earliest_finish_time)
-            latest_finish_time = Edge(zero_timepoint.id, new_node.id, task.latest_finish_time)
+            finish_time = Constraint(zero_timepoint.id, new_node.id, task.earliest_finish_time, task.latest_finish_time)
+            stn.add_constraint(finish_time)
+            # earliest_finish_time = Edge(new_node.id, zero_timepoint.id, -task.earliest_finish_time)
+            # latest_finish_time = Edge(zero_timepoint.id, new_node.id, task.latest_finish_time)
+            #
+            # stn.add_constraint(earliest_finish_time)
+            # stn.add_constraint(latest_finish_time)
 
-            stn.add_constraint(earliest_finish_time)
-            stn.add_constraint(latest_finish_time)
-
-    for edge in stn_dict['edges']:
-        if int(edge['starting_node']) > int(edge['ending_node']):
-            new_constraint = Edge(edge['starting_node'], edge['ending_node'], -edge['weight'], edge['distribution'])
-        else:
-            new_constraint = Edge(edge['starting_node'], edge['ending_node'], edge['weight'], edge['distribution'])
-
-        stn.add_constraint(new_constraint)
+    for constraint in stn_dict['constraints']:
+        i = constraint['starting_node']
+        j = constraint['ending_node']
+        min_time = constraint['min_time']
+        max_time = constraint['max_time']
+        distribution = constraint['distribution']
+        stn.add_constraint(Constraint(i, j, min_time, max_time, distribution))
+        # if int(edge['starting_node']) > int(edge['ending_node']):
+        #     new_constraint = Edge(edge['starting_node'], edge['ending_node'], -edge['weight'], edge['distribution'])
+        # else:
+        #     new_constraint = Edge(edge['starting_node'], edge['ending_node'], edge['weight'], edge['distribution'])
+        #
+        # stn.add_constraint(new_constraint)
 
     return stn
 
@@ -104,7 +114,7 @@ if __name__ == "__main__":
     print('')
 
     if stn.is_consistent(minimal_stn):
-        # stn.update_edges(minimal_stn)
+        stn.update_edges(minimal_stn)
         stn.update_time_schedule(minimal_stn)
 
     print("Completion time: ", stn.get_completion_time())
@@ -112,9 +122,14 @@ if __name__ == "__main__":
     # nx.draw(stn, with_labels=True, font_weight='bold')
     # plt.show()
 
-    print('')
-    print("Simulating execution of STN")
-    simulate(stn, 'srea')
+    # print('')
+    # print("Simulating execution of STN")
+    # simulate(stn, 'srea')
+
+
+        #print(stn.get_edge_data(0, i)['weight'])
+
+    # stn.get_edge_data(0, i)['weight']
 
 
     #https://stackoverflow.com/questions/48543460/how-to-use-user-defined-class-object-as-a-networkx-node
