@@ -2,3 +2,4 @@ numpy
 networkx
 matplotlib
 PuLP
+scipy
