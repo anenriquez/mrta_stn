@@ -1,22 +1,22 @@
 import json
 import networkx as nx
 import numpy as np
-from structs.task import Task
-from temporal.stn import Node, Constraint, STN
-from temporal.simulator import Simulator
+from src.structs.task import Task
+from src.temporal_networks.stnu import Node, Constraint, STNU
+from src.temporal_networks.simulator import Simulator
 
 MAX_SEED = 2 ** 31 - 1
 """The maximum number a random seed can be."""
 
 def get_stn_dict():
-    """Reads an STN from a json file and returns it as a dict"""
+    """Reads an STNU from a json file and returns it as a dict"""
     with open('data/stn_two_tasks.json') as json_file:
         stn_dict = json.load(json_file)
     return stn_dict
 
 
 def create_stn_from_dict(stn_dict):
-    stn = STN()
+    stn = STNU()
     # Adding the zero timepoint
     zero_timepoint = Node(0)
     stn.add_node(0, data=zero_timepoint)
@@ -94,10 +94,10 @@ if __name__ == "__main__":
     print("Nodes: {}\n".format(stn.nodes.data()))
     print("Edges: {}\n".format(stn.edges.data()))
 
-    print("STN:")
+    print("STNU:")
     print(stn)
 
-    # print("Calculating the minimal STN...")
+    # print("Calculating the minimal STNU...")
     # minimal_stn = nx.floyd_warshall(stn)
     # print(minimal_stn)
     # print('')
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     # plt.show()
 
     # print('')
-    print("Simulating execution of STN")
+    print("Simulating execution of STNU")
     simulate(stn, 'srea')
 
 

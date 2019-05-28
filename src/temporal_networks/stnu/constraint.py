@@ -1,6 +1,6 @@
 """ Based on: https://github.com/HEATlab/DREAM/blob/master/libheat/stntools/stn.py """
 
-from temporal.distempirical import norm_sample, uniform_sample
+from src.temporal_networks.distempirical import norm_sample, uniform_sample
 
 
 class Constraint(object):

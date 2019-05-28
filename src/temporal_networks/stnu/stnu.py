@@ -3,7 +3,7 @@
 import networkx as nx
 
 
-class STN(nx.DiGraph):
+class STNU(nx.DiGraph):
     """ Represents a Simple Temporal Network (STN) as a networkx directed graph
     """
     def __init__(self):

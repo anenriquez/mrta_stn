@@ -13,8 +13,10 @@ import pulp
 import copy
 import networkx as nx
 
-from temporal.stn import STN
-from temporal.distempirical import invcdf_norm, invcdf_uniform
+# from src.temporal_networks.stnu import STNU
+from src.temporal_networks.stnu import STNU
+# import src.temporal_networks.stnu.stnu
+from src.temporal_networks.distempirical import invcdf_norm, invcdf_uniform
 
 # \file SREA.py
 #
@@ -230,7 +232,7 @@ def srea_LP(inputstn,
             ):
 
     # Check some types to make sure everything is the correct type
-    if not isinstance(inputstn, STN):
+    if not isinstance(inputstn, STNU):
         raise TypeError("inputstn is not of type STN")
 
     alpha = round(float(alpha), 3)

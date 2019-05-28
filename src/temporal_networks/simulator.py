@@ -2,7 +2,7 @@
 
 import numpy as np
 import copy
-from temporal.srea import srea
+from src.temporal_networks.srea import srea
 
 Z_NODE_ID = 0
 
