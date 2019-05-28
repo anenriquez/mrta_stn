@@ -22,15 +22,12 @@ class STNU(nx.DiGraph):
     def __str__(self):
         to_print = ""
         for (i, j), constraint in sorted(self.constraints.items()):
-            # print("Constraint: ", constraint)
             # if the constraint is connected to the zero_timepoint
             if i == 0:
                 timepoint = self.node[j]['data']
                 lower_bound = -self[j][i]['weight']
                 upper_bound = self[i][j]['weight']
                 to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
-
-                # constraint = self.constraint[(i, j)]
 
                 if constraint.distribution is not None:
                     to_print += " ({})".format(constraint.distribution)
@@ -44,34 +41,6 @@ class STNU(nx.DiGraph):
             to_print += "\n"
         return to_print
 
-    # def __str__(self):
-    #     to_print = ""
-    #     for edge in self.edges():
-    #         i, j = edge
-    #         # if the edge is connected to the zero_timepoint
-    #         if i == 0:
-    #             timepoint = self.node[j]['data']
-    #             lower_bound = -self[j][i]['weight']
-    #             upper_bound = self[i][j]['weight']
-    #
-    #             to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
-    #         else:
-    #             # ignore edges connected to zero_timepoint
-    #             # if i != 0:
-    #             # starting_node_id = edge[0]
-    #             # ending_node_id = edge[1]
-    #             lower_bound = -self[j][i]['weight']
-    #             sampled_value = self[j][i]['data'].sampled_duration
-    #
-    #             if self.has_edge(j, i):
-    #                 upper_bound = self[j][i]['weight']
-    #             else:
-    #                 upper_bound = 'inf'
-    #
-    #             to_print += "Edge {} => {}: [{}, {}], Sampled value: [{}]".format(i, j, lower_bound, upper_bound, sampled_value)
-    #         to_print += "\n"
-    #     return to_print
-
     def add_constraint(self, constraint):
         """Add the edges of a constraint to the STN
         i: starting node
@@ -83,17 +52,6 @@ class STNU(nx.DiGraph):
         i --- wij ---> j
         i <--- -wji --- j
         """
-        # If the constraint has an infinite max_time
-        # if constraint.wij == float('inf'):
-        #     # just add the edge with the min_time
-        #     self.add_edge(constraint.j, constraint.i, weight=constraint.wji)
-        #     starting_node = constraint.j
-        #     ending_node = constraint.i
-        # else:
-        #     self.add_edge(constraint.i, constraint.j, weight=constraint.wij)
-        #     self.add_edge(constraint.j, constraint.i, weight=constraint.wji)
-        #     starting_node = constraint.i
-        #     ending_node = constraint.j
 
         i = constraint.i  # starting node
         j = constraint.j  # ending_node
@@ -108,20 +66,6 @@ class STNU(nx.DiGraph):
             self.received_timepoints += [j]
         else:
             self.requirement_constraints[(i, j)] = constraint
-
-    # def add_constraint(self, constraint):
-    #     """Adds a temporal constraint to the STN"""
-    #     i = constraint.starting_node_id
-    #     j = constraint.ending_node_id
-    #     # self.add_edge(i, j, weight=constraint.weight, data=constraint.get_attr_dict())
-    #     self.add_edge(i, j, weight=constraint.weight, data=constraint)
-    #
-    #     if constraint.is_contingent:
-    #         self.contingent_constraints[(i, j)] = self[i][j]
-    #         self.received_timepoints += [j]
-    #     else:
-    #         self.requirement_constraints[(i, j)] = self[i][j]
-
 
     def is_consistent(self, minimal_stn):
         """The STN is not consistent if it has negative cycles"""
@@ -160,7 +104,6 @@ class STNU(nx.DiGraph):
                 return 0
             else:
                 return float('inf')
-
 
     def update_time_schedule(self, minimal_stn):
         """Updates the start time, finish time and pickup_start_time of scheduled takes"""
@@ -222,35 +165,3 @@ class STNU(nx.DiGraph):
         node_last_task = nodes[-1]
         last_task_finish_time = self.node[node_last_task]['data'].task.finish_time
         return last_task_finish_time
-
-
-
-    # def draw_stn(self):
-    #     nx.draw(self, with_labels=True, font_weight='bold')
-    #     plt.show()
-
-# if __name__ == "__main__":
-#     node0 = Node(0)
-#     node1 = Node(1)
-#
-#     stn = STN()
-#
-#     constraint1 = Edge(node0, node1, 46)
-#     constraint2 = Edge(node1, node0, -41)
-#
-#     stn.add_constraint(constraint1)
-#     stn.add_constraint(constraint2)
-#     minimal_stn = stn.get_minimal_stn()
-#
-#     edges = stn.edges.data()
-#     print("Nodes:", stn.nodes.data())
-#     print("Edges:", edges)
-#
-#     print("Minimal STN")
-#     print(minimal_stn)
-#     print(stn.is_consistent(minimal_stn))
-#
-#     stn.draw_stn()
-
-    # nx.draw(stn, with_labels=True, font_weight='bold')
-    # plt.show()
