@@ -1,52 +1,48 @@
 """ Based on: https://github.com/HEATlab/DREAM/blob/master/libheat/stntools/stn.py """
 
-from temporal.distempirical import norm_sample, uniform_sample
+from src.temporal_networks.distempirical import norm_sample, uniform_sample
 
 
-class Edge(object):
-    """ Represents a temporal constraint in the STN """
+class Constraint(object):
+    """ Represents a temporal constraint between two nodes in the STN
+        i: starting node
+        j: ending node
 
-    def __init__(self, starting_node, ending_node, weight, distribution=None):
+        The constraint
+        i --- [-wji, wij] ---> j
+        Maps to two edges in a distance graph
+        i --- wij ---> j
+        i <--- -wji --- j
+
+        -wji is the lower bound (minimum allocated time between i and j)
+         wij is the upper bound (maximum allocated time between i and j)
+
+        If there is no upper bound, its value is set to infinity and the edge from i to j does not exist
+        Eg, i ---[4, inf] ---> j
+        is mapped to
+        i <--- -4 --- j
+    """
+
+    def __init__(self, i, j, min_time, max_time, distribution=None):
         # node where the constraint starts
-        self.starting_node_id = starting_node
+        self.i = i
         # node where the constraint ends
-        self.ending_node_id = ending_node
-        # Time allotted between the starting and ending node
-        self.weight = weight
-        # Probability distribution (for contingent edges)
+        self.j = j
+        # Minimum allocated time between i and j
+        self.wji = -min_time
+        # Maximum allocated time between i and j
+        if max_time == 'inf':
+            max_time = float('inf')
+        self.wij = max_time
+        # Probability distribution (for contingent constraints)
         self.distribution = distribution
-        # Duration (for contingent edges)
-        # The duration is sampled from the probability distribution
+        # Duration (for contingent constraints) sampled from the probability distribution
         self.sampled_duration = 0
-        # The edge is a contingent edge if it has a probability distribution
+        # The constraint is contingent if it has a probability distribution
         self.is_contingent = distribution is not None
-        # The edge is a requirement edge if it does not have a probability distribution
-        self.is_requirement = distribution is None
 
     def __repr__(self):
-        return "Edge {} => {} [{}]".format(self.starting_node_id, self.ending_node_id, str(self.weight))
-
-    def __hash__(self):
-        return hash((self.starting_node_id, self.ending_node_id, self.weight, self.distribution, self.sampled_duration, self.is_contingent, self.is_requirement))
-
-    def __eq__(self, other):
-        if other is None:
-            return False
-        return (self.starting_node_id == other.starting_node_id
-        and self.ending_node_id == other.ending_node_id
-        and self.weight == other.weight
-        and self.distribution == other.distribution
-        and self.sampled_duration == other.sampled_duration
-        and self.is_contingent == other.is_contingent
-        and self.is_requirement == other.is_requirement)
-
-    def get_attr_dict(self):
-        """Returns the edge attributes as a dictionary"""
-        attr_dict = {'distribution': self.distribution,
-                    'sampled_duration': self.sampled_duration,
-                    'is_contingent': self.is_contingent,
-                    'is_requirement': self.is_requirement}
-        return attr_dict
+        return "Constraint {} => {} [{}, {}]".format(self.i, self.j, -self.wji, self.wij)
 
     def dtype(self):
         """Returns the distribution edge type as a String. If no there is

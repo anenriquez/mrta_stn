@@ -1,6 +1,6 @@
 """ Based on: https://github.com/HEATlab/DREAM/blob/master/libheat/stntools/stn.py """
 
-from structs.task import Task
+from src.structs.task import Task
 
 
 class Node(object):

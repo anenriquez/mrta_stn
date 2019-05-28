@@ -3,12 +3,15 @@
 import networkx as nx
 
 
-class STN(nx.DiGraph):
-    """ A Simple Temporal Network (STN) is represented using networkx """
+class STNU(nx.DiGraph):
+    """ Represents a Simple Temporal Network (STN) as a networkx directed graph
+    """
     def __init__(self):
         nx.DiGraph.__init__(self)
         # List of node ids of received contingent timepoints
         self.received_timepoints = []
+        # {(starting_node, ending_node): Constraint object}
+        self.constraints = {}
         # {(starting_node, ending_node): Constraint object}
         self.contingent_constraints = {}
         # {(starting_node, ending_node): Constraint object}
@@ -18,46 +21,51 @@ class STN(nx.DiGraph):
 
     def __str__(self):
         to_print = ""
-        for edge in self.edges():
-            # if the edge is connected to the zero_timepoint
-            if edge[0] == 0:
-                timepoint = self.node[edge[1]]['data']
-                lower_bound = -self[edge[1]][edge[0]]['weight']
-                upper_bound = self[edge[0]][edge[1]]['weight']
-
+        for (i, j), constraint in sorted(self.constraints.items()):
+            # if the constraint is connected to the zero_timepoint
+            if i == 0:
+                timepoint = self.node[j]['data']
+                lower_bound = -self[j][i]['weight']
+                upper_bound = self[i][j]['weight']
                 to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
+
+                if constraint.distribution is not None:
+                    to_print += " ({})".format(constraint.distribution)
+                if timepoint.is_executed():
+                    to_print += " Ex"
             else:
-                # ignore edges connected to zero_timepoint
-                if edge[1] != 0:
-                    starting_node_id = edge[0]
-                    ending_node_id = edge[1]
-                    lower_bound = -self[starting_node_id][ending_node_id]['weight']
-                    sampled_value = self[starting_node_id][ending_node_id]['data'].sampled_duration
-
-                    if self.has_edge(ending_node_id, starting_node_id):
-                        upper_bound = self[ending_node_id][starting_node_id]['weight']
-                    else:
-                        upper_bound = 'inf'
-
-                    to_print += "Edge {} => {}: [{}, {}], Sampled value: [{}]".format(starting_node_id, ending_node_id, lower_bound, upper_bound, sampled_value)
+                to_print += "Constraint {} => {}: [{}, {}], Sampled value: [{}]".format(
+                    constraint.i, constraint.j, -self[j][i]['weight'], self[i][j]['weight'], constraint.sampled_duration)
+                if constraint.distribution is not None:
+                    to_print += " ({})".format(constraint.distribution)
             to_print += "\n"
         return to_print
 
     def add_constraint(self, constraint):
-        """Adds a temporal constraint to the STN"""
-        i = constraint.starting_node_id
-        j = constraint.ending_node_id
-        # self.add_edge(i, j, weight=constraint.weight, data=constraint.get_attr_dict())
-        self.add_edge(i, j, weight=constraint.weight, data=constraint)
+        """Add the edges of a constraint to the STN
+        i: starting node
+        j: ending node
+
+        A constraint
+        i --- [-wji, wij] ---> j
+        Is mapped to two edges in the STN
+        i --- wij ---> j
+        i <--- -wji --- j
+        """
+
+        i = constraint.i  # starting node
+        j = constraint.j  # ending_node
+
+        self.add_edge(i, j, weight=constraint.wij)
+        self.add_edge(j, i, weight=constraint.wji)
+
+        self.constraints[(i, j)] = constraint
 
         if constraint.is_contingent:
-            self.contingent_constraints[(i, j)] = self[i][j]
+            self.contingent_constraints[(i, j)] = constraint
             self.received_timepoints += [j]
         else:
-            self.requirement_constraints[(i, j)] = self[i][j]
-
-    # def get_minimal_stn(self):
-    #     return nx.floyd_warshall(stn)
+            self.requirement_constraints[(i, j)] = constraint
 
     def is_consistent(self, minimal_stn):
         """The STN is not consistent if it has negative cycles"""
@@ -68,21 +76,34 @@ class STN(nx.DiGraph):
         return consistent
 
     def update_edges(self, minimal_stn, create=False):
-        """Update edges in the STN to reflect the distances in the minimal stn"""
+        """Update edges in the STN to reflect the distances in the minimal stn
+        """
+        print("Minimal stn: ", minimal_stn)
         for column, row in minimal_stn.items():
             nodes = dict(row)
             for n in nodes:
-                # if self.has_edge(column, n):
-                # Updating edge
                 self.update_edge_weight(column, n, minimal_stn[column][n])
 
-    def update_edge_weight(self, starting_node_id, ending_node_id, weight, create=False):
-        if self.has_edge(starting_node_id, ending_node_id):
-            self[starting_node_id][ending_node_id]['weight'] = weight
+    def update_edge_weight(self, i, j, weight, create=False):
+        """ Updates the weight of the edge between node i and node j
+        :param i: starting_node_id
+        :parma j: ending_node_id
+        """
+        if self.has_edge(i, j):
+            self[i][j]['weight'] = weight
+
+    def get_edge_weight(self, i, j):
+        """ Returns the weight of the edge between node i and node j
+        :param i: starting_node_id
+        :parma j: ending_node_id
+        """
+        if self.has_edge(i, j):
+            return self[i][j]['weight']
         else:
-            if create:
-                new_edge = Edge(starting_node_id, ending_node_id, weight)
-                self.add_constraint(new_edge)
+            if i == j and self.has_node(i):
+                return 0
+            else:
+                return float('inf')
 
     def update_time_schedule(self, minimal_stn):
         """Updates the start time, finish time and pickup_start_time of scheduled takes"""
@@ -144,35 +165,3 @@ class STN(nx.DiGraph):
         node_last_task = nodes[-1]
         last_task_finish_time = self.node[node_last_task]['data'].task.finish_time
         return last_task_finish_time
-
-
-
-    # def draw_stn(self):
-    #     nx.draw(self, with_labels=True, font_weight='bold')
-    #     plt.show()
-
-# if __name__ == "__main__":
-#     node0 = Node(0)
-#     node1 = Node(1)
-#
-#     stn = STN()
-#
-#     constraint1 = Edge(node0, node1, 46)
-#     constraint2 = Edge(node1, node0, -41)
-#
-#     stn.add_constraint(constraint1)
-#     stn.add_constraint(constraint2)
-#     minimal_stn = stn.get_minimal_stn()
-#
-#     edges = stn.edges.data()
-#     print("Nodes:", stn.nodes.data())
-#     print("Edges:", edges)
-#
-#     print("Minimal STN")
-#     print(minimal_stn)
-#     print(stn.is_consistent(minimal_stn))
-#
-#     stn.draw_stn()
-
-    # nx.draw(stn, with_labels=True, font_weight='bold')
-    # plt.show()
