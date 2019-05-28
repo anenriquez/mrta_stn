@@ -48,37 +48,29 @@ if __name__ == "__main__":
     print("Nodes: {}\n".format(stnu.nodes.data()))
     print("Edges: {}\n".format(stnu.edges.data()))
 
-    stnu2_dict = stnu.to_dict()
+    # stnu2_dict = stnu.to_dict()
+    #
+    # stnu2 = STNU.from_dict(stnu2_dict)
+    #
+    # print("STNU2: ", stnu)
+    # print("Nodes: {}\n".format(stnu2.nodes.data()))
+    # print("Edges: {}\n".format(stnu2.edges.data()))
 
-    stnu2 = STNU.from_dict(stnu2_dict)
-
-    print("STNU2: ", stnu)
-    print("Nodes: {}\n".format(stnu2.nodes.data()))
-    print("Edges: {}\n".format(stnu2.edges.data()))
-
-    print("Calculating the minimal STNU...")
-    minimal_stnu = nx.floyd_warshall(stnu)
-    print(minimal_stnu)
-    print('')
-
-    if stnu.is_consistent(minimal_stnu):
-        print("The STNU is consistent")
-        stnu.update_edges(minimal_stnu)
-        stnu.update_time_schedule(minimal_stnu)
-
-    print("Completion time: ", stnu.get_completion_time())
-    print("Makespan: ", stnu.get_makespan())
+    # print("Calculating the minimal STNU...")
+    # minimal_stnu = nx.floyd_warshall(stnu)
+    # print(minimal_stnu)
+    # print('')
+    #
+    # if stnu.is_consistent(minimal_stnu):
+    #     print("The STNU is consistent")
+    #     stnu.update_edges(minimal_stnu)
+    #     stnu.update_time_schedule(minimal_stnu)
+    #
+    # print("Completion time: ", stnu.get_completion_time())
+    # print("Makespan: ", stnu.get_makespan())
     # nx.draw(stnu, with_labels=True, font_weight='bold')
     # plt.show()
 
     # print('')
-    # print("Simulating execution of STNU")
-    # simulate(stn, 'srea')
-
-
-        #print(stn.get_edge_data(0, starting_node)['weight'])
-
-    # stn.get_edge_data(0, starting_node)['weight']
-
-
-    #https://stackoverflow.com/questions/48543460/how-to-use-user-defined-class-object-as-a-networkx-node
+    print("Simulating execution of STNU")
+    simulate(stnu, 'srea')
