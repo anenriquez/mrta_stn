@@ -35,7 +35,7 @@ MAX_SEED = 2 ** 31 - 1
 
 def get_stnu_dict():
     """Reads an STNU from a json file and returns it as a dict"""
-    with open('data/stnu_two_tasks.json') as json_file:
+    with open('tests/data/stnu_two_tasks.json') as json_file:
         stnu_dict = json.load(json_file)
     return stnu_dict
 
