@@ -2,7 +2,7 @@
 
 from setuptools import setup
 
-setup(name='temporal_models',
+setup(name='mrta_temporal_models',
       version='0.1.0',
       description='Includes simple temporal networks like STNU',
       author='Angela Enriquez Gomez',
