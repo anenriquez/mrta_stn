@@ -81,7 +81,6 @@ class STNU(nx.DiGraph):
     def update_edges(self, minimal_stn, create=False):
         """Update edges in the STN to reflect the distances in the minimal stn
         """
-        print("Minimal stn: ", minimal_stn)
         for column, row in minimal_stn.items():
             nodes = dict(row)
             for n in nodes:
