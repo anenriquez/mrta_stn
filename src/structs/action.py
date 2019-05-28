@@ -1,7 +1,7 @@
 ''' Taken from https://github.com/ropod-project/ropod_common
 '''
 
-from ropod.structs.area import Area, SubArea
+from src.structs.area import Area, SubArea
 
 class Action(object):
     def __init__(self):

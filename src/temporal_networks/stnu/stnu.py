@@ -1,6 +1,29 @@
-""" Based on: https://github.com/HEATlab/DREAM/blob/master/libheat/stntools/stn.py """
+# Based on: https://github.com/HEATlab/DREAM/blob/master/libheat/stntools/stn.py
+#
+# MIT License
+#
+# Copyright (c) 2019 HEATlab
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
 import networkx as nx
+from src.temporal_networks.stnu import Node, Constraint
 
 
 class STNU(nx.DiGraph):
@@ -9,13 +32,13 @@ class STNU(nx.DiGraph):
     def __init__(self):
         nx.DiGraph.__init__(self)
         # List of node ids of received contingent timepoints
-        self.received_timepoints = []
+        self.received_timepoints = list()
         # {(starting_node, ending_node): Constraint object}
-        self.constraints = {}
+        self.constraints = dict()
         # {(starting_node, ending_node): Constraint object}
-        self.contingent_constraints = {}
+        self.contingent_constraints = dict()
         # {(starting_node, ending_node): Constraint object}
-        self.requirement_constraints = {}
+        self.requirement_constraints = dict()
         # Time difference between the finish time of the last timepoint and the start time of the first timepoint in the STN
         self.completion_time = 0
 
@@ -31,11 +54,11 @@ class STNU(nx.DiGraph):
 
                 if constraint.distribution is not None:
                     to_print += " ({})".format(constraint.distribution)
-                if timepoint.is_executed():
+                if timepoint.is_executed:
                     to_print += " Ex"
             else:
                 to_print += "Constraint {} => {}: [{}, {}], Sampled value: [{}]".format(
-                    constraint.i, constraint.j, -self[j][i]['weight'], self[i][j]['weight'], constraint.sampled_duration)
+                    constraint.starting_node_id, constraint.ending_node_id, -self[j][i]['weight'], self[i][j]['weight'], constraint.sampled_duration)
                 if constraint.distribution is not None:
                     to_print += " ({})".format(constraint.distribution)
             to_print += "\n"
@@ -43,21 +66,21 @@ class STNU(nx.DiGraph):
 
     def add_constraint(self, constraint):
         """Add the edges of a constraint to the STN
-        i: starting node
-        j: ending node
+        starting_node: starting node
+        ending_node: ending node
 
         A constraint
-        i --- [-wji, wij] ---> j
+        starting_node --- [-min_time, max_time] ---> ending_node
         Is mapped to two edges in the STN
-        i --- wij ---> j
-        i <--- -wji --- j
+        starting_node --- max_time ---> ending_node
+        starting_node <--- -min_time --- ending_node
         """
 
-        i = constraint.i  # starting node
-        j = constraint.j  # ending_node
+        i = constraint.starting_node_id
+        j = constraint.ending_node_id
 
-        self.add_edge(i, j, weight=constraint.wij)
-        self.add_edge(j, i, weight=constraint.wji)
+        self.add_edge(i, j, weight=constraint.max_time)
+        self.add_edge(j, i, weight=constraint.min_time)
 
         self.constraints[(i, j)] = constraint
 
@@ -78,24 +101,23 @@ class STNU(nx.DiGraph):
     def update_edges(self, minimal_stn, create=False):
         """Update edges in the STN to reflect the distances in the minimal stn
         """
-        print("Minimal stn: ", minimal_stn)
         for column, row in minimal_stn.items():
             nodes = dict(row)
             for n in nodes:
                 self.update_edge_weight(column, n, minimal_stn[column][n])
 
     def update_edge_weight(self, i, j, weight, create=False):
-        """ Updates the weight of the edge between node i and node j
+        """ Updates the weight of the edge between node starting_node and node ending_node
         :param i: starting_node_id
-        :parma j: ending_node_id
+        :parma ending_node: ending_node_id
         """
         if self.has_edge(i, j):
             self[i][j]['weight'] = weight
 
     def get_edge_weight(self, i, j):
-        """ Returns the weight of the edge between node i and node j
+        """ Returns the weight of the edge between node starting_node and node ending_node
         :param i: starting_node_id
-        :parma j: ending_node_id
+        :parma ending_node: ending_node_id
         """
         if self.has_edge(i, j):
             return self[i][j]['weight']
@@ -165,3 +187,45 @@ class STNU(nx.DiGraph):
         node_last_task = nodes[-1]
         last_task_finish_time = self.node[node_last_task]['data'].task.finish_time
         return last_task_finish_time
+
+    def to_dict(self):
+        stnu_dict = dict()
+        stnu_dict['nodes'] = list()
+        for node in self.nodes():
+            stnu_dict['nodes'].append(self.node[node]['data'].to_dict())
+            print("Printing the nodes")
+            print(self.node[node]['data'])
+        #     stnu_dict['nodes'].append(node.to_dict())
+        stnu_dict['constraints'] = list()
+        for (i, j), constraint in self.constraints.items():
+            stnu_dict['constraints'].append(constraint.to_dict())
+        return stnu_dict
+
+    @staticmethod
+    def from_dict(stnu_dict):
+        stnu = STNU()
+        zero_timepoint_exists = False
+
+        for node_dict in stnu_dict['nodes']:
+            node = Node.from_dict(node_dict)
+            stnu.add_node(node.id, data=node)
+            if node.id != 0:
+                # Adding starting and ending node temporal constraint
+                if node.is_task_start:
+                    start_time = Constraint(0, node.id, node.task.earliest_start_time, node.task.latest_start_time)
+                    stnu.add_constraint(start_time)
+                elif node.is_task_end:
+                    finish_time = Constraint(0, node.id, node.task.earliest_finish_time, node.task.latest_finish_time)
+                    stnu.add_constraint(finish_time)
+            else:
+                zero_timepoint_exists = True
+
+        if zero_timepoint_exists is not True:
+            # Adding the zero timepoint
+            zero_timepoint = Node(0)
+            stnu.add_node(0, data=zero_timepoint)
+
+        for constraint_dict in stnu_dict['constraints']:
+            constraint = Constraint.from_dict(constraint_dict)
+            stnu.add_constraint(constraint)
+        return stnu

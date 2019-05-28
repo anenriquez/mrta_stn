@@ -1,6 +1,27 @@
-"""
-Taken from: https://github.com/HEATlab/DREAM/blob/master/libheat/srea.py
+# Based on https://github.com/HEATlab/DREAM/blob/master/libheat/srea.py
+# MIT License
+#
+# Copyright (c) 2019 HEATlab
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
+"""
 Contains the core of the SREA algorithm.
 
 This file is mostly unchanged from the original RobotBrunch code.
@@ -99,11 +120,11 @@ def setUpLP(stn, decouple):
                               <= stn.get_edge_weight(j, i), prob)
 
             # For now, we dont have interagentEdges
-            # elif edge[0] != 0 and (i, j) in stn.interagentEdges:
-            #     addConstraint(bounds[(j, '+')] - bounds[(i, '-')]
-            #                   <= stn.get_edge_weight(i, j), prob)
-            #     addConstraint(bounds[(i, '+')] - bounds[(j, '-')]
-            #                   <= stn.get_edge_weight(j, i), prob)
+            # elif edge[0] != 0 and (starting_node, ending_node) in stn.interagentEdges:
+            #     addConstraint(bounds[(ending_node, '+')] - bounds[(starting_node, '-')]
+            #                   <= stn.get_edge_weight(starting_node, ending_node), prob)
+            #     addConstraint(bounds[(starting_node, '+')] - bounds[(ending_node, '-')]
+            #                   <= stn.get_edge_weight(ending_node, starting_node), prob)
     return (bounds, deltas, prob)
 
 
@@ -245,8 +266,8 @@ def srea_LP(inputstn,
         bounds, deltas, prob = probContainer
 
     for (i, j), constraint in inputstn.contingent_constraints.items():
-        # i, j = edge
-        # constraint = inputstn[i][j]['data']
+        # starting_node, ending_node = edge
+        # constraint = inputstn[starting_node][ending_node]['data']
         if constraint.dtype() == "gaussian":
             p_ij = invcdf_norm(1.0 - alpha * 0.5, constraint.mu, constraint.sigma)
             p_ji = -invcdf_norm(alpha * 0.5, constraint.mu, constraint.sigma)
@@ -349,14 +370,14 @@ def srea_LP(inputstn,
 #        alpha, stn = output
 #        # print getRobustness(stn)
 #        stn.minimize()
-#        for (i, j), edge in list(stn.contingent_edges.items()):
-#            edge_i = stn.getEdge(0, i)
-#            edge_j = stn.getEdge(0, j)
+#        for (starting_node, ending_node), edge in list(stn.contingent_edges.items()):
+#            edge_i = stn.getEdge(0, starting_node)
+#            edge_j = stn.getEdge(0, ending_node)
 #            edge.Cij = edge_j.getWeightMax()-edge_i.getWeightMax()
 #            edge.Cji = - (edge_j.getWeightMin()-edge_i.getWeightMin())
 #            # this loop ensures that the output STN with integer edge weights is still
 #            # strongly controllable
-#            for connected_edge in stn.getOutgoing(j):
+#            for connected_edge in stn.getOutgoing(ending_node):
 #                edge.Cji = -max(-edge.Cji, edge.Cij -
 #                                connected_edge.Cji-connected_edge.Cij)
 #        return stn
