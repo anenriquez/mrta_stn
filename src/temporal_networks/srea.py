@@ -1,6 +1,27 @@
-"""
-Taken from: https://github.com/HEATlab/DREAM/blob/master/libheat/srea.py
+# Based on https://github.com/HEATlab/DREAM/blob/master/libheat/srea.py
+# MIT License
+#
+# Copyright (c) 2019 HEATlab
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
+"""
 Contains the core of the SREA algorithm.
 
 This file is mostly unchanged from the original RobotBrunch code.
@@ -11,10 +32,12 @@ Authors: Jordan R Abrahams, Kyle Lund, Sam Dietrich
 from math import floor, ceil
 import pulp
 import copy
-import networkx
+import networkx as nx
 
-from temporal.stn import STN
-from temporal.distempirical import invcdf_norm, invcdf_uniform
+# from src.temporal_networks.stnu import STNU
+from src.temporal_networks.stnu import STNU
+# import src.temporal_networks.stnu.stnu
+from src.temporal_networks.distempirical import invcdf_norm, invcdf_uniform
 
 # \file SREA.py
 #
@@ -51,43 +74,57 @@ def setUpLP(stn, decouple):
 
     prob = pulp.LpProblem('PSTN Robust Execution LP', pulp.LpMaximize)
 
+    print("Input STN: ", stn)
+
     # ##
     # Store Original STN edges and objective variables for easy access.
     # Not part of LP yet
     # ##
 
     for i in stn.nodes():
+        print("SREA verts: ", i)
         bounds[(i, '+')] = pulp.LpVariable('t_%d_hi' % i,
-                                           lowBound=-stn.get_edge_data(1, 0)['weight'],
-                                           upBound=stn.get_edge_data(0, i)['weight'])
+                                           lowBound=-stn.get_edge_weight(i, 0),
+                                           upBound=stn.get_edge_weight(0, i))
+        print("Lower bound + : ", -stn.get_edge_weight(i, 0))
+        print("Upper bound + : ", stn.get_edge_weight(0, i))
         bounds[(i, '-')] = pulp.LpVariable('t_%d_lo' % i,
-                                           lowBound=-stn.get_edge_data(i, 0)['weight'],
-                                           upBound=stn.get_edge_data(0, i)['weight'])
+                                           lowBound=-stn.get_edge_weight(i, 0),
+                                           upBound=stn.get_edge_weight(0, i))
+        print("Lower bound - : ", -stn.get_edge_weight(i, 0))
+        print("Upper bound - : ", stn.get_edge_weight(0, i))
+
         condition = bounds[(i, '+')] >= bounds[(i, '-')]
         addConstraint(condition, prob)
 
     for edge in stn.edges():
-        if (edge[0], edge[1]) in stn.contingent_edges:
-            deltas[(edge[0], edge[1])] = pulp.LpVariable('delta_%d_%d' %
+        i, j = edge
+        print("Edge ({}, {})".format(i, j))
+        if (i, j) in stn.contingent_constraints:
+            print("Contingent constraint: ", stn[i][j])
+            print("{}, {}".format(i, j))
+            deltas[(i, j)] = pulp.LpVariable('delta_%d_%d' %
                                              (i, j), lowBound=0, upBound=None)
-            deltas[(edge[1], edge[0])] = pulp.LpVariable('delta_%d_%d' %
+            deltas[(j, i)] = pulp.LpVariable('delta_%d_%d' %
                                              (j, i), lowBound=0, upBound=None)
 
         else:
             # ignore edges from z. these edges are implicitly handled
             # with the bounds on the LP variables
-            if edge[0] != 0 and not decouple:
+            # also ignore complementary edges of contingent constraints
+            if i != 0 and j != 0 and (j, i) not in stn.contingent_constraints and not decouple:
+                print("Adding extra constraints ({}, {})".format(i, j))
                 addConstraint(bounds[(j, '+')] - bounds[(i, '-')]
-                              <= stn.get_edge_data(edge[0], edges[1])['weight'], prob)
+                              <= stn.get_edge_weight(i, j), prob)
                 addConstraint(bounds[(i, '+')] - bounds[(j, '-')]
-                              <= stn.get_edge_data(edge[1], edge[0])['weight'], prob)
+                              <= stn.get_edge_weight(j, i), prob)
 
             # For now, we dont have interagentEdges
-            # elif edge[0] != 0 and (i, j) in stn.interagentEdges:
-            #     addConstraint(bounds[(j, '+')] - bounds[(i, '-')]
-            #                   <= stn.get_edge_weight(i, j), prob)
-            #     addConstraint(bounds[(i, '+')] - bounds[(j, '-')]
-            #                   <= stn.get_edge_weight(j, i), prob)
+            # elif edge[0] != 0 and (starting_node, ending_node) in stn.interagentEdges:
+            #     addConstraint(bounds[(ending_node, '+')] - bounds[(starting_node, '-')]
+            #                   <= stn.get_edge_weight(starting_node, ending_node), prob)
+            #     addConstraint(bounds[(starting_node, '+')] - bounds[(ending_node, '-')]
+            #                   <= stn.get_edge_weight(ending_node, starting_node), prob)
     return (bounds, deltas, prob)
 
 
@@ -113,7 +150,7 @@ def srea(inputstn,
          lb=0.0,
          ub=0.999):
     # inputstn = inputstn.copy()
-    # inputstn = copy.deepcopy(inputstn)
+    inputstn = copy.deepcopy(inputstn)
     # dictionary of alphas for binary search
     alphas = {i: i / 1000.0 for i in range(1001)}
 
@@ -130,6 +167,17 @@ def srea(inputstn,
         minimal_stn = nx.floyd_warshall(inputstn)
         inputstn.update_edges(minimal_stn)
     bounds, deltas, probBase = setUpLP(inputstn, decouple)
+
+    print("Bounds:")
+    for bound in bounds:
+        print("{}:{}".format(bound, bounds[bound]))
+        print("")
+
+    print("Deltas:")
+    for delta in deltas:
+        print("{}:{}".format(delta, deltas[delta]))
+        print("")
+    print("probBase: ", probBase)
 
     # First run binary search on alpha
     while upper - lower > 1:
@@ -205,7 +253,7 @@ def srea_LP(inputstn,
             ):
 
     # Check some types to make sure everything is the correct type
-    if not isinstance(inputstn, STN):
+    if not isinstance(inputstn, STNU):
         raise TypeError("inputstn is not of type STN")
 
     alpha = round(float(alpha), 3)
@@ -217,30 +265,27 @@ def srea_LP(inputstn,
     else:
         bounds, deltas, prob = probContainer
 
-    for edge, attr in inputstn.contingent_constraints.items():
-        # if edge.dtype() == "gaussian":
-        constraint = inputstn[edge[0]][edge[1]]['data']
+    for (i, j), constraint in inputstn.contingent_constraints.items():
+        # starting_node, ending_node = edge
+        # constraint = inputstn[starting_node][ending_node]['data']
         if constraint.dtype() == "gaussian":
-            p_ij = invcdf_norm(1.0 - alpha * 0.5, edge.mu, edge.sigma)
-            p_ji = -invcdf_norm(alpha * 0.5, edge.mu, edge.sigma)
-            limit_ij = invcdf_norm(0.997, edge.mu, edge.sigma)
-            limit_ji = -invcdf_norm(0.003, edge.mu, edge.sigma)
-            # p_ij = 1000*invCDF_map[edge.distribution][one_minus_alpha]
-            # p_ji = -1000*invCDF_map[edge.distribution][alpha]
-            # limit_ij = 1000*invCDF_map[edge.distribution]['1.0']
-            # limit_ji = -1000*invCDF_map[edge.distribution]['0.0']
+            p_ij = invcdf_norm(1.0 - alpha * 0.5, constraint.mu, constraint.sigma)
+            p_ji = -invcdf_norm(alpha * 0.5, constraint.mu, constraint.sigma)
+            limit_ij = invcdf_norm(0.997, constraint.mu, constraint.sigma)
+            limit_ji = -invcdf_norm(0.003, constraint.mu, constraint.sigma)
+
         elif constraint.dtype() == "uniform":
-            p_ij = invcdf_uniform(1.0 - alpha * 0.5, edge.dist_lb,
-                                  edge.dist_ub)
-            p_ji = -invcdf_uniform(alpha * 0.5, edge.dist_lb, edge.dist_ub)
-            limit_ij = invcdf_uniform(0.0, edge.dist_lb, edge.dist_ub)
-            limit_ji = -invcdf_uniform(1.0, edge.dist_lb, edge.dist_ub)
+            p_ij = invcdf_uniform(1.0 - alpha * 0.5, constraint.dist_lb,
+                                  constraint.dist_ub)
+            p_ji = -invcdf_uniform(alpha * 0.5, constraint.dist_lb, constraint.dist_ub)
+            limit_ij = invcdf_uniform(0.0, constraint.dist_lb, constraint.dist_ub)
+            limit_ji = -invcdf_uniform(1.0, constraint.dist_lb, constraint.dist_ub)
 
-        deltas[(edge[0], edge[1])].upBound = limit_ij - p_ij
-        deltas[(edge[0], edge[1])].upBound = limit_ji - p_ji
+        deltas[(i, j)].upBound = limit_ij - p_ij
+        deltas[(i, j)].upBound = limit_ji - p_ji
 
-        cons1 = bounds[(j, "+")] - bounds[(i, "+")] == p_ij + deltas[(edge[0], edge[1])]
-        cons2 = bounds[(j, "-")] - bounds[(i, "-")] == -p_ji - deltas[(edge[1], edge[0])]
+        cons1 = bounds[(j, "+")] - bounds[(i, "+")] == p_ij + deltas[(i, j)]
+        cons2 = bounds[(j, "-")] - bounds[(i, "-")] == -p_ji - deltas[(j, i)]
         # Lund et al. LP (3)
         addConstraint(cons1, prob)
         # Lund et al. LP (4)
@@ -325,14 +370,14 @@ def srea_LP(inputstn,
 #        alpha, stn = output
 #        # print getRobustness(stn)
 #        stn.minimize()
-#        for (i, j), edge in list(stn.contingent_edges.items()):
-#            edge_i = stn.getEdge(0, i)
-#            edge_j = stn.getEdge(0, j)
+#        for (starting_node, ending_node), edge in list(stn.contingent_edges.items()):
+#            edge_i = stn.getEdge(0, starting_node)
+#            edge_j = stn.getEdge(0, ending_node)
 #            edge.Cij = edge_j.getWeightMax()-edge_i.getWeightMax()
 #            edge.Cji = - (edge_j.getWeightMin()-edge_i.getWeightMin())
 #            # this loop ensures that the output STN with integer edge weights is still
 #            # strongly controllable
-#            for connected_edge in stn.getOutgoing(j):
+#            for connected_edge in stn.getOutgoing(ending_node):
 #                edge.Cji = -max(-edge.Cji, edge.Cij -
 #                                connected_edge.Cji-connected_edge.Cij)
 #        return stn

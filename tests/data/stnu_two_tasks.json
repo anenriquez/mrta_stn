@@ -16,12 +16,12 @@
             "subAreas": [],
             "type": ""
         },
-        "earliest_finish_time": 1540719652.0,
-        "earliest_start_time": 1540719649,
+        "earliest_finish_time": 41.0,
+        "earliest_start_time": 41.0,
         "estimated_duration": 4.0,
         "finish_time": -1,
-        "latest_finish_time": 1540719659.0,
-        "latest_start_time": 1540719654,
+        "latest_finish_time": 52.0,
+        "latest_start_time": 47.0,
         "loadId": "",
         "loadType": "",
         "pickup_pose":
@@ -46,7 +46,8 @@
         "team_robot_ids": null
       },
       "is_task_start": true,
-      "is_task_end": false
+      "is_task_end": false,
+      "is_executed": false
     },
     {
       "id": 2,
@@ -64,12 +65,12 @@
             "subAreas": [],
             "type": ""
         },
-        "earliest_finish_time": 1540719652.0,
-        "earliest_start_time": 1540719649,
+        "earliest_finish_time": 41.0,
+        "earliest_start_time": 41.0,
         "estimated_duration": 4.0,
         "finish_time": -1,
-        "latest_finish_time": 1540719659.0,
-        "latest_start_time": 1540719654,
+        "latest_finish_time": 52.0,
+        "latest_start_time": 47.0,
         "loadId": "",
         "loadType": "",
         "pickup_pose":
@@ -94,7 +95,8 @@
         "team_robot_ids": null
       },
       "is_task_start": false,
-      "is_task_end": true
+      "is_task_end": true,
+      "is_executed": false
     },
     {
       "id": 3,
@@ -111,13 +113,13 @@
             "subAreas": [],
             "type": ""
         },
-        "earliest_finish_time": 1540719707.0,
-        "earliest_start_time": 1540719704,
+        "earliest_finish_time": 96.0,
+        "earliest_start_time": 96.0,
         "estimated_duration": 4.0,
         "finish_time": -1,
         "id": "0616af00-ec3b-4ecd-ae62-c94a3703594c",
-        "latest_finish_time": 1540719714.0,
-        "latest_start_time": 1540719709,
+        "latest_finish_time": 107.0,
+        "latest_start_time": 102.0,
         "loadId": "",
         "loadType": "",
         "pickup_pose":
@@ -144,7 +146,8 @@
         "team_robot_ids": null
       },
       "is_task_start": true,
-      "is_task_end": false
+      "is_task_end": false,
+      "is_executed": false
     },
     {
       "id": 4,
@@ -161,13 +164,13 @@
               "subAreas": [],
               "type": ""
           },
-          "earliest_finish_time": 1540719707.0,
-          "earliest_start_time": 1540719704,
+          "earliest_finish_time": 96.0,
+          "earliest_start_time": 96.0,
           "estimated_duration": 4.0,
           "finish_time": -1,
           "id": "0616af00-ec3b-4ecd-ae62-c94a3703594c",
-          "latest_finish_time": 1540719714.0,
-          "latest_start_time": 1540719709,
+          "latest_finish_time": 107.0,
+          "latest_start_time": 102.0,
           "loadId": "",
           "loadType": "",
           "pickup_pose":
@@ -194,30 +197,29 @@
           "team_robot_ids": null
       },
       "is_task_start": false,
-      "is_task_end": true
+      "is_task_end": true,
+      "is_executed": false
     }
   ],
-  "edges":[
+  "constraints":[
     {
-      "starting_node":2,
-      "ending_node":1,
-      "weight":4,
-      "distribution": "N_4_1"
-    },
-    {
-      "starting_node":4,
-      "ending_node":3,
-      "weight":4,
-      "max_duration":"inf",
-      "distribution": "N_4_1"
-    },
+      "starting_node_id": 1,
+      "ending_node_id": 2,
+      "min_time": 4,
+      "max_time": "inf",
+      "distribution": "N_4_1",
+      "sampled_duration": 0,
+      "is_contingent": true
 
+    },
     {
-      "starting_node":3,
-      "ending_node":2,
-      "weight":6,
-      "distribution": "N_6_1"
+      "starting_node_id":3,
+      "ending_node_id":4,
+      "min_time": 4,
+      "max_time": "inf",
+      "distribution": "N_4_1",
+      "sampled_duration": 0,
+      "is_contingent": true
     }
-  ],
-  "num_agents":1
+  ]
 }
