@@ -23,17 +23,17 @@ class Constraint(object):
         i <--- -4 --- j
     """
 
-    def __init__(self, i, j, min_time, max_time, distribution=None):
+    def __init__(self, i=0, j=0, wji=-1, wij=-1, distribution=None):
         # node where the constraint starts
-        self.i = i
+        self.starting_node_id = i
         # node where the constraint ends
-        self.j = j
+        self.ending_node_id = j
         # Minimum allocated time between i and j
-        self.wji = -min_time
+        self.min_time = -wji
         # Maximum allocated time between i and j
-        if max_time == 'inf':
-            max_time = float('inf')
-        self.wij = max_time
+        if wij == 'inf':
+            wij = float('inf')
+        self.max_time = wij
         # Probability distribution (for contingent constraints)
         self.distribution = distribution
         # Duration (for contingent constraints) sampled from the probability distribution
@@ -42,7 +42,7 @@ class Constraint(object):
         self.is_contingent = distribution is not None
 
     def __repr__(self):
-        return "Constraint {} => {} [{}, {}]".format(self.i, self.j, -self.wji, self.wij)
+        return "Constraint {} => {} [{}, {}]".format(self.starting_node_id, self.ending_node_id, -self.min_time, self.max_time)
 
     def dtype(self):
         """Returns the distribution edge type as a String. If no there is
@@ -102,3 +102,30 @@ class Constraint(object):
         if len(name_split) != 3 or name_split[0] != "U":
             raise ValueError("No lower bound for non-uniform dist")
         return float(name_split[1]) * 1000
+
+    def to_dict(self):
+        constraint_dict = dict()
+        constraint_dict['starting_node_id'] = self.starting_node_id
+        constraint_dict['ending_node_id'] = self.ending_node_id
+        constraint_dict['min_time'] = - self.min_time
+        if self.max_time == float('inf'):
+            self.max_time = 'inf'
+        constraint_dict['max_time'] = self.max_time
+        constraint_dict['distribution'] = self.distribution
+        constraint_dict['sampled_duration'] = self.sampled_duration
+        constraint_dict['is_contingent'] = self.is_contingent
+        return constraint_dict
+
+    @staticmethod
+    def from_dict(constraint_dict):
+        constraint = Constraint()
+        constraint.starting_node_id = constraint_dict['starting_node_id']
+        constraint.ending_node_id = constraint_dict['ending_node_id']
+        constraint.min_time = -constraint_dict['min_time']
+        if constraint_dict['max_time'] == 'inf':
+            constraint_dict['max_time'] = float('inf')
+        constraint.max_time = constraint_dict['max_time']
+        constraint.distribution = constraint_dict['distribution']
+        constraint.sampled_duration = constraint_dict['sampled_duration']
+        constraint.is_contingent = constraint_dict['is_contingent']
+        return constraint

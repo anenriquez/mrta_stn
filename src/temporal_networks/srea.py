@@ -99,11 +99,11 @@ def setUpLP(stn, decouple):
                               <= stn.get_edge_weight(j, i), prob)
 
             # For now, we dont have interagentEdges
-            # elif edge[0] != 0 and (i, j) in stn.interagentEdges:
-            #     addConstraint(bounds[(j, '+')] - bounds[(i, '-')]
-            #                   <= stn.get_edge_weight(i, j), prob)
-            #     addConstraint(bounds[(i, '+')] - bounds[(j, '-')]
-            #                   <= stn.get_edge_weight(j, i), prob)
+            # elif edge[0] != 0 and (starting_node, ending_node) in stn.interagentEdges:
+            #     addConstraint(bounds[(ending_node, '+')] - bounds[(starting_node, '-')]
+            #                   <= stn.get_edge_weight(starting_node, ending_node), prob)
+            #     addConstraint(bounds[(starting_node, '+')] - bounds[(ending_node, '-')]
+            #                   <= stn.get_edge_weight(ending_node, starting_node), prob)
     return (bounds, deltas, prob)
 
 
@@ -245,8 +245,8 @@ def srea_LP(inputstn,
         bounds, deltas, prob = probContainer
 
     for (i, j), constraint in inputstn.contingent_constraints.items():
-        # i, j = edge
-        # constraint = inputstn[i][j]['data']
+        # starting_node, ending_node = edge
+        # constraint = inputstn[starting_node][ending_node]['data']
         if constraint.dtype() == "gaussian":
             p_ij = invcdf_norm(1.0 - alpha * 0.5, constraint.mu, constraint.sigma)
             p_ji = -invcdf_norm(alpha * 0.5, constraint.mu, constraint.sigma)
@@ -349,14 +349,14 @@ def srea_LP(inputstn,
 #        alpha, stn = output
 #        # print getRobustness(stn)
 #        stn.minimize()
-#        for (i, j), edge in list(stn.contingent_edges.items()):
-#            edge_i = stn.getEdge(0, i)
-#            edge_j = stn.getEdge(0, j)
+#        for (starting_node, ending_node), edge in list(stn.contingent_edges.items()):
+#            edge_i = stn.getEdge(0, starting_node)
+#            edge_j = stn.getEdge(0, ending_node)
 #            edge.Cij = edge_j.getWeightMax()-edge_i.getWeightMax()
 #            edge.Cji = - (edge_j.getWeightMin()-edge_i.getWeightMin())
 #            # this loop ensures that the output STN with integer edge weights is still
 #            # strongly controllable
-#            for connected_edge in stn.getOutgoing(j):
+#            for connected_edge in stn.getOutgoing(ending_node):
 #                edge.Cji = -max(-edge.Cji, edge.Cij -
 #                                connected_edge.Cji-connected_edge.Cij)
 #        return stn

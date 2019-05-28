@@ -46,7 +46,8 @@
         "team_robot_ids": null
       },
       "is_task_start": true,
-      "is_task_end": false
+      "is_task_end": false,
+      "is_executed": false
     },
     {
       "id": 2,
@@ -94,7 +95,8 @@
         "team_robot_ids": null
       },
       "is_task_start": false,
-      "is_task_end": true
+      "is_task_end": true,
+      "is_executed": false
     },
     {
       "id": 3,
@@ -144,7 +146,8 @@
         "team_robot_ids": null
       },
       "is_task_start": true,
-      "is_task_end": false
+      "is_task_end": false,
+      "is_executed": false
     },
     {
       "id": 4,
@@ -194,24 +197,29 @@
           "team_robot_ids": null
       },
       "is_task_start": false,
-      "is_task_end": true
+      "is_task_end": true,
+      "is_executed": false
     }
   ],
   "constraints":[
     {
-      "starting_node": 1,
-      "ending_node": 2,
+      "starting_node_id": 1,
+      "ending_node_id": 2,
       "min_time": 4,
       "max_time": "inf",
-      "distribution": "N_4_1"
+      "distribution": "N_4_1",
+      "sampled_duration": 0,
+      "is_contingent": true
+
     },
     {
-      "starting_node":3,
-      "ending_node":4,
-      "min_time":4,
+      "starting_node_id":3,
+      "ending_node_id":4,
+      "min_time": 4,
       "max_time": "inf",
-      "distribution": "N_4_1"
+      "distribution": "N_4_1",
+      "sampled_duration": 0,
+      "is_contingent": true
     }
-  ],
-  "num_agents":1
+  ]
 }
