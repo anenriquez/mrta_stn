@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/anenriquez/mrta_temporal_models.svg?token=QudZDF4JraaUN8o4yWNo&branch=master)](https://travis-ci.com/anenriquez/mrta_temporal_models)
+
 # Temporal Models for MRTA (multi-robot task allocation)
 
 Get the requirements:
