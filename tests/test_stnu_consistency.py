@@ -1,14 +1,22 @@
 import unittest
 import json
+import os
 import networkx as nx
 from src.temporal_networks.stnu import STNU
 
-STNU1 = "../data/stnu_two_tasks.json"
+STNU1 = "data/stnu_two_tasks.json"
 
 
 class TestSTNUconsistency(unittest.TestCase):
     def setUp(self):
-        with open(STNU1) as json_file:
+
+        my_dir = os.path.dirname(__file__)
+        stnu_json = os.path.join(my_dir, STNU1)
+
+        print("my dir:", my_dir)
+        print("stnu_json: ", stnu_json)
+
+        with open(stnu_json) as json_file:
             stnu_dict = json.load(json_file)
         self.stnu = STNU.from_dict(stnu_dict)
 
