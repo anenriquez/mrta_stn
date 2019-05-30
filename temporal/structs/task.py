@@ -1,10 +1,10 @@
 ''' Taken from https://github.com/ropod-project/ropod_common
 '''
 
-from src.utils.uuid import generate_uuid
-from src.structs.area import Area
-from src.structs.action import Action
-from src.structs.status import TaskStatus
+from temporal.utils.uuid import generate_uuid
+from temporal.structs.area import Area
+from temporal.structs.action import Action
+from temporal.structs.status import TaskStatus
 
 
 class RobotTask(object):

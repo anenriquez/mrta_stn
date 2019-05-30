@@ -1,10 +1,10 @@
-from src.structs.task import Task
+from temporal.structs.task import Task
 
 
 class Node(object):
     """Represents a timepoint in the STN """
 
-    def __init__(self, id='', task=Task(), is_start_task=True, is_end_task=False, is_executed=False):
+    def __init__(self, id='', task=Task(), is_start_task=True, is_task_end=False, is_executed=False):
         # The unique ID number of the node in the STN.
         self.id = id
         # Transportation task represented by this node
@@ -12,7 +12,7 @@ class Node(object):
         # The node represents the start of the transportation task
         self.is_task_start = is_start_task
         # The node represents the end of the transportation task
-        self.is_task_end = is_end_task
+        self.is_task_end = not(is_start_task)
         # Flag that indicates if the timepoint has been
         # executed.
         self.is_executed = is_executed

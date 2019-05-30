@@ -23,7 +23,7 @@
 # SOFTWARE.
 
 
-from src.temporal_networks.distempirical import norm_sample, uniform_sample
+from temporal.networks.distempirical import norm_sample, uniform_sample
 
 
 class Constraint(object):
@@ -46,7 +46,7 @@ class Constraint(object):
         i <--- -4 --- j
     """
 
-    def __init__(self, i=0, j=0, wji=-1, wij=-1, distribution=None):
+    def __init__(self, i=0, j=0, wji=-1, wij='inf', distribution=None):
         # node where the constraint starts
         self.starting_node_id = i
         # node where the constraint ends

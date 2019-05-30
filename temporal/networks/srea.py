@@ -34,10 +34,10 @@ import pulp
 import copy
 import networkx as nx
 
-# from src.temporal_networks.stnu import STNU
-from src.temporal_networks.stnu import STNU
-# import src.temporal_networks.stnu.stnu
-from src.temporal_networks.distempirical import invcdf_norm, invcdf_uniform
+# from temporal.networks.stnu import STNU
+from temporal.networks.stnu import STNU
+# import temporal.networks.stnu.stnu
+from temporal.networks.distempirical import invcdf_norm, invcdf_uniform
 
 # \file SREA.py
 #

@@ -23,8 +23,8 @@
 # SOFTWARE.
 
 import networkx as nx
-from src.temporal_networks.stnu import Node, Constraint
-
+from temporal.networks.stnu import Node, Constraint
+from temporal.structs.task import Task
 
 class STNU(nx.DiGraph):
     """ Represents a Simple Temporal Network (STN) as a networkx directed graph
@@ -63,6 +63,10 @@ class STNU(nx.DiGraph):
                     to_print += " ({})".format(constraint.distribution)
             to_print += "\n"
         return to_print
+
+    def add_zero_timepoint(self):
+        zero_timepoint = Node(0)
+        self.add_node(0, data=zero_timepoint)
 
     def add_constraint(self, constraint):
         """Add the edges of a constraint to the STN
@@ -187,6 +191,55 @@ class STNU(nx.DiGraph):
         node_last_task = nodes[-1]
         last_task_finish_time = self.node[node_last_task]['data'].task.finish_time
         return last_task_finish_time
+
+    def floyd_warshall(self):
+        minimal_stn = nx.floyd_warshall(self)
+        return minimal_stn
+
+    def add_task(self, task, position):
+        """ A transportation task consists of two nodes:
+            start_node: is_task_start
+            finish_node: is task_end
+        """
+        print("Adding task: ", task.id)
+
+    def add_start_end_constraints(self, node):
+        """Add the start and finish time temporal constraints of a timepoint (node) in the STNU"""
+        if node.is_task_start:
+            start_time = Constraint(0, node.id, node.task.earliest_start_time, node.task.latest_start_time)
+            self.add_constraint(start_time)
+        elif node.is_task_end:
+            finish_time = Constraint(0, node.id, node.task.earliest_finish_time, node.task.latest_finish_time)
+            self.add_constraint(finish_time)
+
+    def build_stn(self, scheduled_tasks):
+        """ Builds an STN with the tasks in the list of scheduled tasks"""
+        self.clear()
+        self.add_zero_timepoint()
+
+        print("Scheduled tasks: ", [task.id for task in scheduled_tasks])
+
+        position = 1
+        for task in scheduled_tasks:
+            print("Adding task {} in position{}".format(task.id, position))
+            # Add two nodes per task
+            node = Node(position, task, is_start_task=True)
+            self.add_node(node.id, data=node)
+            self.add_start_end_constraints(node)
+
+            node = Node(position+1, task, is_start_task=False)
+            self.add_node(node.id, data=node)
+            # Adding starting and ending node temporal constraint
+            self.add_start_end_constraints(node)
+            position += 2
+
+        # Add constraints between nodes
+        nodes = list(self.nodes)[1:]
+        i = iter(nodes)
+        pairs = list(zip(i, i))
+        for (i, j) in pairs:
+            constraint = Constraint(j, i, self.node[i]['data'].task.estimated_duration)
+            self.add_constraint(constraint)
 
     def to_dict(self):
         stnu_dict = dict()

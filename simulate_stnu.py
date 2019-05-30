@@ -25,9 +25,9 @@
 import json
 import networkx as nx
 import numpy as np
-from src.structs.task import Task
-from src.temporal_networks.stnu import Node, Constraint, STNU
-from src.temporal_networks.simulator import Simulator
+from temporal.structs.task import Task
+from temporal.networks.stnu import Node, Constraint, STNU
+from temporal.networks.simulator import Simulator
 
 MAX_SEED = 2 ** 31 - 1
 """The maximum number a random seed can be."""
@@ -35,7 +35,7 @@ MAX_SEED = 2 ** 31 - 1
 
 def get_stnu_dict():
     """Reads an STNU from a json file and returns it as a dict"""
-    with open('data/stnu_two_tasks.json') as json_file:
+    with open('tests/data/stnu_two_tasks.json') as json_file:
         stnu_dict = json.load(json_file)
     return stnu_dict
 
