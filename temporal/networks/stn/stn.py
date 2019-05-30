@@ -169,10 +169,10 @@ class STN(nx.DiGraph):
     def add_start_end_constraints(self, node):
         """Add the start and finish time temporal constraints of a timepoint (node) in the STNU"""
         if node.is_task_start:
-            start_time = ConstraintSTNU(0, node.id, node.task.earliest_start_time, node.task.latest_start_time)
+            start_time = Constraint(0, node.id, node.task.earliest_start_time, node.task.latest_start_time)
             self.add_constraint(start_time)
         elif node.is_task_end:
-            finish_time = ConstraintSTNU(0, node.id, node.task.earliest_finish_time, node.task.latest_finish_time)
+            finish_time = Constraint(0, node.id, node.task.earliest_finish_time, node.task.latest_finish_time)
             self.add_constraint(finish_time)
 
     def build_stn(self, scheduled_tasks):
