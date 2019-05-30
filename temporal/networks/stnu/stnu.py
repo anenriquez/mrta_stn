@@ -238,7 +238,7 @@ class STNU(nx.DiGraph):
         i = iter(nodes)
         pairs = list(zip(i, i))
         for (i, j) in pairs:
-            constraint = Constraint(j, i, self.node[i]['data'].task.estimated_duration)
+            constraint = Constraint(i, j, self.node[i]['data'].task.estimated_duration)
             self.add_constraint(constraint)
 
     def to_dict(self):
