@@ -26,7 +26,7 @@ import json
 import networkx as nx
 import numpy as np
 from temporal.structs.task import Task
-from temporal.networks.stnu import Node, Constraint, STNU
+from temporal.networks.stnu import NodeSTNU, ConstraintSTNU, STNU
 from temporal.networks.simulator import Simulator
 
 MAX_SEED = 2 ** 31 - 1

@@ -23,18 +23,20 @@
 # SOFTWARE.
 
 import networkx as nx
-from temporal.networks.stnu import Node, Constraint
+from temporal.networks.stnu import NodeSTNU, ConstraintSTNU
+from temporal.networks.stn import STN
 from temporal.structs.task import Task
 
-class STNU(nx.DiGraph):
+class STNU(STN):
     """ Represents a Simple Temporal Network (STN) as a networkx directed graph
     """
     def __init__(self):
-        nx.DiGraph.__init__(self)
+        super().__init__()
+        # nx.DiGraph.__init__(self)
         # List of node ids of received contingent timepoints
         self.received_timepoints = list()
         # {(starting_node, ending_node): Constraint object}
-        self.constraints = dict()
+        # self.constraints = dict()
         # {(starting_node, ending_node): Constraint object}
         self.contingent_constraints = dict()
         # {(starting_node, ending_node): Constraint object}
@@ -65,7 +67,7 @@ class STNU(nx.DiGraph):
         return to_print
 
     def add_zero_timepoint(self):
-        zero_timepoint = Node(0)
+        zero_timepoint = NodeSTNU(0)
         self.add_node(0, data=zero_timepoint)
 
     def add_constraint(self, constraint):
@@ -82,11 +84,12 @@ class STNU(nx.DiGraph):
 
         i = constraint.starting_node_id
         j = constraint.ending_node_id
-
-        self.add_edge(i, j, weight=constraint.max_time)
-        self.add_edge(j, i, weight=constraint.min_time)
-
-        self.constraints[(i, j)] = constraint
+        #
+        # self.add_edge(i, j, weight=constraint.max_time)
+        # self.add_edge(j, i, weight=constraint.min_time)
+        #
+        # self.constraints[(i, j)] = constraint
+        super().add_constraint(constraint)
 
         if constraint.is_contingent:
             self.contingent_constraints[(i, j)] = constraint
@@ -94,123 +97,123 @@ class STNU(nx.DiGraph):
         else:
             self.requirement_constraints[(i, j)] = constraint
 
-    def is_consistent(self, minimal_stn):
-        """The STN is not consistent if it has negative cycles"""
-        consistent = True
-        for node, nodes in minimal_stn.items():
-            if nodes[node] != 0:
-                consistent = False
-        return consistent
+    # def is_consistent(self, minimal_stn):
+    #     """The STN is not consistent if it has negative cycles"""
+    #     consistent = True
+    #     for node, nodes in minimal_stn.items():
+    #         if nodes[node] != 0:
+    #             consistent = False
+    #     return consistent
 
-    def update_edges(self, minimal_stn, create=False):
-        """Update edges in the STN to reflect the distances in the minimal stn
-        """
-        for column, row in minimal_stn.items():
-            nodes = dict(row)
-            for n in nodes:
-                self.update_edge_weight(column, n, minimal_stn[column][n])
+    # def update_edges(self, minimal_stn, create=False):
+    #     """Update edges in the STN to reflect the distances in the minimal stn
+    #     """
+    #     for column, row in minimal_stn.items():
+    #         nodes = dict(row)
+    #         for n in nodes:
+    #             self.update_edge_weight(column, n, minimal_stn[column][n])
 
-    def update_edge_weight(self, i, j, weight, create=False):
-        """ Updates the weight of the edge between node starting_node and node ending_node
-        :param i: starting_node_id
-        :parma ending_node: ending_node_id
-        """
-        if self.has_edge(i, j):
-            self[i][j]['weight'] = weight
+    # def update_edge_weight(self, i, j, weight, create=False):
+    #     """ Updates the weight of the edge between node starting_node and node ending_node
+    #     :param i: starting_node_id
+    #     :parma ending_node: ending_node_id
+    #     """
+    #     if self.has_edge(i, j):
+    #         self[i][j]['weight'] = weight
 
-    def get_edge_weight(self, i, j):
-        """ Returns the weight of the edge between node starting_node and node ending_node
-        :param i: starting_node_id
-        :parma ending_node: ending_node_id
-        """
-        if self.has_edge(i, j):
-            return self[i][j]['weight']
-        else:
-            if i == j and self.has_node(i):
-                return 0
-            else:
-                return float('inf')
+    # def get_edge_weight(self, i, j):
+    #     """ Returns the weight of the edge between node starting_node and node ending_node
+    #     :param i: starting_node_id
+    #     :parma ending_node: ending_node_id
+    #     """
+    #     if self.has_edge(i, j):
+    #         return self[i][j]['weight']
+    #     else:
+    #         if i == j and self.has_node(i):
+    #             return 0
+    #         else:
+    #             return float('inf')
 
-    def update_time_schedule(self, minimal_stn):
-        """Updates the start time, finish time and pickup_start_time of scheduled takes"""
-        # Contains latest start and finish times
-        first_row = list(minimal_stn[0].values())
-        # Contains earliest start and finish times
-        first_column = list()
+    # def update_time_schedule(self, minimal_stn):
+    #     """Updates the start time, finish time and pickup_start_time of scheduled takes"""
+    #     # Contains latest start and finish times
+    #     first_row = list(minimal_stn[0].values())
+    #     # Contains earliest start and finish times
+    #     first_column = list()
+    #
+    #     for node, nodes in minimal_stn.items():
+    #         first_column.append(nodes[0])
+    #
+    #     # Remove first element of the list
+    #     first_column.pop(0)
+    #     first_row.pop(0)
+    #
+    #     e_s_times = [first_column[i] for i in range(0, len(first_column)) if int(i) % 2 == 0]
+    #     e_f_times = [first_column[i] for i in range(0, len(first_column)) if int(i) % 2 != 0]
+    #
+    #     l_s_times = [first_row[i] for i in range(0, len(first_row)) if int(i) % 2 == 0]
+    #     l_f_times = [first_row[i] for i in range(0, len(first_row)) if int(i) % 2 != 0]
+    #
+    #     # Updating start time, pickup start time and finish time of tasks in the STN
+    #     task_idx = -1
+    #     for i, node in enumerate(self.nodes()):
+    #         task = self.node[node]['data'].task
+    #         # if the node is not the zero_timepoint
+    #         if task is not None:
+    #             # TODO start_time = e_s_t - travel_time
+    #             task.start_time = -e_s_times[task_idx]
+    #             task.pickup_start_time = -e_s_times[task_idx]
+    #             task.finish_time = -e_f_times[task_idx]
+    #         if i % 2 == 0:
+    #             task_idx += 1
+    #         self.node[node]['data'].task = task
 
-        for node, nodes in minimal_stn.items():
-            first_column.append(nodes[0])
+    # def get_assigned_time(self, node_id):
+    #     """ Returns to assigned time to a timepoint (node) in the STN"""
+    #     if node_id == 0:
+    #         # This is the zero_timepoint
+    #         return 0.0
+    #     if self.get_edge_data(0, node_id)['weight'] != -self.get_edge_data(node_id, 0)['weight']:
+    #         return None
+    #     return self.get_edge_data(0, node_id)['weight']
 
-        # Remove first element of the list
-        first_column.pop(0)
-        first_row.pop(0)
+    # def get_completion_time(self):
+    #     nodes = list(self.nodes())
+    #     node_first_task = nodes[1]
+    #     node_last_task = nodes[-1]
+    #
+    #     first_task_start_time = self.node[node_first_task]['data'].task.start_time
+    #     last_task_finish_time = self.node[node_last_task]['data'].task.finish_time
+    #
+    #     completion_time = round(last_task_finish_time - first_task_start_time)
+    #
+    #     return completion_time
 
-        e_s_times = [first_column[i] for i in range(0, len(first_column)) if int(i) % 2 == 0]
-        e_f_times = [first_column[i] for i in range(0, len(first_column)) if int(i) % 2 != 0]
+    # def get_makespan(self):
+    #     nodes = list(self.nodes())
+    #     node_last_task = nodes[-1]
+    #     last_task_finish_time = self.node[node_last_task]['data'].task.finish_time
+    #     return last_task_finish_time
+    #
+    # def floyd_warshall(self):
+    #     minimal_stn = nx.floyd_warshall(self)
+    #     return minimal_stn
 
-        l_s_times = [first_row[i] for i in range(0, len(first_row)) if int(i) % 2 == 0]
-        l_f_times = [first_row[i] for i in range(0, len(first_row)) if int(i) % 2 != 0]
-
-        # Updating start time, pickup start time and finish time of tasks in the STN
-        task_idx = -1
-        for i, node in enumerate(self.nodes()):
-            task = self.node[node]['data'].task
-            # if the node is not the zero_timepoint
-            if task is not None:
-                # TODO start_time = e_s_t - travel_time
-                task.start_time = -e_s_times[task_idx]
-                task.pickup_start_time = -e_s_times[task_idx]
-                task.finish_time = -e_f_times[task_idx]
-            if i % 2 == 0:
-                task_idx += 1
-            self.node[node]['data'].task = task
-
-    def get_assigned_time(self, node_id):
-        """ Returns to assigned time to a timepoint (node) in the STN"""
-        if node_id == 0:
-            # This is the zero_timepoint
-            return 0.0
-        if self.get_edge_data(0, node_id)['weight'] != -self.get_edge_data(node_id, 0)['weight']:
-            return None
-        return self.get_edge_data(0, node_id)['weight']
-
-    def get_completion_time(self):
-        nodes = list(self.nodes())
-        node_first_task = nodes[1]
-        node_last_task = nodes[-1]
-
-        first_task_start_time = self.node[node_first_task]['data'].task.start_time
-        last_task_finish_time = self.node[node_last_task]['data'].task.finish_time
-
-        completion_time = round(last_task_finish_time - first_task_start_time)
-
-        return completion_time
-
-    def get_makespan(self):
-        nodes = list(self.nodes())
-        node_last_task = nodes[-1]
-        last_task_finish_time = self.node[node_last_task]['data'].task.finish_time
-        return last_task_finish_time
-
-    def floyd_warshall(self):
-        minimal_stn = nx.floyd_warshall(self)
-        return minimal_stn
-
-    def add_task(self, task, position):
-        """ A transportation task consists of two nodes:
-            start_node: is_task_start
-            finish_node: is task_end
-        """
-        print("Adding task: ", task.id)
-
-    def add_start_end_constraints(self, node):
-        """Add the start and finish time temporal constraints of a timepoint (node) in the STNU"""
-        if node.is_task_start:
-            start_time = Constraint(0, node.id, node.task.earliest_start_time, node.task.latest_start_time)
-            self.add_constraint(start_time)
-        elif node.is_task_end:
-            finish_time = Constraint(0, node.id, node.task.earliest_finish_time, node.task.latest_finish_time)
-            self.add_constraint(finish_time)
+    # def add_task(self, task, position):
+    #     """ A transportation task consists of two nodes:
+    #         start_node: is_task_start
+    #         finish_node: is task_end
+    #     """
+    #     print("Adding task: ", task.id)
+    #
+    # def add_start_end_constraints(self, node):
+    #     """Add the start and finish time temporal constraints of a timepoint (node) in the STNU"""
+    #     if node.is_task_start:
+    #         start_time = ConstraintSTNU(0, node.id, node.task.earliest_start_time, node.task.latest_start_time)
+    #         self.add_constraint(start_time)
+    #     elif node.is_task_end:
+    #         finish_time = ConstraintSTNU(0, node.id, node.task.earliest_finish_time, node.task.latest_finish_time)
+    #         self.add_constraint(finish_time)
 
     def build_stn(self, scheduled_tasks):
         """ Builds an STN with the tasks in the list of scheduled tasks"""
@@ -223,11 +226,11 @@ class STNU(nx.DiGraph):
         for task in scheduled_tasks:
             print("Adding task {} in position{}".format(task.id, position))
             # Add two nodes per task
-            node = Node(position, task, is_start_task=True)
+            node = NodeSTNU(position, task, is_start_task=True)
             self.add_node(node.id, data=node)
             self.add_start_end_constraints(node)
 
-            node = Node(position+1, task, is_start_task=False)
+            node = NodeSTNU(position+1, task, is_start_task=False)
             self.add_node(node.id, data=node)
             # Adding starting and ending node temporal constraint
             self.add_start_end_constraints(node)
@@ -238,7 +241,7 @@ class STNU(nx.DiGraph):
         i = iter(nodes)
         pairs = list(zip(i, i))
         for (i, j) in pairs:
-            constraint = Constraint(i, j, self.node[i]['data'].task.estimated_duration)
+            constraint = ConstraintSTNU(i, j, self.node[i]['data'].task.estimated_duration)
             self.add_constraint(constraint)
 
     def to_dict(self):
@@ -260,25 +263,29 @@ class STNU(nx.DiGraph):
         zero_timepoint_exists = False
 
         for node_dict in stnu_dict['nodes']:
-            node = Node.from_dict(node_dict)
+            node = NodeSTNU.from_dict(node_dict)
             stnu.add_node(node.id, data=node)
             if node.id != 0:
                 # Adding starting and ending node temporal constraint
                 if node.is_task_start:
-                    start_time = Constraint(0, node.id, node.task.earliest_start_time, node.task.latest_start_time)
+                    start_time = ConstraintSTNU(0, node.id, node.task.earliest_start_time, node.task.latest_start_time)
                     stnu.add_constraint(start_time)
+
                 elif node.is_task_end:
-                    finish_time = Constraint(0, node.id, node.task.earliest_finish_time, node.task.latest_finish_time)
+                    finish_time = ConstraintSTNU(0, node.id, node.task.earliest_finish_time, node.task.latest_finish_time)
                     stnu.add_constraint(finish_time)
+
             else:
                 zero_timepoint_exists = True
 
         if zero_timepoint_exists is not True:
             # Adding the zero timepoint
-            zero_timepoint = Node(0)
+            zero_timepoint = NodeSTNU(0)
             stnu.add_node(0, data=zero_timepoint)
 
         for constraint_dict in stnu_dict['constraints']:
-            constraint = Constraint.from_dict(constraint_dict)
+            constraint = ConstraintSTNU.from_dict(constraint_dict)
             stnu.add_constraint(constraint)
+            print("Adding object of type: ", constraint)
+
         return stnu
