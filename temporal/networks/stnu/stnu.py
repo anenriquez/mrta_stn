@@ -170,9 +170,9 @@ class STNU(nx.DiGraph):
         if node_id == 0:
             # This is the zero_timepoint
             return 0.0
-        if stn.get_edge_data(0, node_id)['weight'] != -stn.get_edge_data(node_id, 0)['weight']:
+        if self.get_edge_data(0, node_id)['weight'] != -self.get_edge_data(node_id, 0)['weight']:
             return None
-        return stn.get_edge_data(0, node_id)['weight']
+        return self.get_edge_data(0, node_id)['weight']
 
     def get_completion_time(self):
         nodes = list(self.nodes())
