@@ -25,9 +25,9 @@
 import json
 import networkx as nx
 import numpy as np
-from src.structs.task import Task
-from src.temporal_networks.stnu import Node, Constraint, STNU
-from src.temporal_networks.simulator import Simulator
+from temporal.structs.task import Task
+from temporal.networks.stnu import NodeSTNU, ConstraintSTNU, STNU
+from temporal.networks.simulator import Simulator
 
 MAX_SEED = 2 ** 31 - 1
 """The maximum number a random seed can be."""

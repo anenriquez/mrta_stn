@@ -1,44 +1,14 @@
-# Based on: https://github.com/HEATlab/DREAM/blob/master/libheat/stntools/stn.py
-#
-# MIT License
-#
-# Copyright (c) 2019 HEATlab
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
 import networkx as nx
-from src.temporal_networks.stnu import Node, Constraint
+from temporal.networks.stn import Node, Constraint
+from temporal.structs.task import Task
 
-
-class STNU(nx.DiGraph):
+class STN(nx.DiGraph):
     """ Represents a Simple Temporal Network (STN) as a networkx directed graph
     """
     def __init__(self):
-        nx.DiGraph.__init__(self)
-        # List of node ids of received contingent timepoints
-        self.received_timepoints = list()
+        super().__init__()
         # {(starting_node, ending_node): Constraint object}
         self.constraints = dict()
-        # {(starting_node, ending_node): Constraint object}
-        self.contingent_constraints = dict()
-        # {(starting_node, ending_node): Constraint object}
-        self.requirement_constraints = dict()
         # Time difference between the finish time of the last timepoint and the start time of the first timepoint in the STN
         self.completion_time = 0
 
@@ -52,17 +22,15 @@ class STNU(nx.DiGraph):
                 upper_bound = self[i][j]['weight']
                 to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
 
-                if constraint.distribution is not None:
-                    to_print += " ({})".format(constraint.distribution)
-                if timepoint.is_executed:
-                    to_print += " Ex"
             else:
-                to_print += "Constraint {} => {}: [{}, {}], Sampled value: [{}]".format(
-                    constraint.starting_node_id, constraint.ending_node_id, -self[j][i]['weight'], self[i][j]['weight'], constraint.sampled_duration)
-                if constraint.distribution is not None:
-                    to_print += " ({})".format(constraint.distribution)
+                to_print += "Constraint {} => {}: [{}, {}]".format(
+                    constraint.starting_node_id, constraint.ending_node_id, -self[j][i]['weight'], self[i][j]['weight'])
             to_print += "\n"
         return to_print
+
+    def add_zero_timepoint(self):
+        zero_timepoint = Node(0)
+        self.add_node(0, data=zero_timepoint)
 
     def add_constraint(self, constraint):
         """Add the edges of a constraint to the STN
@@ -83,12 +51,6 @@ class STNU(nx.DiGraph):
         self.add_edge(j, i, weight=constraint.min_time)
 
         self.constraints[(i, j)] = constraint
-
-        if constraint.is_contingent:
-            self.contingent_constraints[(i, j)] = constraint
-            self.received_timepoints += [j]
-        else:
-            self.requirement_constraints[(i, j)] = constraint
 
     def is_consistent(self, minimal_stn):
         """The STN is not consistent if it has negative cycles"""
@@ -166,9 +128,9 @@ class STNU(nx.DiGraph):
         if node_id == 0:
             # This is the zero_timepoint
             return 0.0
-        if stn.get_edge_data(0, node_id)['weight'] != -stn.get_edge_data(node_id, 0)['weight']:
+        if self.get_edge_data(0, node_id)['weight'] != -self.get_edge_data(node_id, 0)['weight']:
             return None
-        return stn.get_edge_data(0, node_id)['weight']
+        return self.get_edge_data(0, node_id)['weight']
 
     def get_completion_time(self):
         nodes = list(self.nodes())
@@ -188,6 +150,55 @@ class STNU(nx.DiGraph):
         last_task_finish_time = self.node[node_last_task]['data'].task.finish_time
         return last_task_finish_time
 
+    def floyd_warshall(self):
+        minimal_stn = nx.floyd_warshall(self)
+        return minimal_stn
+
+    def add_task(self, task, position):
+        """ A transportation task consists of two nodes:
+            start_node: is_task_start
+            finish_node: is task_end
+        """
+        print("Adding task: ", task.id)
+
+    def add_start_end_constraints(self, node):
+        """Add the start and finish time temporal constraints of a timepoint (node) in the STNU"""
+        if node.is_task_start:
+            start_time = Constraint(0, node.id, node.task.earliest_start_time, node.task.latest_start_time)
+            self.add_constraint(start_time)
+        elif node.is_task_end:
+            finish_time = Constraint(0, node.id, node.task.earliest_finish_time, node.task.latest_finish_time)
+            self.add_constraint(finish_time)
+
+    def build_stn(self, scheduled_tasks):
+        """ Builds an STN with the tasks in the list of scheduled tasks"""
+        self.clear()
+        self.add_zero_timepoint()
+
+        print("Scheduled tasks: ", [task.id for task in scheduled_tasks])
+
+        position = 1
+        for task in scheduled_tasks:
+            print("Adding task {} in position{}".format(task.id, position))
+            # Add two nodes per task
+            node = Node(position, task, is_start_task=True)
+            self.add_node(node.id, data=node)
+            self.add_start_end_constraints(node)
+
+            node = Node(position+1, task, is_start_task=False)
+            self.add_node(node.id, data=node)
+            # Adding starting and ending node temporal constraint
+            self.add_start_end_constraints(node)
+            position += 2
+
+        # Add constraints between nodes
+        nodes = list(self.nodes)[1:]
+        i = iter(nodes)
+        pairs = list(zip(i, i))
+        for (i, j) in pairs:
+            constraint = Constraint(i, j, self.node[i]['data'].task.estimated_duration)
+            self.add_constraint(constraint)
+
     def to_dict(self):
         stnu_dict = dict()
         stnu_dict['nodes'] = list()
@@ -203,29 +214,33 @@ class STNU(nx.DiGraph):
 
     @staticmethod
     def from_dict(stnu_dict):
-        stnu = STNU()
+        stnu = STN()
         zero_timepoint_exists = False
 
         for node_dict in stnu_dict['nodes']:
-            node = Node.from_dict(node_dict)
+            node = NodeSTN.from_dict(node_dict)
             stnu.add_node(node.id, data=node)
             if node.id != 0:
                 # Adding starting and ending node temporal constraint
                 if node.is_task_start:
-                    start_time = Constraint(0, node.id, node.task.earliest_start_time, node.task.latest_start_time)
+                    start_time = ConstraintSTN(0, node.id, node.task.earliest_start_time, node.task.latest_start_time)
                     stnu.add_constraint(start_time)
+
                 elif node.is_task_end:
-                    finish_time = Constraint(0, node.id, node.task.earliest_finish_time, node.task.latest_finish_time)
+                    finish_time = ConstraintSTN(0, node.id, node.task.earliest_finish_time, node.task.latest_finish_time)
                     stnu.add_constraint(finish_time)
+
             else:
                 zero_timepoint_exists = True
 
         if zero_timepoint_exists is not True:
             # Adding the zero timepoint
-            zero_timepoint = Node(0)
+            zero_timepoint = NodeSTN(0)
             stnu.add_node(0, data=zero_timepoint)
 
         for constraint_dict in stnu_dict['constraints']:
-            constraint = Constraint.from_dict(constraint_dict)
+            constraint = ConstraintSTN.from_dict(constraint_dict)
             stnu.add_constraint(constraint)
+            print("Adding object of type: ", constraint)
+
         return stnu

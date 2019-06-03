@@ -21,54 +21,27 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-"""
-Contains the core of the SREA algorithm.
-
-This file is mostly unchanged from the original RobotBrunch code.
-
-Authors: Jordan R Abrahams, Kyle Lund, Sam Dietrich
-"""
-
 from math import floor, ceil
 import pulp
 import copy
 import networkx as nx
 
-# from src.temporal_networks.stnu import STNU
-from src.temporal_networks.stnu import STNU
-# import src.temporal_networks.stnu.stnu
-from src.temporal_networks.distempirical import invcdf_norm, invcdf_uniform
+from temporal.networks.stnu import STNU
+from temporal.networks.distempirical import invcdf_norm, invcdf_uniform
 
-# \file SREA.py
-#
-#  \brief Runs the SREA algorithm on an input STN and computes the robustness
-#
-#  \details To run this file on an STN, use the command:
-#  \code{.unparsed}
-#  python SREA.py JSONFILE ALPHA
-#  \endcode
-#
-#
-#  \note You'll need pulp to be able to run this. On a linux machine run
-#  `sudo pip install pulp` or `sudo easy_install -U pulp`.
-#  THEN RUN `sudo pulptest`, otherwise it won't work.
-
-# \fn addConstraint(constraint,problem)
-#  \brief Adds an LP constraint to the given LP
+""" SREA algorithm
+"""
 
 
 def addConstraint(constraint, problem):
+    """ Add adds a constraint to the given LP"""
     problem += constraint
-    # print 'adding constraint', constraint
-
-# \fn setUpLP(stn)
-#  \brief initializes the LP problem and the LP variables that will not change
-#      with alpha
-#  \returns A tuple (bounds, deltas, prob) where bounds and deltas are
-#      dictionaries of LP variables, and prob is the LP problem instance
 
 
 def setUpLP(stn, decouple):
+    """ Initializes the LP problem and the LP variables that will not change with alpha
+    Returns a tuple (bounds, deltas, prob) where bounds and deltas are dictionaries of LP variables, and prob is the LP problem instance
+    """
     bounds = {}
     deltas = {}
 
@@ -97,12 +70,9 @@ def setUpLP(stn, decouple):
         condition = bounds[(i, '+')] >= bounds[(i, '-')]
         addConstraint(condition, prob)
 
-    for edge in stn.edges():
-        i, j = edge
-        print("Edge ({}, {})".format(i, j))
+    for (i, j) in stn.edges():
         if (i, j) in stn.contingent_constraints:
             print("Contingent constraint: ", stn[i][j])
-            print("{}, {}".format(i, j))
             deltas[(i, j)] = pulp.LpVariable('delta_%d_%d' %
                                              (i, j), lowBound=0, upBound=None)
             deltas[(j, i)] = pulp.LpVariable('delta_%d_%d' %
@@ -118,30 +88,9 @@ def setUpLP(stn, decouple):
                               <= stn.get_edge_weight(i, j), prob)
                 addConstraint(bounds[(i, '+')] - bounds[(j, '-')]
                               <= stn.get_edge_weight(j, i), prob)
-
-            # For now, we dont have interagentEdges
-            # elif edge[0] != 0 and (starting_node, ending_node) in stn.interagentEdges:
-            #     addConstraint(bounds[(ending_node, '+')] - bounds[(starting_node, '-')]
-            #                   <= stn.get_edge_weight(starting_node, ending_node), prob)
-            #     addConstraint(bounds[(starting_node, '+')] - bounds[(ending_node, '-')]
-            #                   <= stn.get_edge_weight(ending_node, starting_node), prob)
     return (bounds, deltas, prob)
 
 
-##
-# \fn srea(inputstn,debug=False,debugLP=False,lb=0.0,ub=0.999)
-# \brief Runs the SREA algorithm on an input STN
-#
-# @param inputstn The STN that we are running SREA on
-# @param invCDF_map A dictionary of dictionaries generated from a
-#      distgenlib.invcdf_map call. See documentation there for more info.
-# @param debug Print optional status messages about alpha levels
-# @param debugLP Print optional status messages about each run of the LP
-# @param lb The starting lower bound on alpha for the binary search
-# @param ub The starting upper bound on alpha for the binary search
-#
-# @returns a tuple (alpha, outputstn) if there is a solution, or None if there
-#     is no solution
 def srea(inputstn,
          debug=False,
          debugLP=False,
@@ -149,7 +98,16 @@ def srea(inputstn,
          decouple=False,
          lb=0.0,
          ub=0.999):
-    # inputstn = inputstn.copy()
+    """ Runs the SREA algorithm on an input STN
+    @param inputstn The STN that we are running SREA on
+    @param debug Print optional status messages about alpha levels
+    @param debugLP Print optional status messages about each run of the LP
+    @param lb The starting lower bound on alpha for the binary search
+    @param ub The starting upper bound on alpha for the binary search
+
+    @returns a tuple (alpha, outputstn) if there is a solution,
+    or None if there is no solution
+    """
     inputstn = copy.deepcopy(inputstn)
     # dictionary of alphas for binary search
     alphas = {i: i / 1000.0 for i in range(1001)}
@@ -162,10 +120,12 @@ def srea(inputstn,
 
     # set up LP
     if not decouple:
-        # TODO: Change to faster algorithm?
-        # inputstn.floyd_warshall()
         minimal_stn = nx.floyd_warshall(inputstn)
         inputstn.update_edges(minimal_stn)
+        # print("Updated stn: ", inputstn)
+        # print("Resampling contingent edges of stored STN")
+        # resample_stn(inputstn, rand_state)
+        # print("Resampled STN: ", inputstn)
     bounds, deltas, probBase = setUpLP(inputstn, decouple)
 
     print("Bounds:")
@@ -230,29 +190,25 @@ def srea(inputstn,
     assert(False)
 
 
-# \fn srea_LP(inputstn,alpha,debug=False,probContainer=None)
-#  \brief Runs the robust execution LP on the input STN at the given alpha
-#  level
-#
-#  @param inputSTN The STN used as an input to the LP
-#  @param invCDF_map A dictionary of dictionaries generated from a
-#       distgenlib.invcdf_map call. See documentation there for more info.
-#  @param alpha The risk level (between 0 and 1) that we are using for the LP
-#  @param decouple originally was meant to indicate if we wanted decoupling or not
-#   but then we discovered that this already decouples the STN
-#  @param debug Print optional status messages
-#  @param probContainer Optional tuple of LP variables and the LP problem
-#       instance, returned from setUpLP
-#
-#  \returns A dictionary of the LP_variables for the bounds on timepoints.
 def srea_LP(inputstn,
             alpha,
             decouple,
             debug=False,
             probContainer=None
             ):
+    """
+    Runs the robust execution LP on the input STN at the given alpha
+     level
+     @param inputSTN The STN used as an input to the LP
+     @param alpha The risk level (between 0 and 1) that we are using for the LP
+     @param decouple originally was meant to indicate if we wanted decoupling or not but then we discovered that this already decouples the STN
+     @param debug Print optional status messages
+     @param probContainer Optional tuple of LP variables and the LP problem instance, returned from setUpLP
 
-    # Check some types to make sure everything is the correct type
+     returns A dictionary of the LP_variables for the bounds on timepoints.
+    """
+
+    # Make sure everything is the correct type
     if not isinstance(inputstn, STNU):
         raise TypeError("inputstn is not of type STN")
 
@@ -266,8 +222,7 @@ def srea_LP(inputstn,
         bounds, deltas, prob = probContainer
 
     for (i, j), constraint in inputstn.contingent_constraints.items():
-        # starting_node, ending_node = edge
-        # constraint = inputstn[starting_node][ending_node]['data']
+        print("Constraint: ", constraint)
         if constraint.dtype() == "gaussian":
             p_ij = invcdf_norm(1.0 - alpha * 0.5, constraint.mu, constraint.sigma)
             p_ji = -invcdf_norm(alpha * 0.5, constraint.mu, constraint.sigma)
