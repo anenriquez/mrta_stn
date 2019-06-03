@@ -54,15 +54,18 @@ class STNU(STN):
                 upper_bound = self[i][j]['weight']
                 to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
 
-                if constraint.distribution is not None:
+                if constraint.distribution:
                     to_print += " ({})".format(constraint.distribution)
                 if timepoint.is_executed:
                     to_print += " Ex"
             else:
-                to_print += "Constraint {} => {}: [{}, {}], Sampled value: [{}]".format(
-                    constraint.starting_node_id, constraint.ending_node_id, -self[j][i]['weight'], self[i][j]['weight'], constraint.sampled_duration)
-                if constraint.distribution is not None:
-                    to_print += " ({})".format(constraint.distribution)
+                if constraint.distribution:
+                    to_print += "Constraint {} => {}: [{}, {}], Sampled value: [{}] ({})".format(
+                        constraint.starting_node_id, constraint.ending_node_id, -self[j][i]['weight'], self[i][j]['weight'], constraint.sampled_duration, constraint.distribution)
+                else:
+                    to_print += "Constraint {} => {}: [{}, {}]".format(
+                        constraint.starting_node_id, constraint.ending_node_id, -self[j][i]['weight'], self[i][j]['weight'])
+                    # to_print += " ({})".format(constraint.distribution)
             to_print += "\n"
         return to_print
 
@@ -267,13 +270,17 @@ class STNU(STN):
             stnu.add_node(node.id, data=node)
             if node.id != 0:
                 # Adding starting and ending node temporal constraint
-                if node.is_task_start:
-                    start_time = ConstraintSTNU(0, node.id, node.task.earliest_start_time, node.task.latest_start_time)
+                if node.type == "start":
+                    start_time = ConstraintSTNU(0, node.id, 0)
                     stnu.add_constraint(start_time)
 
-                elif node.is_task_end:
-                    finish_time = ConstraintSTNU(0, node.id, node.task.earliest_finish_time, node.task.latest_finish_time)
-                    stnu.add_constraint(finish_time)
+                elif node.type == "pickup":
+                    pickup_start_time = ConstraintSTNU(0, node.id, node.task.earliest_start_time, node.task.latest_start_time)
+                    stnu.add_constraint(pickup_start_time)
+
+                elif node.type == "delivery":
+                    delivery_finish_time = ConstraintSTNU(0, node.id, node.task.earliest_finish_time, node.task.latest_finish_time)
+                    stnu.add_constraint(delivery_finish_time)
 
             else:
                 zero_timepoint_exists = True
@@ -286,6 +293,5 @@ class STNU(STN):
         for constraint_dict in stnu_dict['constraints']:
             constraint = ConstraintSTNU.from_dict(constraint_dict)
             stnu.add_constraint(constraint)
-            print("Adding object of type: ", constraint)
 
         return stnu

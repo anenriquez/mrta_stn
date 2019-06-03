@@ -47,14 +47,14 @@ class ConstraintSTNU(Constraint):
         i <--- -4 --- j
     """
 
-    def __init__(self, i=0, j=0, wji=-1, wij='inf', distribution=None):
+    def __init__(self, i=0, j=0, wji=-1, wij='inf', distribution=""):
         super().__init__(i, j, wji, wij)
         # Probability distribution (for contingent constraints)
         self.distribution = distribution
         # Duration (for contingent constraints) sampled from the probability distribution
         self.sampled_duration = 0
         # The constraint is contingent if it has a probability distribution
-        self.is_contingent = distribution is not None
+        self.is_contingent = distribution is not ""
 
     def dtype(self):
         """Returns the distribution edge type as a String. If no there is
