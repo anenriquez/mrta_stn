@@ -3,14 +3,14 @@ import json
 import os
 from temporal.networks.stnu import STNU
 
-STNU1 = "data/stnu_two_tasks.json"
+STNU_DATA = "data/stnu_two_tasks.json"
 
 
 class TestSTNUconsistency(unittest.TestCase):
     def setUp(self):
 
         my_dir = os.path.dirname(__file__)
-        stnu_json = os.path.join(my_dir, STNU1)
+        stnu_json = os.path.join(my_dir, STNU_DATA)
 
         print("my dir:", my_dir)
         print("stnu_json: ", stnu_json)
@@ -28,7 +28,7 @@ class TestSTNUconsistency(unittest.TestCase):
         completion_time = self.stnu.get_completion_time()
         makespan = self.stnu.get_makespan()
 
-        self.assertEqual(completion_time, 59)
+        self.assertEqual(completion_time, 100)
         self.assertEqual(makespan, 100)
 
 
