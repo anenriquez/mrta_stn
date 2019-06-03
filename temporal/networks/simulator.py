@@ -75,10 +75,10 @@ class Simulator(object):
 
         # Resample the contingent edges.
         # Super important!
-        print("Resampling contingent edges of stored STN")
-        self.resample_stored_stn()
+        # print("Resampling contingent edges of stored STN")
+        # self.resample_stored_stn()
 
-        print("Resampled STN:\n {}".format(self.stn))
+        # print("Resampled STN:\n {}".format(self.stn))
 
         for edge in self.stn.edges():
             i, j = edge
@@ -356,7 +356,7 @@ class Simulator(object):
             consistent.
         """
         self.num_reschedules += 1
-        result = srea(self.stn, debug=True)
+        result = srea(self.stn, debug=True, rand_state=self._rand_state)
         if result is not None:
             self.num_sent_schedules += 1
             return result[0], result[1]

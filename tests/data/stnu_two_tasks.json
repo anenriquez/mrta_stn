@@ -220,6 +220,15 @@
       "distribution": "N_4_1",
       "sampled_duration": 0,
       "is_contingent": true
+    },
+    {
+      "starting_node_id":2,
+      "ending_node_id":3,
+      "min_time": 8,
+      "max_time": "inf",
+      "distribution": "N_8_1",
+      "sampled_duration": 0,
+      "is_contingent": true
     }
   ]
 }

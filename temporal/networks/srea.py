@@ -128,6 +128,20 @@ def setUpLP(stn, decouple):
     return (bounds, deltas, prob)
 
 
+def resample_stn(stn, rand_state) -> None:
+    for constraint in stn.contingent_constraints.values():
+        constraint.resample(rand_state)
+
+    for edge in stn.edges():
+        i, j = edge
+        if (i, j) in stn.contingent_constraints:
+            print("Contingent edge: ", stn.contingent_constraints[(i, j)])
+            # Very hacky, just to test
+            if i == 2:
+                contingent_constraint = stn.contingent_constraints[(i, j)]
+                contingent_constraint.sampled_duration = 44
+                stn.contingent_constraints[(i, j)] = contingent_constraint
+
 ##
 # \fn srea(inputstn,debug=False,debugLP=False,lb=0.0,ub=0.999)
 # \brief Runs the SREA algorithm on an input STN
@@ -144,6 +158,7 @@ def setUpLP(stn, decouple):
 #     is no solution
 def srea(inputstn,
          debug=False,
+         rand_state=0,
          debugLP=False,
          returnAlpha=True,
          decouple=False,
@@ -166,6 +181,10 @@ def srea(inputstn,
         # inputstn.floyd_warshall()
         minimal_stn = nx.floyd_warshall(inputstn)
         inputstn.update_edges(minimal_stn)
+        print("Updated stn: ", inputstn)
+        print("Resampling contingent edges of stored STN")
+        resample_stn(inputstn, rand_state)
+        print("Resampled STN: ", inputstn)
     bounds, deltas, probBase = setUpLP(inputstn, decouple)
 
     print("Bounds:")
@@ -268,11 +287,20 @@ def srea_LP(inputstn,
     for (i, j), constraint in inputstn.contingent_constraints.items():
         # starting_node, ending_node = edge
         # constraint = inputstn[starting_node][ending_node]['data']
+        print("Constraint: ", constraint)
         if constraint.dtype() == "gaussian":
             p_ij = invcdf_norm(1.0 - alpha * 0.5, constraint.mu, constraint.sigma)
             p_ji = -invcdf_norm(alpha * 0.5, constraint.mu, constraint.sigma)
             limit_ij = invcdf_norm(0.997, constraint.mu, constraint.sigma)
             limit_ji = -invcdf_norm(0.003, constraint.mu, constraint.sigma)
+
+            # Very hacky, just to test
+            if i == 2:
+                p_ij = invcdf_norm(1.0 - alpha * 0.5, 49, 1)
+                p_ji = -invcdf_norm(alpha * 0.5, 49, 1)
+                limit_ij = invcdf_norm(0.997, 49, 1)
+                limit_ji = -invcdf_norm(0.003, 49, 1)
+
 
         elif constraint.dtype() == "uniform":
             p_ij = invcdf_uniform(1.0 - alpha * 0.5, constraint.dist_lb,
