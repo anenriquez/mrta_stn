@@ -6,10 +6,11 @@ class STN(nx.DiGraph):
     """ Represents a Simple Temporal Network (STN) as a networkx directed graph
     """
     def __init__(self):
-        # nx.DiGraph.__init__(self)
         super().__init__()
         # {(starting_node, ending_node): Constraint object}
         self.constraints = dict()
+        # Time difference between the finish time of the last timepoint and the start time of the first timepoint in the STN
+        self.completion_time = 0
 
     def __str__(self):
         to_print = ""
@@ -50,12 +51,6 @@ class STN(nx.DiGraph):
         self.add_edge(j, i, weight=constraint.min_time)
 
         self.constraints[(i, j)] = constraint
-
-        # if constraint.is_contingent:
-        #     self.contingent_constraints[(i, j)] = constraint
-        #     self.received_timepoints += [j]
-        # else:
-        #     self.requirement_constraints[(i, j)] = constraint
 
     def is_consistent(self, minimal_stn):
         """The STN is not consistent if it has negative cycles"""
