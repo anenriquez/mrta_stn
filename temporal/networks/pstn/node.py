@@ -2,7 +2,7 @@ from temporal.structs.task import Task
 from temporal.networks.stn import Node
 
 
-class NodeSTNU(Node):
+class NodePSTN(Node):
     """Represents a timepoint in the STN """
 
     def __init__(self, id='', task=Task(), type=0, is_executed=False):
@@ -45,5 +45,5 @@ class NodeSTNU(Node):
         # node.is_task_start = node_dict['is_task_start']
         # node.is_task_end = node_dict['is_task_end']
         is_executed = node_dict['is_executed']
-        node_stnu = NodeSTNU(id, task, type, is_executed)
+        node_stnu = NodePSTN(id, task, type, is_executed)
         return node_stnu
