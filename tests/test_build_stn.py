@@ -29,7 +29,7 @@ class TestBuildSTN(unittest.TestCase):
             self.tasks.append(Task.from_dict(task))
 
     def test_build_stn(self):
-        self.stn.build_stn(self.tasks)
+        self.stn.build_temporal_network(self.tasks)
         print("STN: \n", self.stn)
         print(self.stn.nodes.data())
         print(self.stn.edges.data())
@@ -46,24 +46,8 @@ class TestBuildSTN(unittest.TestCase):
         print("Completion time: ", completion_time)
         print("Makespan: ", makespan)
 
-
-
-
-        # for task in self.tasks:
-        #     self.insert_task(task)
-
-    # def insert_task(self, task):
-    #     n_scheduled_tasks = len(self.scheduled_tasks)
-    #
-    #     for i in range(0, n_scheduled_tasks + 1):
-    #         self.scheduled_tasks.insert(i, task)
-    #         self.stn.build_stn(self.scheduled_tasks)
-    #
-    #         print(self.stn)
-    #         print(self.stn.nodes.data())
-    #         print(self.stn.edges.data())
-    #
-    #         self.scheduled_tasks.pop(i)
+        self.assertEqual(completion_time, 100)
+        self.assertEqual(makespan, 100)
 
 
 if __name__ == '__main__':
