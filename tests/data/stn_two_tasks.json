@@ -5,7 +5,6 @@
       "task":
       {
           "id": "0d06fb90-a76d-48b4-b64f-857b7388ab70",
-          "pickup_start_time": -1,
           "cart_id": "",
           "cart_type": "mobidik",
           "delivery_pose":
@@ -16,12 +15,14 @@
               "subAreas": [],
               "type": ""
           },
-          "earliest_finish_time": 41.0,
-          "earliest_start_time": 41.0,
+          "earliest_delivery_time": 41.0,
+          "earliest_pickup_time": 41.0,
+          "earliest_start_time":-1,
           "estimated_duration": 4.0,
           "finish_time": -1,
-          "latest_finish_time": 52.0,
-          "latest_start_time": 47.0,
+          "latest_delivery_time": 52.0,
+          "latest_pickup_time": 47.0,
+          "latest_start_time":-1,
           "loadId": "",
           "loadType": "",
           "pickup_pose":
@@ -45,15 +46,13 @@
           },
           "team_robot_ids": null
         },
-      "type": "start",
-      "is_executed": false
+      "type": "start"
     },
     {
       "id": 2,
       "task":
       {
         "id": "0d06fb90-a76d-48b4-b64f-857b7388ab70",
-        "pickup_start_time": -1,
         "cart_id": "",
         "cart_type": "mobidik",
         "delivery_pose":
@@ -64,12 +63,14 @@
             "subAreas": [],
             "type": ""
         },
-        "earliest_finish_time": 41.0,
-        "earliest_start_time": 41.0,
+        "earliest_delivery_time": 41.0,
+        "earliest_pickup_time": 41.0,
+        "earliest_start_time":-1,
         "estimated_duration": 4.0,
         "finish_time": -1,
-        "latest_finish_time": 52.0,
-        "latest_start_time": 47.0,
+        "latest_delivery_time": 52.0,
+        "latest_pickup_time": 47.0,
+        "latest_start_time":-1,
         "loadId": "",
         "loadType": "",
         "pickup_pose":
@@ -93,15 +94,13 @@
         },
         "team_robot_ids": null
       },
-      "type": "pickup",
-      "is_executed": false
+      "type": "pickup"
     },
     {
       "id": 3,
       "task":
       {
         "id": "0d06fb90-a76d-48b4-b64f-857b7388ab70",
-        "pickup_start_time": -1,
         "cart_id": "",
         "cart_type": "mobidik",
         "delivery_pose":
@@ -112,12 +111,14 @@
             "subAreas": [],
             "type": ""
         },
-        "earliest_finish_time": 41.0,
-        "earliest_start_time": 41.0,
+        "earliest_delivery_time": 41.0,
+        "earliest_pickup_time": 41.0,
+        "earliest_start_time":-1,
         "estimated_duration": 4.0,
         "finish_time": -1,
-        "latest_finish_time": 52.0,
-        "latest_start_time": 47.0,
+        "latest_delivery_time": 52.0,
+        "latest_pickup_time": 47.0,
+        "latest_start_time":-1,
         "loadId": "",
         "loadType": "",
         "pickup_pose":
@@ -141,14 +142,12 @@
         },
         "team_robot_ids": null
       },
-      "type": "delivery",
-      "is_executed": false
+      "type": "delivery"
     },
     {
       "id": 4,
       "task":
       {
-        "pickup_start_time": -1,
         "cart_id": "",
         "cart_type": "mobidik",
         "delivery_pose":
@@ -159,13 +158,15 @@
             "subAreas": [],
             "type": ""
         },
-        "earliest_finish_time": 96.0,
-        "earliest_start_time": 96.0,
+        "earliest_delivery_time": 96.0,
+        "earliest_pickup_time": 96.0,
+        "earliest_start_time":-1,
         "estimated_duration": 4.0,
         "finish_time": -1,
         "id": "0616af00-ec3b-4ecd-ae62-c94a3703594c",
-        "latest_finish_time": 107.0,
-        "latest_start_time": 102.0,
+        "latest_delivery_time": 107.0,
+        "latest_pickup_time": 102.0,
+        "latest_start_time":-1,
         "loadId": "",
         "loadType": "",
         "pickup_pose":
@@ -191,14 +192,12 @@
 
         "team_robot_ids": null
       },
-      "type": "start",
-      "is_executed": false
+      "type": "start"
     },
     {
       "id": 5,
       "task":
       {
-          "pickup_start_time": -1,
           "cart_id": "",
           "cart_type": "mobidik",
           "delivery_pose":
@@ -209,13 +208,15 @@
               "subAreas": [],
               "type": ""
           },
-          "earliest_finish_time": 96.0,
-          "earliest_start_time": 96.0,
+          "earliest_delivery_time": 96.0,
+          "earliest_pickup_time": 96.0,
+          "earliest_start_time":-1,
           "estimated_duration": 4.0,
           "finish_time": -1,
           "id": "0616af00-ec3b-4ecd-ae62-c94a3703594c",
-          "latest_finish_time": 107.0,
-          "latest_start_time": 102.0,
+          "latest_delivery_time": 107.0,
+          "latest_pickup_time": 102.0,
+          "latest_start_time":-1,
           "loadId": "",
           "loadType": "",
           "pickup_pose":
@@ -241,14 +242,12 @@
 
           "team_robot_ids": null
       },
-      "type": "pickup",
-      "is_executed": false
+      "type": "pickup"
     },
     {
       "id": 6,
       "task":
       {
-        "pickup_start_time": -1,
         "cart_id": "",
         "cart_type": "mobidik",
         "delivery_pose":
@@ -259,13 +258,15 @@
             "subAreas": [],
             "type": ""
         },
-        "earliest_finish_time": 96.0,
-        "earliest_start_time": 96.0,
+        "earliest_delivery_time": 96.0,
+        "earliest_pickup_time": 96.0,
+        "earliest_start_time":-1,
         "estimated_duration": 4.0,
         "finish_time": -1,
         "id": "0616af00-ec3b-4ecd-ae62-c94a3703594c",
-        "latest_finish_time": 107.0,
-        "latest_start_time": 102.0,
+        "latest_delivery_time": 107.0,
+        "latest_pickup_time": 102.0,
+        "latest_start_time":-1,
         "loadId": "",
         "loadType": "",
         "pickup_pose":
@@ -291,8 +292,7 @@
 
         "team_robot_ids": null
     },
-      "type": "delivery",
-      "is_executed": false
+      "type": "delivery"
     }
   ],
    "constraints":[
@@ -300,48 +300,31 @@
       "starting_node_id": 1,
       "ending_node_id": 2,
       "min_time": 6,
-      "max_time": "inf",
-      "distribution": "N_6_1",
-      "sampled_duration": 0,
-      "is_contingent": true
-
+      "max_time": "inf"
       },
     {
       "starting_node_id": 2,
       "ending_node_id": 3,
       "min_time": 4,
-      "max_time": "inf",
-      "distribution": "N_4_1",
-      "sampled_duration": 0,
-      "is_contingent": true
-
+      "max_time": "inf"
     },
     {
       "starting_node_id":3,
       "ending_node_id":4,
       "min_time": 0,
-      "max_time": "inf",
-      "distribution": "",
-      "sampled_duration": 0,
-      "is_contingent": false
+      "max_time": "inf"
     },
     {
       "starting_node_id":4,
       "ending_node_id":5,
       "min_time": 8,
-      "max_time": "inf",
-      "distribution": "N_8_1",
-      "sampled_duration": 0,
-      "is_contingent": true
+      "max_time": "inf"
    },
    {
     "starting_node_id":5,
     "ending_node_id":6,
     "min_time": 4,
-    "max_time": "inf",
-    "distribution": "N_4_1",
-    "sampled_duration": 0,
-    "is_contingent": true
+    "max_time": "inf"
    }
    ]
 }

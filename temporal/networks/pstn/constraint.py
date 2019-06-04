@@ -27,7 +27,7 @@ from temporal.networks.distempirical import norm_sample, uniform_sample
 from temporal.networks.stn import Constraint
 
 
-class ConstraintSTNU(Constraint):
+class ConstraintPSTN(Constraint):
     """ Represents a temporal constraint between two nodes in the STN
         i: starting node
         j: ending node
@@ -141,7 +141,7 @@ class ConstraintSTNU(Constraint):
         # sampled_duration = constraint_dict['sampled_duration']
         # is_contingent = constraint_dict['is_contingent']
 
-        constraint_stnu = ConstraintSTNU(starting_node_id, ending_node_id, min_time, max_time, distribution)
+        constraint_stnu = ConstraintPSTN(starting_node_id, ending_node_id, min_time, max_time, distribution)
         # constraint = ConstraintSTNU()
         # constraint.starting_node_id = constraint_dict['starting_node_id']
         # constraint.ending_node_id = constraint_dict['ending_node_id']

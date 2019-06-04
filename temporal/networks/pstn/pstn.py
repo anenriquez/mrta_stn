@@ -22,14 +22,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import networkx as nx
-from temporal.networks.stnu import NodeSTNU, ConstraintSTNU
+from temporal.networks.pstn import NodePSTN, ConstraintPSTN
 from temporal.networks.stn import STN
-from temporal.structs.task import Task
 
 
-class STNU(STN):
-    """ Represents a Simple Temporal Network (STN) as a networkx directed graph
+class PSTN(STN):
+    """ Represents a Probabilistic Simple Temporal Network (PSTN) as a networkx directed graph
     """
     def __init__(self):
         super().__init__()
@@ -66,7 +64,7 @@ class STNU(STN):
         return to_print
 
     def add_zero_timepoint(self):
-        zero_timepoint = NodeSTNU(0)
+        zero_timepoint = NodePSTN(0)
         self.add_node(0, data=zero_timepoint)
 
     def add_constraint(self, constraint):
@@ -94,12 +92,17 @@ class STNU(STN):
 
     def add_start_end_constraints(self, node):
         """Add the start and finish time temporal constraints of a timepoint (node) in the STNU"""
-        if node.is_task_start:
-            start_time = ConstraintSTNU(0, node.id, node.task.earliest_start_time, node.task.latest_start_time)
+        if node.type == "start":
+            start_time = ConstraintPSTN(0, node.id, 0)
             self.add_constraint(start_time)
-        elif node.is_task_end:
-            finish_time = ConstraintSTNU(0, node.id, node.task.earliest_finish_time, node.task.latest_finish_time)
-            self.add_constraint(finish_time)
+
+        elif node.type == "pickup":
+            pickup_time = ConstraintPSTN(0, node.id, node.task.earliest_pickup_time, node.task.latest_pickup_time)
+            self.add_constraint(pickup_time)
+
+        elif node.type == "delivery":
+            delivery_time = ConstraintPSTN(0, node.id, node.task.earliest_delivery_time, node.task.latest_delivery_time)
+            self.add_constraint(delivery_time)
 
     def build_stn(self, scheduled_tasks):
         """ Builds an STN with the tasks in the list of scheduled tasks"""
@@ -112,11 +115,11 @@ class STNU(STN):
         for task in scheduled_tasks:
             print("Adding task {} in position{}".format(task.id, position))
             # Add two nodes per task
-            node = NodeSTNU(position, task, is_start_task=True)
+            node = NodePSTN(position, task, is_start_task=True)
             self.add_node(node.id, data=node)
             self.add_start_end_constraints(node)
 
-            node = NodeSTNU(position+1, task, is_start_task=False)
+            node = NodePSTN(position + 1, task, is_start_task=False)
             self.add_node(node.id, data=node)
             # Adding starting and ending node temporal constraint
             self.add_start_end_constraints(node)
@@ -127,7 +130,7 @@ class STNU(STN):
         i = iter(nodes)
         pairs = list(zip(i, i))
         for (i, j) in pairs:
-            constraint = ConstraintSTNU(i, j, self.node[i]['data'].task.estimated_duration)
+            constraint = ConstraintPSTN(i, j, self.node[i]['data'].task.estimated_duration)
             self.add_constraint(constraint)
 
     def to_dict(self):
@@ -145,36 +148,36 @@ class STNU(STN):
 
     @staticmethod
     def from_dict(stnu_dict):
-        stnu = STNU()
+        stnu = PSTN()
         zero_timepoint_exists = False
 
         for node_dict in stnu_dict['nodes']:
-            node = NodeSTNU.from_dict(node_dict)
+            node = NodePSTN.from_dict(node_dict)
             stnu.add_node(node.id, data=node)
             if node.id != 0:
                 # Adding starting and ending node temporal constraint
                 if node.type == "start":
-                    start_time = ConstraintSTNU(0, node.id, 0)
+                    start_time = ConstraintPSTN(0, node.id, 0)
                     stnu.add_constraint(start_time)
 
                 elif node.type == "pickup":
-                    pickup_start_time = ConstraintSTNU(0, node.id, node.task.earliest_start_time, node.task.latest_start_time)
-                    stnu.add_constraint(pickup_start_time)
+                    pickup_time = ConstraintPSTN(0, node.id, node.task.earliest_pickup_time, node.task.latest_pickup_time)
+                    stnu.add_constraint(pickup_time)
 
                 elif node.type == "delivery":
-                    delivery_finish_time = ConstraintSTNU(0, node.id, node.task.earliest_finish_time, node.task.latest_finish_time)
-                    stnu.add_constraint(delivery_finish_time)
+                    delivery_time = ConstraintPSTN(0, node.id, node.task.earliest_delivery_time, node.task.latest_delivery_time)
+                    stnu.add_constraint(delivery_time)
 
             else:
                 zero_timepoint_exists = True
 
         if zero_timepoint_exists is not True:
             # Adding the zero timepoint
-            zero_timepoint = NodeSTNU(0)
+            zero_timepoint = NodePSTN(0)
             stnu.add_node(0, data=zero_timepoint)
 
         for constraint_dict in stnu_dict['constraints']:
-            constraint = ConstraintSTNU.from_dict(constraint_dict)
+            constraint = ConstraintPSTN.from_dict(constraint_dict)
             stnu.add_constraint(constraint)
 
         return stnu

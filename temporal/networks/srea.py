@@ -26,7 +26,7 @@ import pulp
 import copy
 import networkx as nx
 
-from temporal.networks.stnu import STNU
+from temporal.networks.pstn import PSTN
 from temporal.networks.distempirical import invcdf_norm, invcdf_uniform
 
 """ SREA algorithm
@@ -209,7 +209,7 @@ def srea_LP(inputstn,
     """
 
     # Make sure everything is the correct type
-    if not isinstance(inputstn, STNU):
+    if not isinstance(inputstn, PSTN):
         raise TypeError("inputstn is not of type STN")
 
     alpha = round(float(alpha), 3)
