@@ -4,6 +4,8 @@ import yaml
 import collections
 from temporal.networks.stn import STN
 from temporal.structs.task import Task
+from temporal.networks.stn import Scheduler
+
 
 DATASET = "data/two_tasks.yaml"
 
@@ -13,6 +15,7 @@ class TestBuildSTN(unittest.TestCase):
         self.tasks = list()
         self.scheduled_tasks = list()
         self.stn = STN()
+        self.scheduler = Scheduler()
 
         my_dir = os.path.dirname(__file__)
         dataset_path = os.path.join(my_dir, DATASET)
@@ -27,20 +30,18 @@ class TestBuildSTN(unittest.TestCase):
 
     def test_build_stn(self):
         self.stn.build_stn(self.tasks)
-        print(self.stn)
+        print("STN: \n", self.stn)
         print(self.stn.nodes.data())
         print(self.stn.edges.data())
 
         minimal_stnu = self.stn.floyd_warshall()
-
-
         self.stn.update_edges(minimal_stnu)
-        # self.stn.update_time_schedule(minimal_stnu)
 
-        print(self.stn)
+        alpha, schedule = self.scheduler.get_schedule(self.stn, "earliest")
+        print("Schedule: \n", schedule)
 
-        completion_time = self.stn.get_completion_time()
-        makespan = self.stn.get_makespan()
+        completion_time = self.scheduler.get_completion_time(schedule)
+        makespan = self.scheduler.get_makespan(schedule)
 
         print("Completion time: ", completion_time)
         print("Makespan: ", makespan)
