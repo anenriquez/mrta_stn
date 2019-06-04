@@ -127,7 +127,7 @@ class STN(nx.DiGraph):
             delivery_time = Constraint(0, node.id, node.task.earliest_delivery_time, node.task.latest_delivery_time)
             self.add_constraint(delivery_time)
 
-    def build_stn(self, scheduled_tasks):
+    def build_temporal_network(self, scheduled_tasks):
         """ Builds an STN with the tasks in the list of scheduled tasks"""
         self.clear()
         self.add_zero_timepoint()

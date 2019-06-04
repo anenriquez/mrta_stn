@@ -104,7 +104,7 @@ class PSTN(STN):
             delivery_time = ConstraintPSTN(0, node.id, node.task.earliest_delivery_time, node.task.latest_delivery_time)
             self.add_constraint(delivery_time)
 
-    def build_stn(self, scheduled_tasks):
+    def build_temporal_network(self, scheduled_tasks):
         """ Builds an STN with the tasks in the list of scheduled tasks"""
         self.clear()
         self.add_zero_timepoint()
@@ -115,23 +115,41 @@ class PSTN(STN):
         for task in scheduled_tasks:
             print("Adding task {} in position{}".format(task.id, position))
             # Add two nodes per task
-            node = NodePSTN(position, task, is_start_task=True)
+            node = NodePSTN(position, task, "start")
             self.add_node(node.id, data=node)
             self.add_start_end_constraints(node)
 
-            node = NodePSTN(position + 1, task, is_start_task=False)
+            node = NodePSTN(position + 1, task, "pickup")
             self.add_node(node.id, data=node)
-            # Adding starting and ending node temporal constraint
             self.add_start_end_constraints(node)
-            position += 2
+
+            node = NodePSTN(position + 2, task, "delivery")
+            self.add_node(node.id, data=node)
+            self.add_start_end_constraints(node)
+            position += 3
 
         # Add constraints between nodes
-        nodes = list(self.nodes)[1:]
-        i = iter(nodes)
-        pairs = list(zip(i, i))
-        for (i, j) in pairs:
-            constraint = ConstraintPSTN(i, j, self.node[i]['data'].task.estimated_duration)
-            self.add_constraint(constraint)
+        nodes = list(self.nodes)
+        print("Nodes: ", nodes)
+        constraints = [((i), (i + 1)) for i in range(1, len(nodes)-1)]
+        print("Constraints: ", constraints)
+
+        for (i, j) in constraints:
+            if self.node[i]['data'].type == "start":
+                # TODO: Get distribution from i to j
+                distribution = "N_6_1"
+                constraint = ConstraintPSTN(i, j, 6, distribution=distribution)
+                self.add_constraint(constraint)
+
+            elif self.node[i]['data'].type == "pickup":
+                # TODO: Get distribution of duration
+                distribution = "N_4_1"
+                constraint = ConstraintPSTN(i, j, self.node[i]['data'].task.estimated_duration, distribution=distribution)
+                self.add_constraint(constraint)
+
+            elif self.node[i]['data'].type == "delivery":
+                constraint = ConstraintPSTN(i, j, 0)
+                self.add_constraint(constraint)
 
     def to_dict(self):
         stnu_dict = dict()
