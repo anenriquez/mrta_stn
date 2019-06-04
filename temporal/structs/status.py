@@ -1,7 +1,7 @@
 ''' Taken from https://github.com/ropod-project/ropod_common
 '''
 
-from src.structs.area import Area
+from temporal.structs.area import Area
 
 SUCCESS = 0
 FAILED = 1

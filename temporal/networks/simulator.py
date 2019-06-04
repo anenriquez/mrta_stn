@@ -24,7 +24,7 @@
 
 import numpy as np
 import copy
-from src.temporal_networks.srea import srea
+from temporal.networks.srea import srea
 
 Z_NODE_ID = 0
 
@@ -75,10 +75,10 @@ class Simulator(object):
 
         # Resample the contingent edges.
         # Super important!
-        print("Resampling contingent edges of stored STN")
+        # print("Resampling contingent edges of stored STN")
         self.resample_stored_stn()
 
-        print("Resampled STN:\n {}".format(self.stn))
+        # print("Resampled STN:\n {}".format(self.stn))
 
         for edge in self.stn.edges():
             i, j = edge

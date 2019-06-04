@@ -1,6 +1,7 @@
-__title__ = 'stntools'
+__title__ = 'stn'
 __version__ = '0.1.0'
 
 from .node import Node
 from .constraint import Constraint
-from .stnu import STNU
+from .stn import STN
+from .scheduler import Scheduler

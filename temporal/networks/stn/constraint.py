@@ -23,7 +23,7 @@
 # SOFTWARE.
 
 
-from src.temporal_networks.distempirical import norm_sample, uniform_sample
+from temporal.networks.distempirical import norm_sample, uniform_sample
 
 
 class Constraint(object):
@@ -46,7 +46,7 @@ class Constraint(object):
         i <--- -4 --- j
     """
 
-    def __init__(self, i=0, j=0, wji=-1, wij=-1, distribution=None):
+    def __init__(self, i=0, j=0, wji=-1, wij='inf'):
         # node where the constraint starts
         self.starting_node_id = i
         # node where the constraint ends
@@ -57,74 +57,9 @@ class Constraint(object):
         if wij == 'inf':
             wij = float('inf')
         self.max_time = wij
-        # Probability distribution (for contingent constraints)
-        self.distribution = distribution
-        # Duration (for contingent constraints) sampled from the probability distribution
-        self.sampled_duration = 0
-        # The constraint is contingent if it has a probability distribution
-        self.is_contingent = distribution is not None
 
     def __repr__(self):
         return "Constraint {} => {} [{}, {}]".format(self.starting_node_id, self.ending_node_id, -self.min_time, self.max_time)
-
-    def dtype(self):
-        """Returns the distribution edge type as a String. If no there is
-            distribution for this edge, return None.
-        """
-        if self.distribution is None:
-            return None
-        if self.distribution[0] == "U":
-            return "uniform"
-        elif self.distribution[0] == "N":
-            return "gaussian"
-        else:
-            return "unknown"
-
-    def resample(self, random_state):
-        """ Retrieves a new sample from a contingent constraint.
-        Raises an exception if this is a requirement constraint.
-
-        Returns:
-            A float selected from this constraint's contingent distribution.
-        """
-        sample = None
-        if not self.is_contingent:
-            raise TypeError("Cannot sample requirement constraint")
-        if self.distribution[0] == "N":
-            sample = norm_sample(self.mu, self.sigma, random_state)
-        elif self.distribution[0] == "U":
-            sample = uniform_sample(self.dist_lb, self.dist_ub, random_state)
-        # We have to use integers because of rounding errors.
-        self.sampled_duration = round(sample)
-        return self.sampled_duration
-
-    @property
-    def mu(self):
-        name_split = self.distribution.split("_")
-        if len(name_split) != 3 or name_split[0] != "N":
-            raise ValueError("No mu for non-normal dist")
-        return float(name_split[1])
-
-    @property
-    def sigma(self):
-        name_split = self.distribution.split("_")
-        if len(name_split) != 3 or name_split[0] != "N":
-            raise ValueError("No sigma for non-normal dist")
-        return float(name_split[2])
-
-    @property
-    def dist_ub(self):
-        name_split = self.distribution.split("_")
-        if len(name_split) != 3 or name_split[0] != "U":
-            raise ValueError("No upper bound for non-uniform dist")
-        return float(name_split[2]) * 1000
-
-    @property
-    def dist_lb(self):
-        name_split = self.distribution.split("_")
-        if len(name_split) != 3 or name_split[0] != "U":
-            raise ValueError("No lower bound for non-uniform dist")
-        return float(name_split[1]) * 1000
 
     def to_dict(self):
         constraint_dict = dict()
@@ -134,9 +69,6 @@ class Constraint(object):
         if self.max_time == float('inf'):
             self.max_time = 'inf'
         constraint_dict['max_time'] = self.max_time
-        constraint_dict['distribution'] = self.distribution
-        constraint_dict['sampled_duration'] = self.sampled_duration
-        constraint_dict['is_contingent'] = self.is_contingent
         return constraint_dict
 
     @staticmethod
@@ -148,7 +80,4 @@ class Constraint(object):
         if constraint_dict['max_time'] == 'inf':
             constraint_dict['max_time'] = float('inf')
         constraint.max_time = constraint_dict['max_time']
-        constraint.distribution = constraint_dict['distribution']
-        constraint.sampled_duration = constraint_dict['sampled_duration']
-        constraint.is_contingent = constraint_dict['is_contingent']
         return constraint

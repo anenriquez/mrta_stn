@@ -4,49 +4,49 @@
       "id": 1,
       "task":
       {
-        "id": "0d06fb90-a76d-48b4-b64f-857b7388ab70",
-        "pickup_start_time": -1,
-        "cart_id": "",
-        "cart_type": "mobidik",
-        "delivery_pose":
-        {
-            "floorNumber": 0,
-            "id": "",
-            "name": "AMK_TDU-TGR-1_X_5.82_Y_6.57",
-            "subAreas": [],
-            "type": ""
+          "id": "0d06fb90-a76d-48b4-b64f-857b7388ab70",
+          "cart_id": "",
+          "cart_type": "mobidik",
+          "delivery_pose":
+          {
+              "floorNumber": 0,
+              "id": "",
+              "name": "AMK_TDU-TGR-1_X_5.82_Y_6.57",
+              "subAreas": [],
+              "type": ""
+          },
+          "earliest_delivery_time": 41.0,
+          "earliest_pickup_time": 41.0,
+          "earliest_start_time": -1,
+          "estimated_duration": 4.0,
+          "finish_time": -1,
+          "latest_delivery_time": 52.0,
+          "latest_pickup_time": 47.0,
+          "latest_start_time": -1,
+          "loadId": "",
+          "loadType": "",
+          "pickup_pose":
+          {
+              "floorNumber": 0,
+              "id": "",
+              "name": "AMK_TDU-TGR-1_X_9.7_Y_5.6",
+              "subAreas": [],
+              "type": ""
+          },
+          "priority": 5,
+          "robot_actions": {},
+          "start_time": -1,
+          "status":
+          {
+              "completed_robot_actions": {},
+              "current_robot_actions": {},
+              "estimated_task_duration": 4.0,
+              "status": "unallocated",
+              "task_id": "0d06fb90-a76d-48b4-b64f-857b7388ab70"
+          },
+          "team_robot_ids": null
         },
-        "earliest_finish_time": 41.0,
-        "earliest_start_time": 41.0,
-        "estimated_duration": 4.0,
-        "finish_time": -1,
-        "latest_finish_time": 52.0,
-        "latest_start_time": 47.0,
-        "loadId": "",
-        "loadType": "",
-        "pickup_pose":
-        {
-            "floorNumber": 0,
-            "id": "",
-            "name": "AMK_TDU-TGR-1_X_9.7_Y_5.6",
-            "subAreas": [],
-            "type": ""
-        },
-        "priority": 5,
-        "robot_actions": {},
-        "start_time": -1,
-        "status":
-        {
-            "completed_robot_actions": {},
-            "current_robot_actions": {},
-            "estimated_task_duration": 4.0,
-            "status": "unallocated",
-            "task_id": "0d06fb90-a76d-48b4-b64f-857b7388ab70"
-        },
-        "team_robot_ids": null
-      },
-      "is_task_start": true,
-      "is_task_end": false,
+      "type": "start",
       "is_executed": false
     },
     {
@@ -54,7 +54,6 @@
       "task":
       {
         "id": "0d06fb90-a76d-48b4-b64f-857b7388ab70",
-        "pickup_start_time": -1,
         "cart_id": "",
         "cart_type": "mobidik",
         "delivery_pose":
@@ -65,12 +64,14 @@
             "subAreas": [],
             "type": ""
         },
-        "earliest_finish_time": 41.0,
-        "earliest_start_time": 41.0,
+        "earliest_delivery_time": 41.0,
+        "earliest_pickup_time": 41.0,
+        "earliest_start_time": -1,
         "estimated_duration": 4.0,
         "finish_time": -1,
-        "latest_finish_time": 52.0,
-        "latest_start_time": 47.0,
+        "latest_delivery_time": 52.0,
+        "latest_pickup_time": 47.0,
+        "latest_start_time": -1,
         "loadId": "",
         "loadType": "",
         "pickup_pose":
@@ -94,15 +95,62 @@
         },
         "team_robot_ids": null
       },
-      "is_task_start": false,
-      "is_task_end": true,
+      "type": "pickup",
       "is_executed": false
     },
     {
       "id": 3,
       "task":
       {
-        "pickup_start_time": -1,
+        "id": "0d06fb90-a76d-48b4-b64f-857b7388ab70",
+        "cart_id": "",
+        "cart_type": "mobidik",
+        "delivery_pose":
+        {
+            "floorNumber": 0,
+            "id": "",
+            "name": "AMK_TDU-TGR-1_X_5.82_Y_6.57",
+            "subAreas": [],
+            "type": ""
+        },
+        "earliest_delivery_time": 41.0,
+        "earliest_pickup_time": 41.0,
+        "earliest_start_time": -1,
+        "estimated_duration": 4.0,
+        "finish_time": -1,
+        "latest_delivery_time": 52.0,
+        "latest_pickup_time": 47.0,
+        "latest_start_time": -1,
+        "loadId": "",
+        "loadType": "",
+        "pickup_pose":
+        {
+            "floorNumber": 0,
+            "id": "",
+            "name": "AMK_TDU-TGR-1_X_9.7_Y_5.6",
+            "subAreas": [],
+            "type": ""
+        },
+        "priority": 5,
+        "robot_actions": {},
+        "start_time": -1,
+        "status":
+        {
+            "completed_robot_actions": {},
+            "current_robot_actions": {},
+            "estimated_task_duration": 4.0,
+            "status": "unallocated",
+            "task_id": "0d06fb90-a76d-48b4-b64f-857b7388ab70"
+        },
+        "team_robot_ids": null
+      },
+      "type": "delivery",
+      "is_executed": false
+    },
+    {
+      "id": 4,
+      "task":
+      {
         "cart_id": "",
         "cart_type": "mobidik",
         "delivery_pose":
@@ -113,13 +161,15 @@
             "subAreas": [],
             "type": ""
         },
-        "earliest_finish_time": 96.0,
-        "earliest_start_time": 96.0,
+        "earliest_delivery_time": 96.0,
+        "earliest_pickup_time": 96.0,
+        "earliest_start_time": -1,
         "estimated_duration": 4.0,
         "finish_time": -1,
         "id": "0616af00-ec3b-4ecd-ae62-c94a3703594c",
-        "latest_finish_time": 107.0,
-        "latest_start_time": 102.0,
+        "latest_delivery_time": 107.0,
+        "latest_pickup_time": 102.0,
+        "latest_start_time": -1,
         "loadId": "",
         "loadType": "",
         "pickup_pose":
@@ -145,15 +195,13 @@
 
         "team_robot_ids": null
       },
-      "is_task_start": true,
-      "is_task_end": false,
+      "type": "start",
       "is_executed": false
     },
     {
-      "id": 4,
+      "id": 5,
       "task":
       {
-          "pickup_start_time": -1,
           "cart_id": "",
           "cart_type": "mobidik",
           "delivery_pose":
@@ -164,13 +212,15 @@
               "subAreas": [],
               "type": ""
           },
-          "earliest_finish_time": 96.0,
-          "earliest_start_time": 96.0,
+          "earliest_delivery_time": 96.0,
+          "earliest_pickup_time": 96.0,
+          "earliest_start_time": -1,
           "estimated_duration": 4.0,
           "finish_time": -1,
           "id": "0616af00-ec3b-4ecd-ae62-c94a3703594c",
-          "latest_finish_time": 107.0,
-          "latest_start_time": 102.0,
+          "latest_delivery_time": 107.0,
+          "latest_pickup_time": 102.0,
+          "latest_start_time": -1,
           "loadId": "",
           "loadType": "",
           "pickup_pose":
@@ -196,15 +246,75 @@
 
           "team_robot_ids": null
       },
-      "is_task_start": false,
-      "is_task_end": true,
+      "type": "pickup",
+      "is_executed": false
+    },
+    {
+      "id": 6,
+      "task":
+      {
+        "cart_id": "",
+        "cart_type": "mobidik",
+        "delivery_pose":
+        {
+            "floorNumber": 0,
+            "id": "",
+            "name": "AMK_TDU-TGR-1_X_15.09_Y_5.69",
+            "subAreas": [],
+            "type": ""
+        },
+        "earliest_delivery_time": 96.0,
+        "earliest_pickup_time": 96.0,
+        "earliest_start_time": -1,
+        "estimated_duration": 4.0,
+        "finish_time": -1,
+        "id": "0616af00-ec3b-4ecd-ae62-c94a3703594c",
+        "latest_delivery_time": 107.0,
+        "latest_pickup_time": 102.0,
+        "latest_start_time": -1,
+        "loadId": "",
+        "loadType": "",
+        "pickup_pose":
+        {
+            "floorNumber": 0,
+            "id": "",
+            "name": "AMK_TDU-TGR-1_X_14.03_Y_9.55",
+            "subAreas": [],
+            "type": ""
+
+        },
+        "priority": 5,
+        "robot_actions": {},
+        "start_time": -1,
+        "status":
+        {
+            "completed_robot_actions": {},
+            "current_robot_actions": {},
+            "estimated_task_duration": 4.0,
+            "status": "unallocated",
+            "task_id": "0616af00-ec3b-4ecd-ae62-c94a3703594c"
+        },
+
+        "team_robot_ids": null
+    },
+      "type": "delivery",
       "is_executed": false
     }
   ],
-  "constraints":[
+   "constraints":[
     {
       "starting_node_id": 1,
       "ending_node_id": 2,
+      "min_time": 6,
+      "max_time": "inf",
+      "distribution": "N_6_1",
+      "sampled_duration": 0,
+      "is_contingent": true
+
+      },
+    {
+      "starting_node_id": 2,
+      "ending_node_id": 3,
       "min_time": 4,
       "max_time": "inf",
       "distribution": "N_4_1",
@@ -215,11 +325,29 @@
     {
       "starting_node_id":3,
       "ending_node_id":4,
-      "min_time": 4,
+      "min_time": 0,
       "max_time": "inf",
-      "distribution": "N_4_1",
+      "distribution": "",
+      "sampled_duration": 0,
+      "is_contingent": false
+    },
+    {
+      "starting_node_id":4,
+      "ending_node_id":5,
+      "min_time": 8,
+      "max_time": "inf",
+      "distribution": "N_8_1",
       "sampled_duration": 0,
       "is_contingent": true
-    }
-  ]
+   },
+   {
+    "starting_node_id":5,
+    "ending_node_id":6,
+    "min_time": 4,
+    "max_time": "inf",
+    "distribution": "N_4_1",
+    "sampled_duration": 0,
+    "is_contingent": true
+   }
+   ]
 }
