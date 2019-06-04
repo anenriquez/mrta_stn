@@ -178,24 +178,6 @@ class STN(nx.DiGraph):
                 constraint = Constraint(i, j, 0)
                 self.add_constraint(constraint)
 
-            # constraint = Constraint(i, j, 4)
-            # self.add_constraint(constraint)
-            # constraint = Constraint(i, j, pairs_tasks[index+1])
-            # self.add_constraint(constraint)
-
-        # for i in range(0, len(nodes), 3):
-        #     print("i")
-        #     print(pairs[i])
-
-
-
-        # i = iter(nodes)
-        # pairs = list(zip(i, i))
-        # for (i, j) in pairs:
-        #     print(i, j)
-            # constraint = Constraint(i, j, self.node[i]['data'].task.estimated_duration)
-            # self.add_constraint(constraint)
-
     def to_dict(self):
         stnu_dict = dict()
         stnu_dict['nodes'] = list()
