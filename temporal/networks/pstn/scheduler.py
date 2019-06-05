@@ -36,7 +36,7 @@ class SchedulerPSTN(Scheduler):
             return self.srea_algorithm(pstn)
         else:
             raise ValueError(("Execution strategy '{}'"
-                              " unknown").format(self.strategy))
+                              " unknown").format(strategy))
 
     def srea_algorithm(self, pstn):
         """ Implements the SREA algorithm.
