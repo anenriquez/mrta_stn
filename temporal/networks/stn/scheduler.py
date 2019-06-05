@@ -23,7 +23,7 @@ class Scheduler(object):
         alpha = 1.0
         if strategy == "earliest":
             return alpha, self.earliest_schedule(stn)
-        elif startegy == "latest":
+        elif strategy == "latest":
             return alpha, self.latest_schedule(stn)
         else:
             raise ValueError(("Execution strategy '{}'"
@@ -47,7 +47,7 @@ class Scheduler(object):
                 stn.node[j]['data'].task = task
         return stn
 
-    def latest_schedule(self):
+    def latest_schedule(self, stn):
         """ Computes a schedule that assigns the latest time to each start timepoint
         """
         for (i, j), constraint in sorted(stn.constraints.items()):
