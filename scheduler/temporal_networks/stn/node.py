@@ -1,4 +1,4 @@
-from temporal.structs.task import Task
+from scheduler.structs.task import Task
 
 
 class Node(object):

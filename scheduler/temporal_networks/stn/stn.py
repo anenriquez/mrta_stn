@@ -1,5 +1,5 @@
 import networkx as nx
-from temporal.networks.stn import Node, Constraint
+from scheduler.temporal_networks.stn import Node, Constraint
 
 
 class STN(nx.DiGraph):
@@ -108,7 +108,7 @@ class STN(nx.DiGraph):
     #     print("Adding task: ", task.id)
 
     def add_start_end_constraints(self, node):
-        """Add the start and finish time temporal constraints of a timepoint (node) in the STN
+        """Add the start and finish time scheduler constraints of a timepoint (node) in the STN
         EStn = EPtn - TTt(n-1)tn
         LStn = LPtn - TTt(n-1)tn
         """
@@ -200,7 +200,7 @@ class STN(nx.DiGraph):
             node = Node.from_dict(node_dict)
             stn.add_node(node.id, data=node)
             if node.id != 0:
-                # Adding starting and ending node temporal constraint
+                # Adding starting and ending node scheduler constraint
                 if node.type == "start":
                     # TODO: Get travel time (TT) from previous task (or init position) to the pickup of next task
                     earliest_start_time = 0

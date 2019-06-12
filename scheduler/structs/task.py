@@ -1,10 +1,10 @@
 ''' Taken from https://github.com/ropod-project/ropod_common
 '''
 
-from temporal.utils.uuid import generate_uuid
-from temporal.structs.area import Area
-from temporal.structs.action import Action
-from temporal.structs.status import TaskStatus
+from scheduler.utils.uuid import generate_uuid
+from scheduler.structs.area import Area
+from scheduler.structs.action import Action
+from scheduler.structs.status import TaskStatus
 
 
 class Task(object):

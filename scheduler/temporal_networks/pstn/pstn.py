@@ -22,8 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from temporal.networks.pstn import NodePSTN, ConstraintPSTN
-from temporal.networks.stn import STN
+from scheduler.temporal_networks.pstn import NodePSTN, ConstraintPSTN
+from scheduler.temporal_networks.stn import STN
 
 
 class PSTN(STN):
@@ -91,7 +91,7 @@ class PSTN(STN):
             self.requirement_constraints[(i, j)] = constraint
 
     def add_start_end_constraints(self, node):
-        """Add the start and finish time temporal constraints of a timepoint (node) in the STNU"""
+        """Add the start and finish time scheduler constraints of a timepoint (node) in the STNU"""
         if node.type == "start":
             start_time = ConstraintPSTN(0, node.id, 0)
             self.add_constraint(start_time)
@@ -173,7 +173,7 @@ class PSTN(STN):
             node = NodePSTN.from_dict(node_dict)
             stnu.add_node(node.id, data=node)
             if node.id != 0:
-                # Adding starting and ending node temporal constraint
+                # Adding starting and ending node scheduler constraint
                 if node.type == "start":
                     start_time = ConstraintPSTN(0, node.id, 0)
                     stnu.add_constraint(start_time)

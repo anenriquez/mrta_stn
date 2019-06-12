@@ -26,8 +26,8 @@ import pulp
 import copy
 import networkx as nx
 
-from temporal.networks.pstn import PSTN
-from temporal.networks.distempirical import invcdf_norm, invcdf_uniform
+from scheduler.temporal_networks.pstn import PSTN
+from scheduler.temporal_networks.distempirical import invcdf_norm, invcdf_uniform
 
 """ SREA algorithm
 """

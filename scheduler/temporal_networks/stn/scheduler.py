@@ -1,6 +1,6 @@
 import numpy as np
 import copy
-from temporal.networks.stn import STN
+from scheduler.temporal_networks.stn import STN
 
 """ Computes a schedule based on the selected dispatch strategy """
 
@@ -14,7 +14,7 @@ class Scheduler(object):
 
         Args:
         execution_strat (str): String representing the execution strategy.
-        stn (STN): a simple temporal network
+        stn (STN): a simple scheduler network
 
         Returns a tuple with format:
         | [0]: Alpha of the guide.

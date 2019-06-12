@@ -24,7 +24,7 @@
 
 import numpy as np
 import copy
-from temporal.networks.srea import srea
+from scheduler.temporal_networks.srea import srea
 
 Z_NODE_ID = 0
 

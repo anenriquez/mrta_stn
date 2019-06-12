@@ -23,11 +23,11 @@
 # SOFTWARE.
 
 
-from temporal.networks.distempirical import norm_sample, uniform_sample
+from scheduler.temporal_networks.distempirical import norm_sample, uniform_sample
 
 
 class Constraint(object):
-    """ Represents a temporal constraint between two nodes in the STN
+    """ Represents a scheduler constraint between two nodes in the STN
         i: starting node
         j: ending node
 
