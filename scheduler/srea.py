@@ -124,9 +124,11 @@ def srea(inputstn,
     # set up LP
     if not decouple:
         print("Getting minimal stn")
-        minimal_stn = nx.floyd_warshall(inputstn)
-        inputstn.update_edges(minimal_stn)
-        # inputstn = get_minimal_network(inputstn)
+        # minimal_stn = nx.floyd_warshall(inputstn)
+        # inputstn.update_edges(minimal_stn)
+        inputstn = get_minimal_network(inputstn)
+        if inputstn is None:
+            return result
         print("Updated stn: ", inputstn)
         # print("Resampling contingent edges of stored STN")
         # resample_stn(inputstn, rand_state)

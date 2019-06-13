@@ -153,7 +153,7 @@ class STN(nx.DiGraph):
         self.clear()
         self.add_zero_timepoint()
 
-        print("Scheduled tasks: ", [task.id for task in scheduled_tasks])
+        print("Tasks: ", [task.id for task in scheduled_tasks])
 
         position = 1
         for task in scheduled_tasks:

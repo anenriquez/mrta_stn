@@ -33,7 +33,7 @@ class TestBuildSTN(unittest.TestCase):
         # print(self.stn.nodes.data())
         # print(self.stn.edges.data())
 
-        minimal_network = self.scheduler.get_dispatch_graph()
+        metric, minimal_network = self.scheduler.get_dispatch_graph()
 
         print("Minimal STN: \n", minimal_network)
 

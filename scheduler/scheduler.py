@@ -48,7 +48,7 @@ class Scheduler(object):
     def build_temporal_network(self, tasks):
         self.temporal_network.build_temporal_network(tasks)
 
-    def get_dispatch_graph(self):
+    def get_dispatch_graph(self) -> tuple:
         if self.scheduling_method == 'srea':
             result = self.srea_algorithm()
         elif self.scheduling_method == 'fpc':
@@ -57,15 +57,19 @@ class Scheduler(object):
         return result
 
     def srea_algorithm(self) -> tuple:
-        return srea(self.temporal_network, debug=True)
-        # if result is not None:
-        #     # risk_level, dispatch_graph = result
-        #     # self.temporal_network.update_edges(dispatch_graph)
+        result = srea(self.temporal_network, debug=True)
+        if result is not None:
+            risk_level, dispatch_graph = result
+            return risk_level, dispatch_graph
+            # self.temporal_network.update_edges(dispatch_graph)
         # else:
         #     print("Result of SREA was None")
 
-    def fpc_algorithm(self) -> STN:
-        return get_minimal_network(self.temporal_network)
+    def fpc_algorithm(self) -> tuple:
+        dispatch_graph = get_minimal_network(self.temporal_network)
+        risk_level = 1
+        return risk_level, dispatch_graph
+
 
         # minimal_network = self.temporal_network.floyd_warshall()
         # if self.temporal_network.is_consistent(minimal_network):
