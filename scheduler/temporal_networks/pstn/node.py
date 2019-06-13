@@ -1,5 +1,5 @@
-from temporal.structs.task import Task
-from temporal.networks.stn import Node
+from scheduler.structs.task import Task
+from scheduler.temporal_networks.stn import Node
 
 
 class NodePSTN(Node):
