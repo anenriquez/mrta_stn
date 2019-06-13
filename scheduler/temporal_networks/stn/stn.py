@@ -127,14 +127,29 @@ class STN(nx.DiGraph):
 
 
         # Add constraints between new Nodes
-        new_nodes = [start_node_id, pickup_node_id, delivery_node_id]
+        new_constraints_between = [start_node_id, pickup_node_id, delivery_node_id]
 
-        print("New nodes: ", new_nodes)
+        # Check if there is a node after the new delivery node
+        if self.has_node(delivery_node_id+1):
+            # new_constraints_between = [start_node_id, pickup_node_id, delivery_node_id, delivery_node_id+1]
+            new_constraints_between.append(delivery_node_id+1)
+        # else:
+            # new_constraints_between =  [start_node_id, pickup_node_id, delivery_node_id]
 
-        constraints = [((i), (i + 1)) for i in range(1, len(self.nodes())-1)]
+        # Check if there is a node before the new start node
+        if self.has_node(start_node_id-1):
+            new_constraints_between.insert(0, start_node_id-1)
+            # new_constraints_between = [start_node_id-1, start_node_id, pickup_node_id, delivery_node_id]
+        # else:
+        #     new_constraints_between =  [start_node_id, pickup_node_id, delivery_node_id]
+
+        print("New constraints between nodes: ", new_constraints_between)
+
+        constraints = [((i), (i + 1)) for i in new_constraints_between[:-1]]
         print("Constraints: ", constraints)
 
         for (i, j) in constraints:
+            print("Adding constraint: ", (i, j))
             if self.node[i]['data'].type == "start":
                 # TODO: Get travel time from i to j
                 constraint = Constraint(i, j, 6)
@@ -160,6 +175,10 @@ class STN(nx.DiGraph):
         start_node_id = 2 * position + (position-2)
         pickup_node_id = start_node_id + 1
         delivery_node_id = pickup_node_id + 1
+        new_constraints_between = list()
+
+        if self.has_node(start_node_id-1) and self.has_node(delivery_node_id+1):
+            new_constraints_between = [start_node_id-1, start_node_id]
 
         # Remove node and all adjacent edges
         self.remove_node(start_node_id)
@@ -173,6 +192,22 @@ class STN(nx.DiGraph):
                 mapping[node_id] = node_id - 3
         print("mapping: ", mapping)
         nx.relabel_nodes(self, mapping, copy=False)
+
+        # If there is a task before the new position, add constraints
+        # if self.has_node(start_node_id-1) and self.has_node(delivery_node_id+1):
+        #     new_constraints_between = [start_node_id-1, start_node_id]
+        if new_constraints_between:
+
+            constraints = [((i), (i + 1)) for i in new_constraints_between[:-1]]
+            print("Constraints: ", constraints)
+
+            for (i, j) in constraints:
+                print("Adding constraint: ", (i, j))
+                if self.node[i]['data'].type == "delivery":
+                    constraint = Constraint(i, j, 0)
+                    self.add_constraint(constraint)
+
+
 
         print("Nodes: ", self.nodes.data())
         print("Edges: ", self.edges.data())

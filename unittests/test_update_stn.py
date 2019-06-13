@@ -19,7 +19,7 @@ class UpdateSTN(object):
             dataset = yaml.safe_load(file)
 
         tasks = list()
-        ordered_tasks = collections.OrderedDict(sorted(dataset['tasks'].items(), reverse=True))
+        ordered_tasks = collections.OrderedDict(sorted(dataset['tasks'].items()))
 
         for task_id, task in ordered_tasks.items():
             tasks.append(Task.from_dict(task))
@@ -59,8 +59,10 @@ class UpdateSTN(object):
         # Adds a new task in position 1. Displaces existing task at position 1 to position 2
         stn.add_task(self.tasks[1], 1)
 
-        n_nodes = 3 * len(self.tasks) + 1
-        n_edges = 2 * (5 * len(self.tasks) + len(self.tasks)-1)
+        # We added two tasks
+        added_tasks = [self.tasks[0], self.tasks[1]]
+        n_nodes = 3 * len(added_tasks) + 1
+        n_edges = 2 * (5 * len(added_tasks) + len(added_tasks)-1)
         # if len(self.tasks) > 1:
         #     n_edges = 2 * (5 * len(self.tasks) + len(self.tasks)-1)
         # else:
@@ -98,7 +100,7 @@ class UpdateSTN(object):
         # self.assertEqual(n_nodes, stn.number_of_nodes())
         # self.assertEqual(n_edges, stn.number_of_edges())
 
-    def test_remove_task(self):
+    def test_remove_task_beginning(self):
         print("Adding tasks consecutively...")
         stn = STN()
         print(stn)
@@ -106,22 +108,47 @@ class UpdateSTN(object):
         for i, task in enumerate(self.tasks):
             stn.add_task(task, i+1)
 
-        n_nodes = 3 * len(self.tasks) + 1
-        n_edges = 2 * (5 * len(self.tasks) + len(self.tasks)-1)
+        # n_nodes = 3 * len(self.tasks) + 1
+        # n_edges = 2 * (5 * len(self.tasks) + len(self.tasks)-1)
+        #
+        # print("N nodes: ", n_nodes)
+        # print("N edges: ", n_edges)
 
-        print("N nodes: ", n_nodes)
-        print("N edges: ", n_edges)
-
+        # Remove task in position 1
         stn.remove_task(1)
+
+    def test_remove_task_middle(self):
+        print("Adding tasks consecutively...")
+        stn = STN()
+        print(stn)
+
+        for i, task in enumerate(self.tasks):
+            stn.add_task(task, i+1)
+
+        # Remove task in position 2
+        stn.remove_task(2)
+
+    def test_remove_task_end(self):
+        print("Removing task at the end...")
+        stn = STN()
+        print(stn)
+
+        for i, task in enumerate(self.tasks):
+            stn.add_task(task, i+1)
+
+        # Remove task in position 2
+        stn.remove_task(3)
 
 
 if __name__ == '__main__':
     # unittest.main()
     test = UpdateSTN()
     # test.test_add_tasks_consecutively()
-    test.test_add_task_beggining()
+    # test.test_add_task_beggining()
     # test.test_add_task_middle()
-    # test.test_remove_task()
+    # test.test_remove_task_beginning()
+    # test.test_remove_task_middle()
+    test.test_remove_task_end()
 
     #add_tasks_consecutively()
     # tasks = get_tasks()
