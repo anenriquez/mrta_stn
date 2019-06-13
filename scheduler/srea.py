@@ -28,6 +28,7 @@ import networkx as nx
 
 from scheduler.temporal_networks.pstn import PSTN
 from scheduler.temporal_networks.distempirical import invcdf_norm, invcdf_uniform
+from scheduler.fpc import get_minimal_network
 
 """ SREA algorithm
 """
@@ -108,7 +109,9 @@ def srea(inputstn,
     @returns a tuple (alpha, outputstn) if there is a solution,
     or None if there is no solution
     """
+    print("We are in SREA!")
     inputstn = copy.deepcopy(inputstn)
+    print("---->Input stn: ", inputstn)
     # dictionary of alphas for binary search
     alphas = {i: i / 1000.0 for i in range(1001)}
 
@@ -120,9 +123,11 @@ def srea(inputstn,
 
     # set up LP
     if not decouple:
+        print("Getting minimal stn")
         minimal_stn = nx.floyd_warshall(inputstn)
         inputstn.update_edges(minimal_stn)
-        # print("Updated stn: ", inputstn)
+        # inputstn = get_minimal_network(inputstn)
+        print("Updated stn: ", inputstn)
         # print("Resampling contingent edges of stored STN")
         # resample_stn(inputstn, rand_state)
         # print("Resampled STN: ", inputstn)

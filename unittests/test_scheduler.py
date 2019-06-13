@@ -2,8 +2,10 @@ import unittest
 import json
 import os
 import numpy as np
-from temporal.networks.pstn import PSTN
-from temporal.networks.pstn import SchedulerPSTN
+from scheduler.temporal_networks.pstn import PSTN
+from scheduler.scheduler import Scheduler
+from scheduler.structs.task import Task
+
 
 PSTN_DATA = "data/pstn_two_tasks.json"
 MAX_SEED = 2 ** 31 - 1
@@ -11,32 +13,25 @@ MAX_SEED = 2 ** 31 - 1
 
 class TestScheduler(unittest.TestCase):
     def setUp(self):
-
+        tasks = list()
         my_dir = os.path.dirname(__file__)
         stnu_json = os.path.join(my_dir, PSTN_DATA)
 
-        print("my dir:", my_dir)
-        print("stnu_json: ", stnu_json)
-
+        self.scheduler = Scheduler('srea')
         with open(stnu_json) as json_file:
             stnu_dict = json.load(json_file)
-        self.pstn = PSTN.from_dict(stnu_dict)
-
-        random_seed = np.random.randint(MAX_SEED)
-        seed_gen = np.random.RandomState(random_seed)
-        seed = seed_gen.randint(MAX_SEED)
-        self.scheduler = SchedulerPSTN(seed)
+            self.scheduler.temporal_network = PSTN.from_dict(stnu_dict)
 
     def test_consistency(self):
-        print("Initial PSTN:\n", self.pstn)
+        print("Initial PSTN:\n", self.scheduler.temporal_network)
 
         # Resample the contingent edges.
         # Super important!
-        pstn = self.scheduler.resample_pstn(self.pstn)
-        print("Resampled pstn:\n", pstn)
+        # pstn = self.scheduler.resample_pstn(self.pstn)
+        # print("Resampled pstn:\n", pstn)
 
         print("Getting GUIDE...")
-        alpha, guide_stn = self.scheduler.get_schedule(pstn, "srea")
+        alpha, guide_stn = self.scheduler.get_dispatch_graph()
         print("GUIDE")
         print(guide_stn)
         print("Alpha: ", alpha)

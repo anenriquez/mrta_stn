@@ -50,21 +50,22 @@ class STN(nx.DiGraph):
 
         self.constraints[(i, j)] = constraint
 
-    def is_consistent(self, minimal_stn):
+    def is_consistent(self, shortest_path_array):
         """The STN is not consistent if it has negative cycles"""
         consistent = True
-        for node, nodes in minimal_stn.items():
+        for node, nodes in shortest_path_array.items():
             if nodes[node] != 0:
                 consistent = False
         return consistent
 
-    def update_edges(self, minimal_stn, create=False):
+    def update_edges(self, shortest_path_array, create=False):
         """Update edges in the STN to reflect the distances in the minimal stn
         """
-        for column, row in minimal_stn.items():
+        print("Updating edges")
+        for column, row in shortest_path_array.items():
             nodes = dict(row)
             for n in nodes:
-                self.update_edge_weight(column, n, minimal_stn[column][n])
+                self.update_edge_weight(column, n, shortest_path_array[column][n])
 
     def update_edge_weight(self, i, j, weight, create=False):
         """ Updates the weight of the edge between node starting_node and node ending_node
@@ -96,9 +97,29 @@ class STN(nx.DiGraph):
     #         return None
     #     return self.get_edge_data(0, node_id)['weight']
 
-    def floyd_warshall(self):
-        minimal_stn = nx.floyd_warshall(self)
-        return minimal_stn
+    # def floyd_warshall(self):
+    #     minimal_stn = nx.floyd_warshall(self)
+    #     return minimal_stn
+
+    def get_completion_time(self):
+        nodes = list(self.nodes())
+        node_first_task = nodes[1]
+        node_last_task = nodes[-1]
+
+        start_time_lower_bound = -self[node_first_task][0]['weight']
+
+        finish_time_upper_bound = self[0][node_last_task]['weight']
+
+        completion_time = round(finish_time_upper_bound - start_time_lower_bound)
+
+        return completion_time
+
+    def get_makespan(self):
+        nodes = list(self.nodes())
+        node_last_task = nodes[-1]
+        last_task_finish_time = self[0][node_last_task]['weight']
+
+        return last_task_finish_time
 
     # def add_task(self, task, position):
     #     """ A transportation task consists of two nodes:
