@@ -14,7 +14,7 @@ class Node(object):
 
     def __repr__(self):
         """ String representation """
-        return "node_{} {}".format(self.task.id, self.type)
+        return "node_{} {}".format(self.id, self.type)
 
     def __hash__(self):
         return hash((self.id, self.task, self.type))

@@ -13,6 +13,8 @@ class STN(nx.DiGraph):
 
     def __str__(self):
         to_print = ""
+
+        #  TODO
         for (i, j), constraint in sorted(self.constraints.items()):
             # if the constraint is connected to the zero_timepoint
             if i == 0:
@@ -54,10 +56,10 @@ class STN(nx.DiGraph):
     def remove_constraint(self, constraint):
         i = constraint.starting_node_id
         j = constraint.ending_node_id
-        print("Starting node: ", i)
-        print("Ending node: ", j)
-
-        print("Edges: ", self.edges())
+        # print("Starting node: ", i)
+        # print("Ending node: ", j)
+        #
+        # print("Edges: ", self.edges())
 
         # print("Edge: ", self.edges([i, j]))
         # print("Edge: ", self.edges([j, i]))
@@ -180,10 +182,27 @@ class STN(nx.DiGraph):
         if self.has_node(start_node_id-1) and self.has_node(delivery_node_id+1):
             new_constraints_between = [start_node_id-1, start_node_id]
 
+        # Get adjacent edges
+        edges_to_remove = list(self.in_edges(start_node_id)) + list(self.out_edges(start_node_id)) + list(self.in_edges(pickup_node_id)) + list(self.out_edges(pickup_node_id)) + list(self.in_edges(delivery_node_id)) + list(self.out_edges(delivery_node_id))
+
+        print("Edges to remove: ", edges_to_remove)
+
+        for (i, j) in edges_to_remove:
+            if (i, j) in self.constraints:
+                self.remove_constraint(self.constraints[(i, j)])
+
+        print("Updated constraints: ", self.constraints)
+
+        # print("In edges: ", self.in_edges(start_node_id))
+        # print("Out edges: ", self.out_edges(start_node_id))
+        # self.remove_edges_from(edges_to_remove)
+
         # Remove node and all adjacent edges
         self.remove_node(start_node_id)
         self.remove_node(pickup_node_id)
         self.remove_node(delivery_node_id)
+
+
 
         # Displace by -3 all nodes and constraints after position
         mapping = {}
