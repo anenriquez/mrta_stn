@@ -1,5 +1,5 @@
 import networkx as nx
-from scheduler.temporal_networks.stn import Node, Constraint
+from scheduler.temporal_networks.stn import Node #, Constraint
 
 
 class STN(nx.DiGraph):
@@ -7,19 +7,10 @@ class STN(nx.DiGraph):
     """
     def __init__(self):
         super().__init__()
-        # {(starting_node, ending_node): Constraint object}
-        self.constraints = dict()
         self.add_zero_timepoint()
 
     def __str__(self):
         to_print = ""
-
-        #  TODO
-        # print("------------")
-        # print([(u,v,d) for (u,v,d) in self.out_edges(data=True) if self.has_edge(v,u)])
-        print("------------")
-
-
         for (i, j, data) in self.edges.data():
             if self.has_edge(j, i) and i < j:
                 # Constraints with the zero timepoint
@@ -28,71 +19,53 @@ class STN(nx.DiGraph):
                     lower_bound = -self[j][i]['weight']
                     upper_bound = self[i][j]['weight']
                     to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
+                # Constraints between the other timepoints
                 else:
                     to_print += "Constraint {} => {}: [{}, {}]".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
                 to_print += "\n"
-                # print(i, j)
-                # print(self.get_edge_data(i, j), self.get_edge_data(j, i))
 
-        # print("------------")
-        #
-        # for (i, j), constraint in sorted(self.constraints.items()):
-        #     # if the constraint is connected to the zero_timepoint
-        #     if i == 0:
-        #         timepoint = self.node[j]['data']
-        #         lower_bound = -self[j][i]['weight']
-        #         upper_bound = self[i][j]['weight']
-        #         to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
-        #
-        #     else:
-        #         to_print += "Constraint {} => {}: [{}, {}]".format(
-        #             constraint.starting_node_id, constraint.ending_node_id, -self[j][i]['weight'], self[i][j]['weight'])
-        #     to_print += "\n"
         return to_print
 
     def add_zero_timepoint(self):
         zero_timepoint = Node(0)
         self.add_node(0, data=zero_timepoint)
 
-    def add_constraint(self, constraint):
-        """Add the edges of a constraint to the STN
-        starting_node: starting node
-        ending_node: ending node
-
-        A constraint
-        starting_node --- [-min_time, max_time] ---> ending_node
-        Is mapped to two edges in the STN
-        starting_node --- max_time ---> ending_node
-        starting_node <--- -min_time --- ending_node
+    def add_constraint(self, i=0, j=0, wji=-1, wij=float('inf')):
         """
+        Adds constraint between nodes i and j
+        i: starting node
+        j: ending node
 
-        i = constraint.starting_node_id
-        j = constraint.ending_node_id
+        The constraint
+        i --- [-wji, wij] ---> j
+        Maps to two edges in a distance graph
+        i --- wij ---> j
+        i <--- -wji --- j
 
-        self.add_edge(i, j, weight=constraint.max_time)
-        self.add_edge(j, i, weight=constraint.min_time)
+        -wji is the lower bound (minimum allocated time between i and j)
+         wij is the upper bound (maximum allocated time between i and j)
 
-        self.constraints[(i, j)] = constraint
+        If there is no upper bound, its value is set to infinity
+        """
+        # Minimum allocated time between i and j
+        min_time = -wji
+        # Maximum allocated time between i and j
+        # if wij == 'inf':
+        #     wij = float('inf')
+        max_time = wij
 
-    def remove_constraint(self, constraint):
-        i = constraint.starting_node_id
-        j = constraint.ending_node_id
-        # print("Starting node: ", i)
-        # print("Ending node: ", j)
-        #
-        # print("Edges: ", self.edges())
+        # i = constraint.starting_node_id
+        # j = constraint.ending_node_id
 
-        # print("Edge: ", self.edges([i, j]))
-        # print("Edge: ", self.edges([j, i]))
+        self.add_edge(j, i, weight=min_time)
+        self.add_edge(i, j, weight=max_time)
 
-
+    def remove_constraint(self, i, j):
+        """ i : starting node id
+            j : ending node id
+        """
         self.remove_edge(i, j)
         self.remove_edge(j, i)
-
-        print("Edges: ", self.edges())
-
-        # Remove key from constraints dict
-        self.constraints.pop((i, j), None)
 
     def add_task(self, task, position):
         """ A task is added as 3 nodes and 5 constraints in the STN"
@@ -109,31 +82,26 @@ class STN(nx.DiGraph):
         If the task is not the first in the STN, add wait time constraint
         """
         print("Adding task {} in position {}".format(task.id, position))
-        # if position > 1:
-        #     navigation_node_id = position + 3
-        # else:
-        #     navigation_node_id = position
+
         start_node_id = 2 * position + (position-2)
         pickup_node_id = start_node_id + 1
         delivery_node_id = pickup_node_id + 1
 
-        print("Initial Nodes: ", self.nodes())
-        print("Initial Edges: ", self.edges.data())
-
         # Remove constraint linking start_node_id and previous task (if any)
-        if (start_node_id-1, start_node_id) in self.constraints and start_node_id-1 != 0:
-            print("Deleting constraint: ", self.constraints[(start_node_id-1, start_node_id)])
-            self.remove_constraint(self.constraints[(start_node_id-1, start_node_id)])
+        if self.has_edge(start_node_id-1, start_node_id) and start_node_id-1 != 0:
+            print("Deleting constraint: {} => {}".format(start_node_id-1, start_node_id))
+
+            self.remove_constraint(start_node_id-1, start_node_id)
 
         # Displace by 3 all nodes and constraints after position
         mapping = {}
         for node_id, data in self.nodes(data=True):
             if node_id >= start_node_id:
                 mapping[node_id] = node_id + 3
-        print("mapping: ", mapping)
+        # print("mapping: ", mapping)
         nx.relabel_nodes(self, mapping, copy=False)
 
-        print("Edges after remapping: ", self.edges.data())
+        # print("Edges after remapping: ", self.edges.data())
 
         # Add new nodes
         node = Node(start_node_id, task, "start")
@@ -148,52 +116,46 @@ class STN(nx.DiGraph):
         self.add_node(node.id, data=node)
         self.add_start_end_constraints(node)
 
-
-        # Add constraints between new Nodes
+        # Add constraints between new nodes
         new_constraints_between = [start_node_id, pickup_node_id, delivery_node_id]
 
         # Check if there is a node after the new delivery node
         if self.has_node(delivery_node_id+1):
-            # new_constraints_between = [start_node_id, pickup_node_id, delivery_node_id, delivery_node_id+1]
             new_constraints_between.append(delivery_node_id+1)
-        # else:
-            # new_constraints_between =  [start_node_id, pickup_node_id, delivery_node_id]
 
         # Check if there is a node before the new start node
         if self.has_node(start_node_id-1):
             new_constraints_between.insert(0, start_node_id-1)
-            # new_constraints_between = [start_node_id-1, start_node_id, pickup_node_id, delivery_node_id]
-        # else:
-        #     new_constraints_between =  [start_node_id, pickup_node_id, delivery_node_id]
 
-        print("New constraints between nodes: ", new_constraints_between)
+        # print("New constraints between nodes: ", new_constraints_between)
 
         constraints = [((i), (i + 1)) for i in new_constraints_between[:-1]]
-        print("Constraints: ", constraints)
+        # print("Constraints: ", constraints)
 
         for (i, j) in constraints:
-            print("Adding constraint: ", (i, j))
+            # print("Adding constraint: ", (i, j))
             if self.node[i]['data'].type == "start":
                 # TODO: Get travel time from i to j
-                constraint = Constraint(i, j, 6)
-                self.add_constraint(constraint)
+                # constraint = Constraint(i, j, 6)
+                self.add_constraint(i, j, 6)
 
             elif self.node[i]['data'].type == "pickup":
-                constraint = Constraint(i, j, self.node[i]['data'].task.estimated_duration)
-                self.add_constraint(constraint)
+                #constraint = Constraint(i, j, self.node[i]['data'].task.estimated_duration)
+                self.add_constraint(i, j, self.node[i]['data'].task.estimated_duration)
 
             elif self.node[i]['data'].type == "delivery":
-                constraint = Constraint(i, j, 0)
-                self.add_constraint(constraint)
+                # constraint = Constraint(i, j, 0)
+                self.add_constraint(i, j, 0)
 
-        print("Nodes: ", self.nodes.data())
-        print("Edges: ", self.edges.data())
-
-        print("N nodes in stn: ", self.number_of_nodes())
-        print("N edges in stn: ", self.number_of_edges())
+        # print("Nodes: ", self.nodes.data())
+        # print("Edges: ", self.edges.data())
+        #
+        # print("N nodes in stn: ", self.number_of_nodes())
+        # print("N edges in stn: ", self.number_of_edges())
 
     def remove_task(self, position):
         """ Removes the task from the given position"""
+
         print("Removing task at position: ", position)
         start_node_id = 2 * position + (position-2)
         pickup_node_id = start_node_id + 1
@@ -203,58 +165,34 @@ class STN(nx.DiGraph):
         if self.has_node(start_node_id-1) and self.has_node(delivery_node_id+1):
             new_constraints_between = [start_node_id-1, start_node_id]
 
-        # Get adjacent edges
-        edges_to_remove = list(self.in_edges(start_node_id)) + list(self.out_edges(start_node_id)) + list(self.in_edges(pickup_node_id)) + list(self.out_edges(pickup_node_id)) + list(self.in_edges(delivery_node_id)) + list(self.out_edges(delivery_node_id))
-
-        print("Edges to remove: ", edges_to_remove)
-
-        for (i, j) in edges_to_remove:
-            if (i, j) in self.constraints:
-                self.remove_constraint(self.constraints[(i, j)])
-
-        print("Updated constraints: ", self.constraints)
-
-        # print("In edges: ", self.in_edges(start_node_id))
-        # print("Out edges: ", self.out_edges(start_node_id))
-        # self.remove_edges_from(edges_to_remove)
-
         # Remove node and all adjacent edges
         self.remove_node(start_node_id)
         self.remove_node(pickup_node_id)
         self.remove_node(delivery_node_id)
-
-
 
         # Displace by -3 all nodes and constraints after position
         mapping = {}
         for node_id, data in self.nodes(data=True):
             if node_id >= start_node_id:
                 mapping[node_id] = node_id - 3
-        print("mapping: ", mapping)
+        # print("mapping: ", mapping)
         nx.relabel_nodes(self, mapping, copy=False)
 
-        # If there is a task before the new position, add constraints
-        # if self.has_node(start_node_id-1) and self.has_node(delivery_node_id+1):
-        #     new_constraints_between = [start_node_id-1, start_node_id]
         if new_constraints_between:
-
             constraints = [((i), (i + 1)) for i in new_constraints_between[:-1]]
-            print("Constraints: ", constraints)
+            # print("Constraints: ", constraints)
 
             for (i, j) in constraints:
-                print("Adding constraint: ", (i, j))
+                # print("Adding constraint: ", (i, j))
                 if self.node[i]['data'].type == "delivery":
-                    constraint = Constraint(i, j, 0)
-                    self.add_constraint(constraint)
+                    # constraint = Constraint(i, j, 0)
+                    self.add_constraint(i, j, 0)
 
-
-
-        print("Nodes: ", self.nodes.data())
-        print("Edges: ", self.edges.data())
-
-        print("N nodes in stn: ", self.number_of_nodes())
-        print("N edges in stn: ", self.number_of_edges())
-
+        # print("Nodes: ", self.nodes.data())
+        # print("Edges: ", self.edges.data())
+        #
+        # print("N nodes in stn: ", self.number_of_nodes())
+        # print("N edges in stn: ", self.number_of_edges())
 
     def is_consistent(self, shortest_path_array):
         """The STN is not consistent if it has negative cycles"""
@@ -343,16 +281,16 @@ class STN(nx.DiGraph):
             # TODO: Get travel time (TT) from previous task (or init position) to the pickup of next task
             earliest_start_time = 0
             # latest_start_time = 100
-            start_time = Constraint(0, node.id, earliest_start_time)
-            self.add_constraint(start_time)
+            # start_time = Constraint(0, node.id, earliest_start_time)
+            self.add_constraint(0, node.id, earliest_start_time)
 
         if node.type == "pickup":
-            pickup_time = Constraint(0, node.id, node.task.earliest_pickup_time, node.task.latest_pickup_time)
-            self.add_constraint(pickup_time)
+            # pickup_time = Constraint(0, node.id, node.task.earliest_pickup_time, node.task.latest_pickup_time)
+            self.add_constraint(0, node.id, node.task.earliest_pickup_time, node.task.latest_pickup_time)
 
         elif node.type == "delivery":
-            delivery_time = Constraint(0, node.id, node.task.earliest_delivery_time, node.task.latest_delivery_time)
-            self.add_constraint(delivery_time)
+            # delivery_time = Constraint(0, node.id, node.task.earliest_delivery_time, node.task.latest_delivery_time)
+            self.add_constraint(0, node.id, node.task.earliest_delivery_time, node.task.latest_delivery_time)
 
     def build_temporal_network(self, scheduled_tasks):
         """ Builds an STN with the tasks in the list of scheduled tasks"""
@@ -394,29 +332,29 @@ class STN(nx.DiGraph):
         for (i, j) in constraints:
             if self.node[i]['data'].type == "start":
                 # TODO: Get travel time from i to j
-                constraint = Constraint(i, j, 6)
-                self.add_constraint(constraint)
+                # constraint = Constraint(i, j, 6)
+                self.add_constraint(i, j, 6)
 
             elif self.node[i]['data'].type == "pickup":
-                constraint = Constraint(i, j, self.node[i]['data'].task.estimated_duration)
-                self.add_constraint(constraint)
+                # constraint = Constraint(i, j, self.node[i]['data'].task.estimated_duration)
+                self.add_constraint(i, j, self.node[i]['data'].task.estimated_duration)
 
             elif self.node[i]['data'].type == "delivery":
-                constraint = Constraint(i, j, 0)
-                self.add_constraint(constraint)
+                # constraint = Constraint(i, j, 0)
+                self.add_constraint(i, j, 0)
 
-    def to_dict(self):
-        stnu_dict = dict()
-        stnu_dict['nodes'] = list()
-        for node in self.nodes():
-            stnu_dict['nodes'].append(self.node[node]['data'].to_dict())
-            print("Printing the nodes")
-            print(self.node[node]['data'])
-        #     stnu_dict['nodes'].append(node.to_dict())
-        stnu_dict['constraints'] = list()
-        for (i, j), constraint in self.constraints.items():
-            stnu_dict['constraints'].append(constraint.to_dict())
-        return stnu_dict
+    # def to_dict(self):
+    #     stnu_dict = dict()
+    #     stnu_dict['nodes'] = list()
+    #     for node in self.nodes():
+    #         stnu_dict['nodes'].append(self.node[node]['data'].to_dict())
+    #         print("Printing the nodes")
+    #         print(self.node[node]['data'])
+    #     #     stnu_dict['nodes'].append(node.to_dict())
+    #     stnu_dict['constraints'] = list()
+    #     for (i, j), constraint in self.constraints.items():
+    #         stnu_dict['constraints'].append(constraint.to_dict())
+    #     return stnu_dict
 
     @staticmethod
     def from_dict(stn_dict):
@@ -432,16 +370,16 @@ class STN(nx.DiGraph):
                     # TODO: Get travel time (TT) from previous task (or init position) to the pickup of next task
                     earliest_start_time = 0
                     # latest_start_time = 100
-                    start_time = Constraint(0, node.id, earliest_start_time)
-                    stn.add_constraint(start_time)
+                    # start_time = Constraint(0, node.id, earliest_start_time)
+                    stn.add_constraint(0, node.id, earliest_start_time)
 
                 elif node.type == "pickup":
-                    pickup_time = Constraint(0, node.id, node.task.earliest_pickup_time, node.task.latest_pickup_time)
-                    stn.add_constraint(pickup_time)
+                    # pickup_time = Constraint(0, node.id, node.task.earliest_pickup_time, node.task.latest_pickup_time)
+                    stn.add_constraint(0, node.id, node.task.earliest_pickup_time, node.task.latest_pickup_time)
 
                 elif node.type == "delivery":
-                    delivery_time = Constraint(0, node.id, node.task.earliest_delivery_time, node.task.latest_delivery_time)
-                    stn.add_constraint(delivery_time)
+                    # delivery_time = Constraint(0, node.id, node.task.earliest_delivery_time, node.task.latest_delivery_time)
+                    stn.add_constraint(0, node.id, node.task.earliest_delivery_time, node.task.latest_delivery_time)
 
             else:
                 zero_timepoint_exists = True
