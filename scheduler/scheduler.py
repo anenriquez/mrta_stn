@@ -24,12 +24,17 @@ Possible scheduling methods:
 
 class Scheduler(object):
 
-    def __init__(self, scheduling_method):
+    def __init__(self, scheduling_method, **kwargs):
         self.scheduling_method = scheduling_method
-        self.temporal_network = self.init_temporal_network()
+
+        json_temporal_network = kwargs.pop('json_temporal_network', None)
+
+        if json_temporal_network is not None:
+            self.temporal_network = self.load_temporal_network(json_temporal_network)
+        else:
+            self.temporal_network = self.init_temporal_network()
 
     def init_temporal_network(self):
-        print("Calling init stn")
         if self.scheduling_method == 'srea':
             temporal_network = PSTN()
         elif self.scheduling_method == 'fpc':
@@ -39,6 +44,12 @@ class Scheduler(object):
             pass
         elif self.scheduling_method == 'durability':
             temporal_network = STN()
+
+        return temporal_network
+
+    def load_temporal_network(self, json_temporal_network):
+        if self.scheduling_method == 'fpc':
+            temporal_network = STN.from_json(json_temporal_network)
 
         return temporal_network
 

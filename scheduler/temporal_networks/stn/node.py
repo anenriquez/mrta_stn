@@ -4,39 +4,44 @@ from scheduler.structs.task import Task
 class Node(object):
     """Represents a timepoint in the STN """
 
-    def __init__(self, id='', task=Task(), type=0):
-        # The unique ID number of the node in the STN.
-        self.id = id
-        # Transportation task represented by this node
-        self.task = task
-        # The node can be a start, pickup or delivery node
+    def __init__(self, task_id='', pose='', type='zero_timepoint'):
+        # id of the task represented by this node
+        self.task_id = task_id
+        # Pose in the map where the node has to be executed
+        self.pose = pose
+        # The node can be of type zero_timepoint, navigation, start or finish
         self.type = type
 
+    def __str__(self):
+        to_print = ""
+        to_print += "node {} {}".format(self.task_id, self.type)
+        return to_print
+
     def __repr__(self):
-        """ String representation """
-        return "node_{} {}".format(self.task.id, self.type)
+        # return "node {} {}".format(self.task_id, self.type)
+        return str(self.to_dict())
 
     def __hash__(self):
-        return hash((self.id, self.task, self.type))
+        return hash((self.task_id, self.pose, self.type))
 
     def __eq__(self, other):
         if other is None:
             return False
-        return (self.id == other.id and
-                self.task == other.task and
+        return (self.task_id == other.task_id and
+                self.pose == other.pose and
                 self.type == other.type)
 
     def to_dict(self):
         node_dict = dict()
-        node_dict['id'] = self.id
-        node_dict['task'] = self.task.to_dict()
+        node_dict['task_id'] = self.task_id
+        node_dict['pose'] = self.pose
         node_dict['type'] = self.type
         return node_dict
 
     @staticmethod
     def from_dict(node_dict):
         node = Node()
-        node.id = node_dict['id']
-        node.task = Task.from_dict(node_dict['task'])
+        node.task_id = node_dict['task_id']
+        node.pose = node_dict['pose']
         node.type = node_dict['type']
         return node
