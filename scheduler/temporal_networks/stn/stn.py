@@ -15,18 +15,39 @@ class STN(nx.DiGraph):
         to_print = ""
 
         #  TODO
-        for (i, j), constraint in sorted(self.constraints.items()):
-            # if the constraint is connected to the zero_timepoint
-            if i == 0:
-                timepoint = self.node[j]['data']
-                lower_bound = -self[j][i]['weight']
-                upper_bound = self[i][j]['weight']
-                to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
+        # print("------------")
+        # print([(u,v,d) for (u,v,d) in self.out_edges(data=True) if self.has_edge(v,u)])
+        print("------------")
 
-            else:
-                to_print += "Constraint {} => {}: [{}, {}]".format(
-                    constraint.starting_node_id, constraint.ending_node_id, -self[j][i]['weight'], self[i][j]['weight'])
-            to_print += "\n"
+
+        for (i, j, data) in self.edges.data():
+            if self.has_edge(j, i) and i < j:
+                # Constraints with the zero timepoint
+                if i == 0:
+                    timepoint = self.node[j]['data']
+                    lower_bound = -self[j][i]['weight']
+                    upper_bound = self[i][j]['weight']
+                    to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
+                else:
+                    to_print += "Constraint {} => {}: [{}, {}]".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
+                to_print += "\n"
+                # print(i, j)
+                # print(self.get_edge_data(i, j), self.get_edge_data(j, i))
+
+        # print("------------")
+        #
+        # for (i, j), constraint in sorted(self.constraints.items()):
+        #     # if the constraint is connected to the zero_timepoint
+        #     if i == 0:
+        #         timepoint = self.node[j]['data']
+        #         lower_bound = -self[j][i]['weight']
+        #         upper_bound = self[i][j]['weight']
+        #         to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
+        #
+        #     else:
+        #         to_print += "Constraint {} => {}: [{}, {}]".format(
+        #             constraint.starting_node_id, constraint.ending_node_id, -self[j][i]['weight'], self[i][j]['weight'])
+        #     to_print += "\n"
         return to_print
 
     def add_zero_timepoint(self):
