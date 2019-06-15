@@ -24,11 +24,10 @@
 
 
 from scheduler.temporal_networks.distempirical import norm_sample, uniform_sample
-from scheduler.temporal_networks.stn import Constraint
 
 
-class ConstraintPSTN(Constraint):
-    """ Represents a scheduler constraint between two nodes in the STN
+class Constraint(object):
+    """ Represents a contingent constraint between two nodes in the PSTN
         i: starting node
         j: ending node
 
@@ -47,18 +46,19 @@ class ConstraintPSTN(Constraint):
         i <--- -4 --- j
     """
 
-    def __init__(self, i=0, j=0, wji=-1, wij='inf', distribution=""):
-        super().__init__(i, j, wji, wij)
-        # Probability distribution (for contingent constraints)
+    def __init__(self, i=0, j=0, distribution=""):
+        # Probability distribution
         self.distribution = distribution
-        # Duration (for contingent constraints) sampled from the probability distribution
+        # Duration sampled from the probability distribution
         self.sampled_duration = 0
-        # The constraint is contingent if it has a probability distribution
-        self.is_contingent = distribution is not ""
+
+    def __repr__(self):
+        to_print = ""
+        to_print += self.distribution
+        return to_print
 
     def dtype(self):
-        """Returns the distribution edge type as a String. If no there is
-            distribution for this edge, return None.
+        """ Returns the distribution type as a String.
         """
         if self.distribution is None:
             return None
@@ -71,14 +71,12 @@ class ConstraintPSTN(Constraint):
 
     def resample(self, random_state):
         """ Retrieves a new sample from a contingent constraint.
-        Raises an exception if this is a requirement constraint.
 
         Returns:
             A float selected from this constraint's contingent distribution.
         """
         sample = None
-        if not self.is_contingent:
-            raise TypeError("Cannot sample requirement constraint")
+
         if self.distribution[0] == "N":
             sample = norm_sample(self.mu, self.sigma, random_state)
         elif self.distribution[0] == "U":
@@ -115,41 +113,41 @@ class ConstraintPSTN(Constraint):
             raise ValueError("No lower bound for non-uniform dist")
         return float(name_split[1]) * 1000
 
-    def to_dict(self):
-        constraint_dict = super().__to_dict()
-        # constraint_dict = dict()
-        # constraint_dict['starting_node_id'] = self.starting_node_id
-        # constraint_dict['ending_node_id'] = self.ending_node_id
-        # constraint_dict['min_time'] = - self.min_time
-        # if self.max_time == float('inf'):
-        #     self.max_time = 'inf'
-        # constraint_dict['max_time'] = self.max_time
-        constraint_dict['distribution'] = self.distribution
-        constraint_dict['sampled_duration'] = self.sampled_duration
-        constraint_dict['is_contingent'] = self.is_contingent
-        return constraint_dict
-
-    @staticmethod
-    def from_dict(constraint_dict):
-        constraint = Constraint.from_dict(constraint_dict)
-
-        starting_node_id = constraint.starting_node_id
-        ending_node_id = constraint.ending_node_id
-        min_time = - constraint.min_time
-        max_time = constraint.max_time
-        distribution = constraint_dict['distribution']
-        # sampled_duration = constraint_dict['sampled_duration']
-        # is_contingent = constraint_dict['is_contingent']
-
-        constraint_stnu = ConstraintPSTN(starting_node_id, ending_node_id, min_time, max_time, distribution)
-        # constraint = ConstraintSTNU()
-        # constraint.starting_node_id = constraint_dict['starting_node_id']
-        # constraint.ending_node_id = constraint_dict['ending_node_id']
-        # constraint.min_time = -constraint_dict['min_time']
-        # if constraint_dict['max_time'] == 'inf':
-        #     constraint_dict['max_time'] = float('inf')
-        # constraint.max_time = constraint_dict['max_time']
-        # constraint.distribution = constraint_dict['distribution']
-        # constraint.sampled_duration = constraint_dict['sampled_duration']
-        # constraint.is_contingent = constraint_dict['is_contingent']
-        return constraint_stnu
+    # def to_dict(self):
+    #     constraint_dict = super().__to_dict()
+    #     # constraint_dict = dict()
+    #     # constraint_dict['starting_node_id'] = self.starting_node_id
+    #     # constraint_dict['ending_node_id'] = self.ending_node_id
+    #     # constraint_dict['min_time'] = - self.min_time
+    #     # if self.max_time == float('inf'):
+    #     #     self.max_time = 'inf'
+    #     # constraint_dict['max_time'] = self.max_time
+    #     constraint_dict['distribution'] = self.distribution
+    #     constraint_dict['sampled_duration'] = self.sampled_duration
+    #     constraint_dict['is_contingent'] = self.is_contingent
+    #     return constraint_dict
+    #
+    # @staticmethod
+    # def from_dict(constraint_dict):
+    #     constraint = Constraint.from_dict(constraint_dict)
+    #
+    #     starting_node_id = constraint.starting_node_id
+    #     ending_node_id = constraint.ending_node_id
+    #     min_time = - constraint.min_time
+    #     max_time = constraint.max_time
+    #     distribution = constraint_dict['distribution']
+    #     # sampled_duration = constraint_dict['sampled_duration']
+    #     # is_contingent = constraint_dict['is_contingent']
+    #
+    #     constraint_stnu = ConstraintPSTN(starting_node_id, ending_node_id, min_time, max_time, distribution)
+    #     # constraint = ConstraintSTNU()
+    #     # constraint.starting_node_id = constraint_dict['starting_node_id']
+    #     # constraint.ending_node_id = constraint_dict['ending_node_id']
+    #     # constraint.min_time = -constraint_dict['min_time']
+    #     # if constraint_dict['max_time'] == 'inf':
+    #     #     constraint_dict['max_time'] = float('inf')
+    #     # constraint.max_time = constraint_dict['max_time']
+    #     # constraint.distribution = constraint_dict['distribution']
+    #     # constraint.sampled_duration = constraint_dict['sampled_duration']
+    #     # constraint.is_contingent = constraint_dict['is_contingent']
+    #     return constraint_stnu

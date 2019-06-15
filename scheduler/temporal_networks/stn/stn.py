@@ -13,7 +13,7 @@ class MyEncoder(JSONEncoder):
 class STN(nx.DiGraph):
     """ Represents a Simple Temporal Network (STN) as a networkx directed graph
     """
-    def __init__(self, graph=nx.DiGraph()):
+    def __init__(self):
         super().__init__()
         self.add_zero_timepoint()
 
@@ -29,7 +29,11 @@ class STN(nx.DiGraph):
                     to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
                 # Constraints between the other timepoints
                 else:
-                    to_print += "Constraint {} => {}: [{}, {}]".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
+                    if 'is_contingent' in self[j][i]:
+                        to_print += "Constraint {} => {}: [{}, {}] ({})".format(i, j, -self[j][i]['weight'], self[i][j]['weight'], self[i][j]['distribution'])
+                    else:
+
+                        to_print += "Constraint {} => {}: [{}, {}]".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
                 to_print += "\n"
 
         return to_print
@@ -38,7 +42,7 @@ class STN(nx.DiGraph):
         node = Node()
         self.add_node(0, data=node.to_dict())
 
-    def add_constraint(self, i=0, j=0, wji=-1, wij=float('inf')):
+    def add_constraint(self, i=0, j=0, wji=0, wij=float('inf')):
         """
         Adds constraint between nodes i and j
         i: starting node
@@ -161,19 +165,63 @@ class STN(nx.DiGraph):
         constraints = [((i), (i + 1)) for i in new_constraints_between[:-1]]
         print("Constraints: ", constraints)
 
+        self.add_intertimepoints_constraints(constraints, task)
+
+        # for (i, j) in constraints:
+        #     print("Adding constraint: ", (i, j))
+        #     if self.node[i]['data']['type'] == "navigation":
+        #         duration = self.get_navigation_duration(i, j)
+        #         self.add_constraint(i, j, duration)
+        #
+        #     elif self.node[i]['data']['type'] == "start":
+        #         duration = self.get_task_duration(task)
+        #         self.add_constraint(i, j, duration)
+        #
+        #     elif self.node[i]['data']['type'] == "finish":
+        #         # wait time between finish of one task and start of the next one. Fixed to [0, inf]
+        #         self.add_constraint(i, j, 0)
+
+    def add_intertimepoints_constraints(self, constraints, task):
+        """ Adds constraints between the timepoints of a task
+        Constraints between:
+        - navigation start and start
+        - start and finish
+        - finish and next task (if any)
+        Args:
+            constraints (list) : list of tuples that defines the pair of nodes between which a new constraint should be added
+            Example:
+            constraints = [(1, 2), (2, 3)]
+            New constraints will be added between nodes 1 and 2 and between 2 and 3
+
+            task (Task): task represented by the constraints
+        """
         for (i, j) in constraints:
             print("Adding constraint: ", (i, j))
             if self.node[i]['data']['type'] == "navigation":
-                # TODO: get probability distribution of duration from i to j
-                self.add_constraint(i, j, 6)
+                duration = self.get_navigation_duration(i, j)
+                self.add_constraint(i, j, duration)
 
             elif self.node[i]['data']['type'] == "start":
-                # TODO: get probability distribution of duration from i to j
-                self.add_constraint(i, j, 4)
+                duration = self.get_task_duration(task)
+                self.add_constraint(i, j, duration)
 
             elif self.node[i]['data']['type'] == "finish":
-                # wait time between finish of one task and start of the next one
+                # wait time between finish of one task and start of the next one. Fixed to [0, inf]
                 self.add_constraint(i, j, 0)
+
+    def get_navigation_duration(self, source, destination):
+        """ Reads from the database the estimated duration for navigating from source to destination
+        """
+        # TODO: Read estimated duration from dataset
+        duration = 6
+        return duration
+
+    def get_task_duration(self, task):
+        """ Reads from the database the estimated duration of the task
+        In the case of transportation tasks, the estimated duration is the navigation time from the pickup to the delivery location
+        """
+        duration = task.estimated_duration
+        return duration
 
     def show_n_nodes_edges(self):
         """ Prints the number of nodes and edges in the stn

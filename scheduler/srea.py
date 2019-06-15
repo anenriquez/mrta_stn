@@ -71,8 +71,9 @@ def setUpLP(stn, decouple):
         condition = bounds[(i, '+')] >= bounds[(i, '-')]
         addConstraint(condition, prob)
 
+    contingent_constraints = stn.get_contingent_constraints()
     for (i, j) in stn.edges():
-        if (i, j) in stn.contingent_constraints:
+        if (i, j) in contingent_constraints:
             print("Contingent constraint: ", stn[i][j])
             deltas[(i, j)] = pulp.LpVariable('delta_%d_%d' %
                                              (i, j), lowBound=0, upBound=None)
@@ -83,7 +84,7 @@ def setUpLP(stn, decouple):
             # ignore edges from z. these edges are implicitly handled
             # with the bounds on the LP variables
             # also ignore complementary edges of contingent constraints
-            if i != 0 and j != 0 and (j, i) not in stn.contingent_constraints and not decouple:
+            if i != 0 and j != 0 and (j, i) not in contingent_constraints and not decouple:
                 print("Adding extra constraints ({}, {})".format(i, j))
                 addConstraint(bounds[(j, '+')] - bounds[(i, '-')]
                               <= stn.get_edge_weight(i, j), prob)
@@ -228,7 +229,9 @@ def srea_LP(inputstn,
     else:
         bounds, deltas, prob = probContainer
 
-    for (i, j), constraint in inputstn.contingent_constraints.items():
+    contingent_constraints = inputstn.get_contingent_constraints()
+
+    for (i, j), constraint in contingent_constraints.items():
         print("Constraint: ", constraint)
         if constraint.dtype() == "gaussian":
             p_ij = invcdf_norm(1.0 - alpha * 0.5, constraint.mu, constraint.sigma)

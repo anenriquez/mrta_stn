@@ -51,6 +51,9 @@ class Scheduler(object):
         if self.scheduling_method == 'fpc':
             temporal_network = STN.from_json(json_temporal_network)
 
+        elif self.scheduling_method == 'srea':
+            temporal_network = PSTN.from_json(json_temporal_network)
+
         return temporal_network
 
     def update_temporal_network(self):
