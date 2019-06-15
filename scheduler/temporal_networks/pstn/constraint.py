@@ -31,19 +31,8 @@ class Constraint(object):
         i: starting node
         j: ending node
 
-        The constraint
-        i --- [-wji, wij] ---> j
-        Maps to two edges in a distance graph
-        i --- wij ---> j
-        i <--- -wji --- j
-
-        -wji is the lower bound (minimum allocated time between i and j)
-         wij is the upper bound (maximum allocated time between i and j)
-
-        If there is no upper bound, its value is set to infinity and the edge from i to j does not exist
-        Eg, i ---[4, inf] ---> j
-        is mapped to
-        i <--- -4 --- j
+        The duration between i and j is represented as a contingent constraint with a probability distribution
+        i ------> j
     """
 
     def __init__(self, i=0, j=0, distribution=""):
@@ -112,42 +101,3 @@ class Constraint(object):
         if len(name_split) != 3 or name_split[0] != "U":
             raise ValueError("No lower bound for non-uniform dist")
         return float(name_split[1]) * 1000
-
-    # def to_dict(self):
-    #     constraint_dict = super().__to_dict()
-    #     # constraint_dict = dict()
-    #     # constraint_dict['starting_node_id'] = self.starting_node_id
-    #     # constraint_dict['ending_node_id'] = self.ending_node_id
-    #     # constraint_dict['min_time'] = - self.min_time
-    #     # if self.max_time == float('inf'):
-    #     #     self.max_time = 'inf'
-    #     # constraint_dict['max_time'] = self.max_time
-    #     constraint_dict['distribution'] = self.distribution
-    #     constraint_dict['sampled_duration'] = self.sampled_duration
-    #     constraint_dict['is_contingent'] = self.is_contingent
-    #     return constraint_dict
-    #
-    # @staticmethod
-    # def from_dict(constraint_dict):
-    #     constraint = Constraint.from_dict(constraint_dict)
-    #
-    #     starting_node_id = constraint.starting_node_id
-    #     ending_node_id = constraint.ending_node_id
-    #     min_time = - constraint.min_time
-    #     max_time = constraint.max_time
-    #     distribution = constraint_dict['distribution']
-    #     # sampled_duration = constraint_dict['sampled_duration']
-    #     # is_contingent = constraint_dict['is_contingent']
-    #
-    #     constraint_stnu = ConstraintPSTN(starting_node_id, ending_node_id, min_time, max_time, distribution)
-    #     # constraint = ConstraintSTNU()
-    #     # constraint.starting_node_id = constraint_dict['starting_node_id']
-    #     # constraint.ending_node_id = constraint_dict['ending_node_id']
-    #     # constraint.min_time = -constraint_dict['min_time']
-    #     # if constraint_dict['max_time'] == 'inf':
-    #     #     constraint_dict['max_time'] = float('inf')
-    #     # constraint.max_time = constraint_dict['max_time']
-    #     # constraint.distribution = constraint_dict['distribution']
-    #     # constraint.sampled_duration = constraint_dict['sampled_duration']
-    #     # constraint.is_contingent = constraint_dict['is_contingent']
-    #     return constraint_stnu

@@ -167,20 +167,6 @@ class STN(nx.DiGraph):
 
         self.add_intertimepoints_constraints(constraints, task)
 
-        # for (i, j) in constraints:
-        #     print("Adding constraint: ", (i, j))
-        #     if self.node[i]['data']['type'] == "navigation":
-        #         duration = self.get_navigation_duration(i, j)
-        #         self.add_constraint(i, j, duration)
-        #
-        #     elif self.node[i]['data']['type'] == "start":
-        #         duration = self.get_task_duration(task)
-        #         self.add_constraint(i, j, duration)
-        #
-        #     elif self.node[i]['data']['type'] == "finish":
-        #         # wait time between finish of one task and start of the next one. Fixed to [0, inf]
-        #         self.add_constraint(i, j, 0)
-
     def add_intertimepoints_constraints(self, constraints, task):
         """ Adds constraints between the timepoints of a task
         Constraints between:
@@ -302,19 +288,6 @@ class STN(nx.DiGraph):
             else:
                 return float('inf')
 
-    # def get_assigned_time(self, node_id):
-    #     """ Returns to assigned time to a timepoint (node) in the STN"""
-    #     if node_id == 0:
-    #         # This is the zero_timepoint
-    #         return 0.0
-    #     if self.get_edge_data(0, node_id)['weight'] != -self.get_edge_data(node_id, 0)['weight']:
-    #         return None
-    #     return self.get_edge_data(0, node_id)['weight']
-
-    # def floyd_warshall(self):
-    #     minimal_stn = nx.floyd_warshall(self)
-    #     return minimal_stn
-
     def get_completion_time(self):
         nodes = list(self.nodes())
         node_first_task = nodes[1]
@@ -380,105 +353,3 @@ class STN(nx.DiGraph):
         stn.add_nodes_from(graph.nodes(data=True))
         stn.add_edges_from(graph.edges(data=True))
         return stn
-
-
-
-    # def build_temporal_network(self, scheduled_tasks):
-    #     """ Builds an STN with the tasks in the list of scheduled tasks"""
-    #     self.clear()
-    #     self.add_zero_timepoint()
-    #
-    #     print("Tasks: ", [task.id for task in scheduled_tasks])
-    #
-    #     position = 1
-    #     for task in scheduled_tasks:
-    #         print("Adding task {} in position {}".format(task.id, position))
-    #         # Add three nodes per task
-    #         node = Node(position, task, "start")
-    #         self.add_node(node.id, data=node)
-    #         self.add_start_end_constraints(node)
-    #
-    #         node = Node(position+1, task, "pickup")
-    #         self.add_node(node.id, data=node)
-    #         self.add_start_end_constraints(node)
-    #
-    #         node = Node(position+2, task, "delivery")
-    #         self.add_node(node.id, data=node)
-    #         self.add_start_end_constraints(node)
-    #         position += 3
-    #
-    #     # Add constraints between nodes
-    #     nodes = list(self.nodes) #[1:]
-    #     print("Nodes: ", nodes)
-    #     constraints = [((i), (i + 1)) for i in range(1, len(nodes)-1)]
-    #     print("Constraints: ", constraints)
-    #
-    #     # Add tasks constraints
-    #     for (i, j) in constraints:
-    #         if self.node[i]['data'].type == "start":
-    #             # TODO: Get travel time from i to j
-    #             # constraint = Constraint(i, j, 6)
-    #             self.add_constraint(i, j, 6)
-    #
-    #         elif self.node[i]['data'].type == "pickup":
-    #             # constraint = Constraint(i, j, self.node[i]['data'].task.estimated_duration)
-    #             self.add_constraint(i, j, self.node[i]['data'].task.estimated_duration)
-    #
-    #         elif self.node[i]['data'].type == "delivery":
-    #             # constraint = Constraint(i, j, 0)
-    #             self.add_constraint(i, j, 0)
-
-    # def to_dict(self):
-    #     stnu_dict = dict()
-    #     stnu_dict['nodes'] = list()
-    #     for node in self.nodes():
-    #         stnu_dict['nodes'].append(self.node[node]['data'].to_dict())
-    #         print("Printing the nodes")
-    #         print(self.node[node]['data'])
-    #     #     stnu_dict['nodes'].append(node.to_dict())
-    #     stnu_dict['constraints'] = list()
-    #     for (i, j), constraint in self.constraints.items():
-    #         stnu_dict['constraints'].append(constraint.to_dict())
-    #     return stnu_dict
-
-    # @staticmethod
-    # def from_dict(stn_dict):
-    #     stn = STN()
-    #     zero_timepoint_exists = False
-    #
-    #     for node_dict in stn_dict['nodes']:
-    #         node = Node.from_dict(node_dict)
-    #         stn.add_node(node.id, data=node)
-    #         if node.id != 0:
-    #             # Adding starting and ending node scheduler constraint
-    #             if node.type == "start":
-    #                 # TODO: Get travel time (TT) from previous task (or init position) to the pickup of next task
-    #                 earliest_start_time = 0
-    #                 # latest_start_time = 100
-    #                 # start_time = Constraint(0, node.id, earliest_start_time)
-    #                 stn.add_constraint(0, node.id, earliest_start_time)
-    #
-    #             elif node.type == "pickup":
-    #                 # pickup_time = Constraint(0, node.id, node.task.earliest_pickup_time, node.task.latest_pickup_time)
-    #                 stn.add_constraint(0, node.id, node.task.earliest_pickup_time, node.task.latest_pickup_time)
-    #
-    #             elif node.type == "delivery":
-    #                 # delivery_time = Constraint(0, node.id, node.task.earliest_delivery_time, node.task.latest_delivery_time)
-    #                 stn.add_constraint(0, node.id, node.task.earliest_delivery_time, node.task.latest_delivery_time)
-    #
-    #         else:
-    #             zero_timepoint_exists = True
-    #
-    #     if zero_timepoint_exists is not True:
-    #         # Adding the zero timepoint
-    #         zero_timepoint = Node(0)
-    #         stn.add_node(0, data=zero_timepoint)
-    #
-    #     for constraint_dict in stn_dict['constraints']:
-    #         constraint = Constraint.from_dict(constraint_dict)
-    #         stn.add_constraint(constraint)
-    #
-    #     return stn
-
-    # def __repr__(self):
-    #     return json.dumps(self.__dict__)
