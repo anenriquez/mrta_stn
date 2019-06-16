@@ -1,34 +1,29 @@
 import unittest
-import json
 import os
-import numpy as np
-from scheduler.temporal_networks.pstn import PSTN
-from scheduler.scheduler import Scheduler
+import json
+import collections
 from scheduler.structs.task import Task
+from scheduler.scheduler import Scheduler
+
+STN = "data/pstn_two_tasks.json"
 
 
-PSTN_DATA = "data/pstn_two_tasks.json"
-MAX_SEED = 2 ** 31 - 1
+class TestBuildPSTN(unittest.TestCase):
 
-
-class TestScheduler(unittest.TestCase):
     def setUp(self):
-        tasks = list()
-        my_dir = os.path.dirname(__file__)
-        stnu_json = os.path.join(my_dir, PSTN_DATA)
+        # Load the stn as a dictionary
+        with open(STN) as json_file:
+            pstn_dict = json.load(json_file)
 
-        self.scheduler = Scheduler('srea')
-        with open(stnu_json) as json_file:
-            stnu_dict = json.load(json_file)
-            self.scheduler.temporal_network = PSTN.from_dict(stnu_dict)
+        # Convert the dict to a json string
+        pstn_json = json.dumps(pstn_dict)
 
-    def test_consistency(self):
-        print("Initial PSTN:\n", self.scheduler.temporal_network)
+        self.scheduler = Scheduler('srea', json_temporal_network=pstn_json)
 
-        # Resample the contingent edges.
-        # Super important!
-        # pstn = self.scheduler.resample_pstn(self.pstn)
-        # print("Resampled pstn:\n", pstn)
+    def test_build_stn(self):
+        print("PSTN: \n", self.scheduler.temporal_network)
+
+        print(type(self.scheduler.temporal_network))
 
         print("Getting GUIDE...")
         alpha, guide_stn = self.scheduler.get_dispatch_graph()
@@ -36,64 +31,75 @@ class TestScheduler(unittest.TestCase):
         print(guide_stn)
         print("Alpha: ", alpha)
 
-        expected_alpha = 0.081
+        completion_time = guide_stn.get_completion_time()
+        makespan = guide_stn.get_makespan()
+        print("Completion time: ", completion_time)
+        print("Makespan: ", makespan)
+
+        self.assertEqual(completion_time, 70)
+        self.assertEqual(makespan, 107)
+
+        expected_alpha = 0.023
         self.assertEqual(alpha, expected_alpha)
 
-        for (i, j), constraint in sorted(guide_stn.constraints.items()):
+        contingent_constraints = guide_stn.get_contingent_constraints()
+
+        for (i, j), constraint in sorted(contingent_constraints.items()):
+
             if i == 0 and j == 1:
                 lower_bound = -guide_stn[j][i]['weight']
                 upper_bound = guide_stn[i][j]['weight']
-                self.assertEqual(lower_bound, 38)
-                self.assertEqual(upper_bound, 39)
+                self.assertEqual(lower_bound, 37)
+                self.assertEqual(upper_bound, 38)
             if i == 0 and j == 2:
                 lower_bound = -guide_stn[j][i]['weight']
                 upper_bound = guide_stn[i][j]['weight']
-                self.assertEqual(lower_bound, 42)
-                self.assertEqual(upper_bound, 47)
+                self.assertEqual(lower_bound, 41)
+                self.assertEqual(upper_bound, 46)
             if i == 0 and j == 3:
                 lower_bound = -guide_stn[j][i]['weight']
                 upper_bound = guide_stn[i][j]['weight']
-                self.assertEqual(lower_bound, 45)
+                self.assertEqual(lower_bound, 41)
                 self.assertEqual(upper_bound, 52)
             if i == 0 and j == 4:
                 lower_bound = -guide_stn[j][i]['weight']
                 upper_bound = guide_stn[i][j]['weight']
-                self.assertEqual(lower_bound, 91)
-                self.assertEqual(upper_bound, 92)
+                self.assertEqual(lower_bound, 90)
+                self.assertEqual(upper_bound, 91)
             if i == 0 and j == 5:
                 lower_bound = -guide_stn[j][i]['weight']
                 upper_bound = guide_stn[i][j]['weight']
-                self.assertEqual(lower_bound, 97)
-                self.assertEqual(upper_bound, 102)
+                self.assertEqual(lower_bound, 96)
+                self.assertEqual(upper_bound, 101)
             if i == 0 and j == 6:
                 lower_bound = -guide_stn[j][i]['weight']
                 upper_bound = guide_stn[i][j]['weight']
-                self.assertEqual(lower_bound, 100)
+                self.assertEqual(lower_bound, 96)
                 self.assertEqual(upper_bound, 107)
             if i == 1 and j == 2:
                 lower_bound = -guide_stn[j][i]['weight']
                 upper_bound = guide_stn[i][j]['weight']
-                self.assertEqual(lower_bound, 6)
+                self.assertEqual(lower_bound, 0)
                 self.assertEqual(upper_bound, 47)
             if i == 2 and j == 3:
                 lower_bound = -guide_stn[j][i]['weight']
                 upper_bound = guide_stn[i][j]['weight']
-                self.assertEqual(lower_bound, 4)
+                self.assertEqual(lower_bound, 0)
                 self.assertEqual(upper_bound, 11)
             if i == 3 and j == 4:
                 lower_bound = -guide_stn[j][i]['weight']
                 upper_bound = guide_stn[i][j]['weight']
                 self.assertEqual(lower_bound, 0)
-                self.assertEqual(upper_bound, 49)
+                self.assertEqual(upper_bound, 61)
             if i == 4 and j == 5:
                 lower_bound = -guide_stn[j][i]['weight']
                 upper_bound = guide_stn[i][j]['weight']
-                self.assertEqual(lower_bound, 8)
-                self.assertEqual(upper_bound, 57)
+                self.assertEqual(lower_bound, 0)
+                self.assertEqual(upper_bound, 61)
             if i == 5 and j == 6:
                 lower_bound = -guide_stn[j][i]['weight']
                 upper_bound = guide_stn[i][j]['weight']
-                self.assertEqual(lower_bound, 4)
+                self.assertEqual(lower_bound, 0)
                 self.assertEqual(upper_bound, 11)
 
 

@@ -1,37 +1,28 @@
 import unittest
 import os
-import yaml
+import json
 import collections
 from scheduler.structs.task import Task
 from scheduler.scheduler import Scheduler
 
-DATASET = "data/two_tasks.yaml"
+STN = "data/stn_two_tasks.json"
 
 
 class TestBuildSTN(unittest.TestCase):
+
     def setUp(self):
-        tasks = self.get_tasks()
-        self.scheduler = Scheduler('fpc')
-        self.scheduler.build_temporal_network(tasks)
 
-    def get_tasks(self):
-        my_dir = os.path.dirname(__file__)
-        dataset_path = os.path.join(my_dir, DATASET)
+        # Load the stn as a dictionary
+        with open(STN) as json_file:
+            stn_dict = json.load(json_file)
 
-        with open(dataset_path, 'r') as file:
-            dataset = yaml.safe_load(file)
+        # Convert the dict to a json string
+        stn_json = json.dumps(stn_dict)
 
-        tasks = list()
-        ordered_tasks = collections.OrderedDict(sorted(dataset['tasks'].items(), reverse=True))
-
-        for task_id, task in ordered_tasks.items():
-            tasks.append(Task.from_dict(task))
-        return tasks
+        self.scheduler = Scheduler('fpc', json_temporal_network=stn_json)
 
     def test_build_stn(self):
         print("STN: \n", self.scheduler.temporal_network)
-        # print(self.stn.nodes.data())
-        # print(self.stn.edges.data())
 
         metric, minimal_network = self.scheduler.get_dispatch_graph()
 
