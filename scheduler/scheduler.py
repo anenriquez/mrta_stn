@@ -56,11 +56,17 @@ class Scheduler(object):
 
         return temporal_network
 
-    def update_temporal_network(self):
-        pass
+    def get_temporal_network(self):
+        return self.temporal_network
 
-    def build_temporal_network(self, tasks):
-        self.temporal_network.build_temporal_network(tasks)
+    def get_scheduling_method(self):
+        return self.scheduling_method
+
+    def add_task(self, task, position):
+        self.temporal_network.add_task(task, position)
+
+    def remove_task(self, position):
+        self.temporal_network.remove_task(position)
 
     def get_dispatch_graph(self) -> tuple:
         if self.scheduling_method == 'srea':
