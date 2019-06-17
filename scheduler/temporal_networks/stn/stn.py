@@ -118,6 +118,9 @@ class STN(nx.DiGraph):
         - task duration
         - earliest and latest finish times
         If the task is not the first in the STN, add wait time constraint
+
+        Note: Position 0 is reserved for the zero_timepoint
+        Add tasks from postion 1 onwards
         """
         print("Adding task {} in position {}".format(task.id, position))
 
