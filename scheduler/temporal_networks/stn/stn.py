@@ -29,11 +29,8 @@ class STN(nx.DiGraph):
                     to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
                 # Constraints between the other timepoints
                 else:
-                    if 'is_contingent' in self[j][i]:
-                        to_print += "Constraint {} => {}: [{}, {}] ({})".format(i, j, -self[j][i]['weight'], self[i][j]['weight'], self[i][j]['distribution'])
-                    else:
+                    to_print += "Constraint {} => {}: [{}, {}]".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
 
-                        to_print += "Constraint {} => {}: [{}, {}]".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
                 to_print += "\n"
 
         return to_print

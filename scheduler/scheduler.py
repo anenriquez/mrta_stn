@@ -1,5 +1,6 @@
 from scheduler.temporal_networks.stn import STN
 from scheduler.temporal_networks.pstn import PSTN
+from scheduler.temporal_networks.stnu import STNU
 from scheduler.srea import srea
 from scheduler.fpc import get_minimal_network
 
@@ -40,7 +41,7 @@ class Scheduler(object):
         elif self.scheduling_method == 'fpc':
             temporal_network = STN()
         elif self.scheduling_method == 'dsc-lp':
-            # temporal_network = STNU()
+            temporal_network = STNU()
             pass
         elif self.scheduling_method == 'durability':
             temporal_network = STN()
@@ -50,6 +51,9 @@ class Scheduler(object):
     def load_temporal_network(self, json_temporal_network):
         if self.scheduling_method == 'fpc':
             temporal_network = STN.from_json(json_temporal_network)
+
+        if self.scheduling_method == 'dsc-lp':
+            temporal_network = STNU.from_json(json_temporal_network)
 
         elif self.scheduling_method == 'srea':
             temporal_network = PSTN.from_json(json_temporal_network)
