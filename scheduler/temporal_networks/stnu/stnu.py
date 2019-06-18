@@ -29,7 +29,7 @@ class STNU(STN):
                     to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
                 # Constraints between the other timepoints
                 else:
-                    if 'is_contingent' in self[j][i]:
+                    if self[j][i]['is_contingent'] is True:
                         to_print += "Constraint {} => {}: [{}, {}] (contingent)".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
                     else:
 
@@ -82,6 +82,23 @@ class STNU(STN):
                 contingent_constraints[(i, j)] = self[i][j]
 
         return contingent_constraints
+
+    def get_contingent_timepoints(self):
+        """ Returns a list with the contingent (uncontrollable) timepoints in the STNU
+        """
+        timepoints = list(self.nodes)
+        contingent_timepoints = list()
+
+        for (i, j, data) in self.edges.data():
+            if self[i][j]['is_contingent'] is True and i < j:
+                contingent_timepoints.append(timepoints[j])
+
+        return contingent_timepoints
+
+    def shrink_contingent_constraint(self, i, j, low, high):
+        if self.has_edge(i, j):
+            self[i][j]['weight'] += high
+            self[j][i]['weight'] -= low
 
     def add_intertimepoints_constraints(self, constraints, task):
         """ Adds constraints between the timepoints of a task

@@ -19,10 +19,16 @@ class TestBuildSTNU(object):
         # Convert the dict to a json string
         stnu_json = json.dumps(stnu_dict)
 
-        self.scheduler = Scheduler('dsc-lp', json_temporal_network=stnu_json)
+        self.scheduler = Scheduler('dsc_lp', json_temporal_network=stnu_json)
 
     def test_build_stn(self):
         print("STNU: \n", self.scheduler.get_temporal_network())
+
+        print(type(self.scheduler.temporal_network))
+
+        r = self.scheduler.get_dispatch_graph()
+        print(r)
+
 
         # metric, minimal_network = self.scheduler.get_dispatch_graph()
         #

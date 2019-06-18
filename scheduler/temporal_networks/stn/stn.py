@@ -76,6 +76,19 @@ class STN(nx.DiGraph):
         self.remove_edge(i, j)
         self.remove_edge(j, i)
 
+    def get_constraints(self):
+        """ Two edges correspond to a constraint.
+            returns     dict with constraints
+                        {(starting_node, ending_node): self[i][j] }
+        """
+        constraints = dict()
+
+        for (i, j) in self.edges():
+            if i < j:
+                constraints[(i, j)] = self[i][j]
+
+        return constraints
+
     def get_node_pose(self, task, type):
         """ Returns the pose in the map where the task has to be executed
         """
