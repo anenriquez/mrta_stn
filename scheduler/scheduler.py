@@ -5,9 +5,9 @@ from scheduler.srea import srea
 from scheduler.fpc import get_minimal_network
 from scheduler.dsc_lp import DSC_LP
 
-""" Computes the dispatchable graph (solution space) of an temporal network based on the scheduling method defined in the config file
+""" Computes the dispatchable graph (solution space) of a temporal network
 
-The dispatch graph is not the schedule (assigment of values to timepoints) but the space of solutions to the Simple Temporal Problem (STP).
+The dispatch graph is not the schedule (assigment of values to timepoints), but the space of solutions to the Simple Temporal Problem (STP).
 
 Possible scheduling methods:
 - fpc:  Full Path Consistency.
@@ -17,7 +17,7 @@ Possible scheduling methods:
         Approximate method for solving the Robust Execution Problem. Computes the space of solutions that maximizes the robustness (likelihood of success) along with a level of risk
 
 - dsc-lp:   Degree of Strong Controllability Linear Program
-            Approximate method for finding the DSC along with a solution (schedule)
+            Approximate method for finding the DSC along with an offline solution (schedule)
 
 - durability: Returns a durable dispatchable graph that
               withstands unexpected disturbances
@@ -86,52 +86,39 @@ class Scheduler(object):
         return result
 
     def srea_algorithm(self) -> tuple:
-        result = srea(self.temporal_network, debug=True)
-        if result is not None:
-            risk_level, dispatch_graph = result
-            return risk_level, dispatch_graph
-            # self.temporal_network.update_edges(dispatch_graph)
-        # else:
-        #     print("Result of SREA was None")
+        result = srea(self.temporal_network)
+        if result is None:
+            return
+        risk_level, dispatch_graph = result
+        return risk_level, dispatch_graph
 
     def fpc_algorithm(self) -> tuple:
         dispatch_graph = get_minimal_network(self.temporal_network)
-        if dispatch_graph is not None:
-            risk_level = 1
-            return risk_level, dispatch_graph
+        if dispatch_graph is None:
+            return
+        risk_level = 1
+        return risk_level, dispatch_graph
 
     def dsc_lp_algorithm(self) -> tuple:
-        """ Returns a schedule because it is an offline approach
-        """
         dsc_lp = DSC_LP(self.temporal_network)
-        status, bounds, epsilons = dsc_lp.original_lp(debug=False)
+        status, bounds, epsilons = dsc_lp.original_lp()
 
-        if epsilons:
-            original, shrinked = dsc_lp.new_interval(epsilons)
-            print("Original: ", original)
-            print("Shrinked: ", shrinked)
+        if epsilons is None:
+            return
+        original, shrinked = dsc_lp.new_interval(epsilons)
+        print("Original: ", original)
+        print("Shrinked: ", shrinked)
 
-            dsc = dsc_lp.compute_dsc(original, shrinked)
-            print("DSC: ", dsc)
+        dsc = dsc_lp.compute_dsc(original, shrinked)
+        print("DSC: ", dsc)
 
-            stnu = dsc_lp.get_stnu(bounds)
-            print(stnu)
+        stnu = dsc_lp.get_stnu(bounds)
+        print(stnu)
 
-            dispatch_graph = dsc_lp.get_schedule(bounds)
+        dispatch_graph = dsc_lp.get_schedule(bounds)
 
-            schedule = dsc_lp.get_schedule(bounds)
-            print("Schedule: ", schedule)
+        # Returns a schedule because it is an offline approach
+        schedule = dsc_lp.get_schedule(bounds)
+        print("Schedule: ", schedule)
 
-            return dsc, schedule
-
-
-        # minimal_network = self.temporal_network.floyd_warshall()
-        # if self.temporal_network.is_consistent(minimal_network):
-        #     return minimal_network
-        # else:
-        #     print("Temporal network was inconsistent")
-            # self.temporal_network.update_edges(minimal_network)
-
-    # def get_graph_metrics(self):
-    #     completion_time = self.temporal_network.get_completion_time()
-    #     makespan = self.temporal_network.get_makespan()
+        return dsc, schedule

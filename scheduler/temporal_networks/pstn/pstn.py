@@ -121,7 +121,7 @@ class PSTN(STN):
             task (Task): task represented by the constraints
         """
         for (i, j) in constraints:
-            print("Adding constraint: ", (i, j))
+            # print("Adding constraint: ", (i, j))
             if self.node[i]['data']['type'] == "navigation":
                 distribution = self.get_navigation_distribution(i, j)
                 self.add_constraint(i, j, distribution=distribution)

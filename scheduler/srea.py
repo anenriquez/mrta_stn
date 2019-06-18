@@ -56,17 +56,13 @@ def setUpLP(stn, decouple):
     # ##
 
     for i in stn.nodes():
-        print("SREA verts: ", i)
         bounds[(i, '+')] = pulp.LpVariable('t_%d_hi' % i,
                                            lowBound=-stn.get_edge_weight(i, 0),
                                            upBound=stn.get_edge_weight(0, i))
-        print("Lower bound + : ", -stn.get_edge_weight(i, 0))
-        print("Upper bound + : ", stn.get_edge_weight(0, i))
+
         bounds[(i, '-')] = pulp.LpVariable('t_%d_lo' % i,
                                            lowBound=-stn.get_edge_weight(i, 0),
                                            upBound=stn.get_edge_weight(0, i))
-        print("Lower bound - : ", -stn.get_edge_weight(i, 0))
-        print("Upper bound - : ", stn.get_edge_weight(0, i))
 
         condition = bounds[(i, '+')] >= bounds[(i, '-')]
         addConstraint(condition, prob)
@@ -74,7 +70,6 @@ def setUpLP(stn, decouple):
     contingent_constraints = stn.get_contingent_constraints()
     for (i, j) in stn.edges():
         if (i, j) in contingent_constraints:
-            print("Contingent constraint: ", stn[i][j])
             deltas[(i, j)] = pulp.LpVariable('delta_%d_%d' %
                                              (i, j), lowBound=0, upBound=None)
             deltas[(j, i)] = pulp.LpVariable('delta_%d_%d' %
@@ -85,7 +80,6 @@ def setUpLP(stn, decouple):
             # with the bounds on the LP variables
             # also ignore complementary edges of contingent constraints
             if i != 0 and j != 0 and (j, i) not in contingent_constraints and not decouple:
-                print("Adding extra constraints ({}, {})".format(i, j))
                 addConstraint(bounds[(j, '+')] - bounds[(i, '-')]
                               <= stn.get_edge_weight(i, j), prob)
                 addConstraint(bounds[(i, '+')] - bounds[(j, '-')]
@@ -110,9 +104,8 @@ def srea(inputstn,
     @returns a tuple (alpha, outputstn) if there is a solution,
     or None if there is no solution
     """
-    print("We are in SREA!")
+
     inputstn = copy.deepcopy(inputstn)
-    print("---->Input stn: ", inputstn)
     # dictionary of alphas for binary search
     alphas = {i: i / 1000.0 for i in range(1001)}
 
@@ -124,28 +117,11 @@ def srea(inputstn,
 
     # set up LP
     if not decouple:
-        print("Getting minimal stn")
-        # minimal_stn = nx.floyd_warshall(inputstn)
-        # inputstn.update_edges(minimal_stn)
         inputstn = get_minimal_network(inputstn)
         if inputstn is None:
             return result
         print("Updated stn: ", inputstn)
-        # print("Resampling contingent edges of stored STN")
-        # resample_stn(inputstn, rand_state)
-        # print("Resampled STN: ", inputstn)
     bounds, deltas, probBase = setUpLP(inputstn, decouple)
-
-    print("Bounds:")
-    for bound in bounds:
-        print("{}:{}".format(bound, bounds[bound]))
-        print("")
-
-    print("Deltas:")
-    for delta in deltas:
-        print("{}:{}".format(delta, deltas[delta]))
-        print("")
-    print("probBase: ", probBase)
 
     # First run binary search on alpha
     while upper - lower > 1:
@@ -232,7 +208,6 @@ def srea_LP(inputstn,
     contingent_constraints = inputstn.get_contingent_constraints()
 
     for (i, j), constraint in contingent_constraints.items():
-        print("Constraint: ", constraint)
         if constraint.dtype() == "gaussian":
             p_ij = invcdf_norm(1.0 - alpha * 0.5, constraint.mu, constraint.sigma)
             p_ji = -invcdf_norm(alpha * 0.5, constraint.mu, constraint.sigma)
@@ -289,63 +264,3 @@ def srea_LP(inputstn,
     if status != 'Optimal':
         return None
     return bounds
-
-# \fn getRobustness(stn)
-# \brief Calls the rust simulator to compute the robustness of the input STN
-# NOTE: This is now depracated
-#
-#
-# def getRobustness(stn):
-#    tempstn = 'json/temp.json'
-#
-#    with open(tempstn, 'w+') as f:
-#        json.dump(stn.forJSON(), f, indent=2, separators=(',', ':'))
-#
-#    # Find the robustness of the decoupling
-#    simulation = Popen(['../stpsimulator/target/release/simulator_stp',
-#                        '--samples', str(10000),
-#                        '--threads', '4',
-#                        '--sample_directory', '../stpsimulator/samples/',
-#                        tempstn],
-#                       stdout=PIPE, stderr=PIPE)
-#    simulation.wait()
-#
-#    dataRegex = re.compile(r'result:\n([0-9\.]+)')
-#
-#    # extract the robustness from simulator output
-#    simData = simulation.stdout.read()
-#    match = dataRegex.search(simData)
-#
-#    # simulator failed -- 0 robustness
-#    if match is None:
-#        return 0
-#
-#    return float(match.group(1))
-#
-#
-# \fn getDispatch(stn)
-# \brief performs srea on the given STN
-##
-# \returns STN that represents the dispatch strategy
-# def getDispatch(stn, invCDF_map):
-#
-#    output = srea(stn, invCDF_map)
-#
-#    if output != None:
-#        alpha, stn = output
-#        # print getRobustness(stn)
-#        stn.minimize()
-#        for (starting_node, ending_node), edge in list(stn.contingent_edges.items()):
-#            edge_i = stn.getEdge(0, starting_node)
-#            edge_j = stn.getEdge(0, ending_node)
-#            edge.Cij = edge_j.getWeightMax()-edge_i.getWeightMax()
-#            edge.Cji = - (edge_j.getWeightMin()-edge_i.getWeightMin())
-#            # this loop ensures that the output STN with integer edge weights is still
-#            # strongly controllable
-#            for connected_edge in stn.getOutgoing(ending_node):
-#                edge.Cji = -max(-edge.Cji, edge.Cij -
-#                                connected_edge.Cji-connected_edge.Cij)
-#        return stn
-#
-#    print("srea did not result in a feasible LP, please try again with a different STN")
-#    return None

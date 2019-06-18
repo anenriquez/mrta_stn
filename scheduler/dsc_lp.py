@@ -50,7 +50,6 @@ class DSC_LP(object):
         """
         Add adds a constraint to the given LP problem
         """
-        # print("Adding constraint: ", constraint)
         problem += constraint
 
     def setup(self, proportion=False, maxmin=False):
@@ -87,11 +86,7 @@ class DSC_LP(object):
 
         # Store Original STN edges and objective variables for easy access. Not part of LP yet
 
-        # contingent_timepoints = self.stnu.get_contingent_timepoints()
-        # print("Contingent timepoints: ", contingent_timepoints)
-
         for i in self.stnu.nodes():
-            # print("Node: ", i)
             bounds[(i, '+')] = pulp.LpVariable('t_%i_hi'%i, lowBound=0,
                                                 upBound=self.stnu.get_edge_weight(0, i))
 
@@ -107,23 +102,13 @@ class DSC_LP(object):
                 self.add_constraint(bounds[(i, '+')] == 0, prob)
 
             if i not in self.contingent_timepoints:
-                print("Adding constraint for ", i)
                 self.add_constraint(bounds[(i, '-')] == bounds[(i, '+')], prob)
 
         if proportion:
             return (bounds, epsilons, prob)
 
-        # contingent_constraints = self.stnu.get_contingent_constraints()
-
-        # print("----------")
-        # constraints = self.stnu.get_constraints()
-
-        # print("Constraints: ", constraints)
-        # print("Contigent constraints: ", contingent_constraints)
-
         for (i, j) in self.constraints:
             if (i, j) in self.contingent_constraints:
-                print("Contingent constraint: ", (i, j))
 
                 epsilons[(j, '+')] = pulp.LpVariable('eps_%i_hi' % j, lowBound=0, upBound=None)
 
@@ -160,23 +145,11 @@ class DSC_LP(object):
 
         bounds, epsilons, prob = self.setup()
 
-        # print("Bounds:")
-        # for bound in bounds:
-        #     print("{}:{}".format(bound, bounds[bound]))
-        #     print("")
-        #
-        # print("Epsilons:")
-        # for epsilon in epsilons:
-        #     print("{}:{}".format(epsilon, epsilons[epsilon]))
-        #     print("")
-        # print("prob: ", prob)
-
         # Set up objective function for the LP
         if naive_obj:
             obj = sum([epsilons[(i, j)] for i, j in epsilons])
         else:
             eps = list()
-            # contingent_constraints = stnu.get_contingent_constraints()
 
             for i, j in self.contingent_constraints:
                 c = self.stnu[i][j]['weight'] + self.stnu[j][i]['weight']
@@ -208,25 +181,6 @@ class DSC_LP(object):
         if status != 'Optimal':
             print("The solution for LP is not optimal")
             return status, None, None
-
-    # print("Status: ", status)
-    # print("Bounds: ", bounds)
-    # print("Epsilons: ", epsilons)
-    #
-    # print("Original STNU")
-    # print(stnu)
-    #
-    # for i, sign in bounds:
-    #     if sign == '+':
-    #         stnu.update_edge_weight(
-    #             0, i, ceil(bounds[(i, '+')].varValue))
-    #     else:
-    #         stnu.update_edge_weight(
-    #             i, 0, ceil(-bounds[(i, '-')].varValue))
-    #
-    # print("Updated STNU")
-    # print(stnu)
-
         return status, bounds, epsilons
 
     def new_interval(self, epsilons):
@@ -238,7 +192,6 @@ class DSC_LP(object):
         """
         original = list()
         shrinked = list()
-        # constraints = stnu.get_contingent_constraints()
 
         for (i, j) in self.contingent_constraints:
             orig = (-self.stnu[j][i]['weight'], self.stnu[i][j]['weight'])
@@ -281,20 +234,6 @@ class DSC_LP(object):
                     i, 0, ceil(-bounds[(i, '-')].varValue))
 
         return self.stnu
-
-    # def get_schedule(self, bounds):
-    #     schedule = {}
-    #     # contingent_timepoints = stnu.get_contingent_timepoints()
-    #
-    #     for i in self.stnu.nodes():
-    #         if i not in self.contingent_timepoints:
-    #             time = (bounds[(i, '-')].varValue + bounds[(i, '+')].varValue)/2
-    #             schedule[i] = time
-    #         else:
-    #             time = bounds[(i, '+')].varValue
-    #             schedule[i] = time
-    #
-    #     return schedule
 
     def get_schedule(self, bounds):
         """ Assigns a dispatching time to each requirement timepoint
