@@ -263,6 +263,22 @@ class STN(nx.DiGraph):
                     # wait time between finish of one task and start of the next one
                     self.add_constraint(i, j, 0)
 
+    def get_scheduled_tasks(self):
+        """
+        Gets the tasks (in order)
+        Each timepoint in the STN is associated with a task.
+        return  list of task ids
+        """
+        scheduled_tasks = list()
+        for i in self.nodes():
+            # if (i-1) % 3 == 0:
+                # The node is a navigation node
+            timepoint = Node.from_dict(self.node[i]['data'])
+            if timepoint.type == "navigation":
+                scheduled_tasks.append(timepoint.task_id)
+
+        return scheduled_tasks
+
     def is_consistent(self, shortest_path_array):
         """The STN is not consistent if it has negative cycles"""
         consistent = True
