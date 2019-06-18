@@ -29,11 +29,8 @@ class STN(nx.DiGraph):
                     to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
                 # Constraints between the other timepoints
                 else:
-                    if 'is_contingent' in self[j][i]:
-                        to_print += "Constraint {} => {}: [{}, {}] ({})".format(i, j, -self[j][i]['weight'], self[i][j]['weight'], self[i][j]['distribution'])
-                    else:
+                    to_print += "Constraint {} => {}: [{}, {}]".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
 
-                        to_print += "Constraint {} => {}: [{}, {}]".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
                 to_print += "\n"
 
         return to_print
@@ -62,12 +59,7 @@ class STN(nx.DiGraph):
         # Minimum allocated time between i and j
         min_time = -wji
         # Maximum allocated time between i and j
-        # if wij == 'inf':
-        #     wij = float('inf')
         max_time = wij
-
-        # i = constraint.starting_node_id
-        # j = constraint.ending_node_id
 
         self.add_edge(j, i, weight=min_time)
         self.add_edge(i, j, weight=max_time)
@@ -78,6 +70,20 @@ class STN(nx.DiGraph):
         """
         self.remove_edge(i, j)
         self.remove_edge(j, i)
+
+    def get_constraints(self):
+        """
+        Two edges correspond to a constraint.
+        returns     dict with constraints
+                    {(starting_node, ending_node): self[i][j] }
+        """
+        constraints = dict()
+
+        for (i, j) in self.edges():
+            if i < j:
+                constraints[(i, j)] = self[i][j]
+
+        return constraints
 
     def get_node_pose(self, task, type):
         """ Returns the pose in the map where the task has to be executed
@@ -118,6 +124,9 @@ class STN(nx.DiGraph):
         - task duration
         - earliest and latest finish times
         If the task is not the first in the STN, add wait time constraint
+
+        Note: Position 0 is reserved for the zero_timepoint
+        Add tasks from postion 1 onwards
         """
         print("Adding task {} in position {}".format(task.id, position))
 
@@ -127,7 +136,7 @@ class STN(nx.DiGraph):
 
         # Remove constraint linking navigation_node_id and previous node (if any)
         if self.has_edge(navigation_node_id-1, navigation_node_id) and navigation_node_id-1 != 0:
-            print("Deleting constraint: {} => {}".format(navigation_node_id-1, navigation_node_id))
+            # print("Deleting constraint: {} => {}".format(navigation_node_id-1, navigation_node_id))
 
             self.remove_constraint(navigation_node_id-1, navigation_node_id)
 
@@ -163,7 +172,7 @@ class STN(nx.DiGraph):
         # print("New constraints between nodes: ", new_constraints_between)
 
         constraints = [((i), (i + 1)) for i in new_constraints_between[:-1]]
-        print("Constraints: ", constraints)
+        # print("Constraints: ", constraints)
 
         self.add_intertimepoints_constraints(constraints, task)
 
@@ -182,7 +191,7 @@ class STN(nx.DiGraph):
             task (Task): task represented by the constraints
         """
         for (i, j) in constraints:
-            print("Adding constraint: ", (i, j))
+            # print("Adding constraint: ", (i, j))
             if self.node[i]['data']['type'] == "navigation":
                 duration = self.get_navigation_duration(i, j)
                 self.add_constraint(i, j, duration)
@@ -196,7 +205,7 @@ class STN(nx.DiGraph):
                 self.add_constraint(i, j, 0)
 
     def get_navigation_duration(self, source, destination):
-        """ Reads from the database the estimated duration for navigating from source to destination
+        """ Reads from the database the estimated duration for navigating from source to destination and takes the mean
         """
         # TODO: Read estimated duration from dataset
         duration = 6
@@ -206,6 +215,7 @@ class STN(nx.DiGraph):
         """ Reads from the database the estimated duration of the task
         In the case of transportation tasks, the estimated duration is the navigation time from the pickup to the delivery location
         """
+        # TODO: Read estimated duration from dataset
         duration = task.estimated_duration
         return duration
 
@@ -249,6 +259,22 @@ class STN(nx.DiGraph):
                 if self.node[i]['data']['type'] == "finish":
                     # wait time between finish of one task and start of the next one
                     self.add_constraint(i, j, 0)
+
+    def get_scheduled_tasks(self):
+        """
+        Gets the tasks (in order)
+        Each timepoint in the STN is associated with a task.
+        return  list of task ids
+        """
+        scheduled_tasks = list()
+        for i in self.nodes():
+            # if (i-1) % 3 == 0:
+                # The node is a navigation node
+            timepoint = Node.from_dict(self.node[i]['data'])
+            if timepoint.type == "navigation":
+                scheduled_tasks.append(timepoint.task_id)
+
+        return scheduled_tasks
 
     def is_consistent(self, shortest_path_array):
         """The STN is not consistent if it has negative cycles"""

@@ -24,6 +24,7 @@
 
 from scheduler.temporal_networks.pstn import Constraint
 from scheduler.temporal_networks.stn import STN
+from scheduler.temporal_networks.stn import Node
 from json import JSONEncoder
 from networkx.readwrite import json_graph
 import json
@@ -39,6 +40,28 @@ class PSTN(STN):
     """
     def __init__(self):
         super().__init__()
+
+    def __str__(self):
+        to_print = ""
+        for (i, j, data) in self.edges.data():
+            if self.has_edge(j, i) and i < j:
+                # Constraints with the zero timepoint
+                if i == 0:
+                    timepoint = Node.from_dict(self.node[j]['data'])
+                    lower_bound = -self[j][i]['weight']
+                    upper_bound = self[i][j]['weight']
+                    to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
+                # Constraints between the other timepoints
+                else:
+                    if 'is_contingent' in self[j][i]:
+                        to_print += "Constraint {} => {}: [{}, {}] ({})".format(i, j, -self[j][i]['weight'], self[i][j]['weight'], self[i][j]['distribution'])
+                    else:
+
+                        to_print += "Constraint {} => {}: [{}, {}]".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
+
+                to_print += "\n"
+
+        return to_print
 
     def add_constraint(self, i=0, j=0, wji=0, wij=float('inf'), distribution=""):
         """
@@ -98,7 +121,7 @@ class PSTN(STN):
             task (Task): task represented by the constraints
         """
         for (i, j) in constraints:
-            print("Adding constraint: ", (i, j))
+            # print("Adding constraint: ", (i, j))
             if self.node[i]['data']['type'] == "navigation":
                 distribution = self.get_navigation_distribution(i, j)
                 self.add_constraint(i, j, distribution=distribution)

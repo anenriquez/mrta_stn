@@ -42,9 +42,9 @@ class TestBuildPSTN(unittest.TestCase):
         expected_alpha = 0.023
         self.assertEqual(alpha, expected_alpha)
 
-        contingent_constraints = guide_stn.get_contingent_constraints()
+        constraints = guide_stn.get_constraints()
 
-        for (i, j), constraint in sorted(contingent_constraints.items()):
+        for (i, j) in constraints:
 
             if i == 0 and j == 1:
                 lower_bound = -guide_stn[j][i]['weight']
@@ -64,8 +64,8 @@ class TestBuildPSTN(unittest.TestCase):
             if i == 0 and j == 4:
                 lower_bound = -guide_stn[j][i]['weight']
                 upper_bound = guide_stn[i][j]['weight']
-                self.assertEqual(lower_bound, 90)
-                self.assertEqual(upper_bound, 91)
+                self.assertEqual(lower_bound, 92)
+                self.assertEqual(upper_bound, 93)
             if i == 0 and j == 5:
                 lower_bound = -guide_stn[j][i]['weight']
                 upper_bound = guide_stn[i][j]['weight']
