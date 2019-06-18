@@ -28,185 +28,186 @@ import sys
 from scheduler.temporal_networks.stnu import STNU
 from math import ceil
 
+"""
+Computes the Degree of Strong Controllability (DSC) using an LP program as presented in:
 
-''' Converts an input STNU to LP form and computes its degree of controllability as presented in:
 Shyan Akmal, Savana Ammons, Hemeng Li, and James Boerkoel Jr. Quantifying Degrees of Controllability in Temporal Networks with Uncertainty. In
 Proceedings of the 29th International Conference on Automated Planning and Scheduling, ICAPS 2019, 07 2019.
-'''
-
+"""
 # A global variable that stores the max float that will be used to deal with infinite edges.
 MAX_FLOAT = sys.float_info.max
 
 
-def addConstraint(constraint, problem):
-    """ Add adds a constraint to the given LP"""
-    print("Adding constraint: ", constraint)
-    problem += constraint
+class DSC_LP(object):
 
+    def __init__(self, stnu):
+        self.stnu = stnu
+        self.constraints = stnu.get_constraints()
+        self.contingent_constraints = stnu.get_contingent_constraints()
+        self.contingent_timepoints = stnu.get_contingent_timepoints()
 
-def setUp(stnu, proportion=False, maxmin=False):
-    """ Initializes the LP problem and the LP variables
-    @param stnu            An input STNU
-    @param proportion     Flag indicating whether we are
-                          setting up LP to proportionally shrink contingent intervals
-    @param maxmin         Flag indicating whether we are
-                          setting up LP to maximize the min shrinked contingent intervals
+    def add_constraint(self, constraint, problem):
+        """
+        Add adds a constraint to the given LP problem
+        """
+        # print("Adding constraint: ", constraint)
+        problem += constraint
 
-    @return   A tuple (bounds, deltas, prob) where bounds and
-              deltas are dictionaries of LP variables, and prob is the LP problem instance
-    """
-    bounds = {}
-    epsilons = {}
+    def setup(self, proportion=False, maxmin=False):
+        """
+        Initializes the LP problem and the LP variables
+        proportion     Flag indicating whether we are
+                              setting up LP to proportionally shrink contingent intervals
+        maxmin         Flag indicating whether we are
+                              setting up LP to maximize the min shrinked contingent intervals
 
-    # Maximize for super and minimize for Subinterval
-    if maxmin:
-        prob = pulp.LpProblem('SuperInterval LP', pulp.LpMaximize)
-    else:
-        prob = pulp.LpProblem('Max Subinterval LP', pulp.LpMinimize)
+        return   A tuple (bounds, deltas, prob) where bounds and
+                  deltas are dictionaries of LP variables, and prob is the LP problem instance
+        """
+        bounds = {}
+        epsilons = {}
 
-    # ##
-    # NOTE: Our LP requires each event to occur within a finite interval.
-    # If the input LP does not have finite interval specified for all events, we want to set the setMakespan to MAX_FLOAT (infinity) so the LP works
-    #
-    # We do not want to run minimal network first because we are going to modify the contingent edges in LP, while some constraints in  minimal network are obtained through contingent edges
-    #
-    # There might be better way to deal with this problem.
-    # ##
-    for (i, j) in stnu.edges():
-        weight = stnu.get_edge_weight(i, j)
-        if weight == float('inf'):
-            stnu.update_edge_weight(i, j, MAX_FLOAT)
+        # Maximize for super and minimize for Subinterval
+        if maxmin:
+            prob = pulp.LpProblem('SuperInterval LP', pulp.LpMaximize)
+        else:
+            prob = pulp.LpProblem('Max Subinterval LP', pulp.LpMinimize)
 
-    # ##
-    # Store Original STN edges and objective variables for easy access.
-    # Not part of LP yet
-    # ##
-    contingent_timepoints = stnu.get_contingent_timepoints()
-    print("Contingent timepoints: ", contingent_timepoints)
+        # NOTE: Our LP requires each event to occur within a finite interval.
+        # If the input LP does not have finite interval specified for all events, we want to set the setMakespan to MAX_FLOAT (infinity) so the LP works
+        #
+        # We do not want to run minimal network first because we are going to modify the contingent edges in LP, while some constraints in  minimal network are obtained through contingent edges
+        #
+        # There might be better way to deal with this problem.
+        # ##
+        for (i, j) in self.stnu.edges():
+            weight = self.stnu.get_edge_weight(i, j)
+            if weight == float('inf'):
+                self.stnu.update_edge_weight(i, j, MAX_FLOAT)
 
-    for i in stnu.nodes():
-        print("Node: ", i)
-        bounds[(i, '+')] = pulp.LpVariable('t_%i_hi'%i, lowBound=0,
-                                            upBound=stnu.get_edge_weight(0, i))
+        # Store Original STN edges and objective variables for easy access. Not part of LP yet
 
-        lowbound = 0 if stnu.get_edge_weight(i, 0) == float('inf') else\
-                            -stnu.get_edge_weight(i, 0)
+        # contingent_timepoints = self.stnu.get_contingent_timepoints()
+        # print("Contingent timepoints: ", contingent_timepoints)
 
-        bounds[(i,'-')] = pulp.LpVariable('t_%i_lo'%i, lowBound=lowbound, upBound=None)
+        for i in self.stnu.nodes():
+            # print("Node: ", i)
+            bounds[(i, '+')] = pulp.LpVariable('t_%i_hi'%i, lowBound=0,
+                                                upBound=self.stnu.get_edge_weight(0, i))
 
-        addConstraint(bounds[(i, '-')] <= bounds[(i, '+')], prob)
+            lowbound = 0 if self.stnu.get_edge_weight(i, 0) == float('inf') else\
+                                -self.stnu.get_edge_weight(i, 0)
 
-        if i == 0:
-            addConstraint(bounds[(i, '-')] == 0, prob)
-            addConstraint(bounds[(i, '+')] == 0, prob)
+            bounds[(i,'-')] = pulp.LpVariable('t_%i_lo'%i, lowBound=lowbound, upBound=None)
 
-        if i not in contingent_timepoints:
-            print("Adding constraint for ", i)
-            addConstraint(bounds[(i, '-')] == bounds[(i, '+')], prob)
+            self.add_constraint(bounds[(i, '-')] <= bounds[(i, '+')], prob)
 
-    if proportion:
+            if i == 0:
+                self.add_constraint(bounds[(i, '-')] == 0, prob)
+                self.add_constraint(bounds[(i, '+')] == 0, prob)
+
+            if i not in self.contingent_timepoints:
+                print("Adding constraint for ", i)
+                self.add_constraint(bounds[(i, '-')] == bounds[(i, '+')], prob)
+
+        if proportion:
+            return (bounds, epsilons, prob)
+
+        # contingent_constraints = self.stnu.get_contingent_constraints()
+
+        # print("----------")
+        # constraints = self.stnu.get_constraints()
+
+        # print("Constraints: ", constraints)
+        # print("Contigent constraints: ", contingent_constraints)
+
+        for (i, j) in self.constraints:
+            if (i, j) in self.contingent_constraints:
+                print("Contingent constraint: ", (i, j))
+
+                epsilons[(j, '+')] = pulp.LpVariable('eps_%i_hi' % j, lowBound=0, upBound=None)
+
+                epsilons[(j, '-')] = pulp.LpVariable('eps_%i_lo' % j, lowBound=0, upBound=None)
+
+                self.add_constraint(bounds[(j, '+')]-bounds[(i, '+')] ==
+                        self.stnu.get_edge_weight(i, j) - epsilons[(j,'+')], prob)
+                self.add_constraint(bounds[(j, '-')]-bounds[(i, '-')] ==
+                        -self.stnu.get_edge_weight(j, i) + epsilons[(j, '-')], prob)
+
+            else:
+                # NOTE: We need to handle the infinite weight edges. Otherwise the LP would be infeasible
+                upbound = MAX_FLOAT if self.stnu.get_edge_weight(i, j) == float('inf') \
+                            else self.stnu.get_edge_weight(i, j)
+
+                lowbound = MAX_FLOAT if self.stnu.get_edge_weight(j, i) == float('inf') \
+                            else self.stnu.get_edge_weight(j, i)
+
+                self.add_constraint(bounds[(j, '+')]-bounds[(i, '-')] <= upbound, prob)
+                self.add_constraint(bounds[(i, '+')]-bounds[(j, '-')] <= lowbound, prob)
+
         return (bounds, epsilons, prob)
 
-    contingent_constraints = stnu.get_contingent_constraints()
+    def original_lp(self, naive_obj=False, debug=False):
+        """ Runs the LP on the input STN
+        naive_obj       Flag indicating if we are using the naive
+                       objective function
+        debug          Print optional status messages
 
-    print("----------")
-    constraints = stnu.get_constraints()
+        return      LP status
+                    dictionary of the LP_variables for the bounds on timepoints
+                    dictionary of LP variables for epsilons
+        """
 
-    print("Constraints: ", constraints)
-    print("Contigent constraints: ", contingent_constraints)
+        bounds, epsilons, prob = self.setup()
 
-    for (i, j) in constraints:
-        if (i, j) in contingent_constraints:
-            print("Contingent constraint: ", (i, j))
+        # print("Bounds:")
+        # for bound in bounds:
+        #     print("{}:{}".format(bound, bounds[bound]))
+        #     print("")
+        #
+        # print("Epsilons:")
+        # for epsilon in epsilons:
+        #     print("{}:{}".format(epsilon, epsilons[epsilon]))
+        #     print("")
+        # print("prob: ", prob)
 
-            epsilons[(j, '+')] = pulp.LpVariable('eps_%i_hi' % j, lowBound=0, upBound=None)
-
-            epsilons[(j, '-')] = pulp.LpVariable('eps_%i_lo' % j, lowBound=0, upBound=None)
-
-            addConstraint(bounds[(j, '+')]-bounds[(i, '+')] ==
-                    stnu.get_edge_weight(i, j) - epsilons[(j,'+')], prob)
-            addConstraint(bounds[(j, '-')]-bounds[(i, '-')] ==
-                    -stnu.get_edge_weight(j, i) + epsilons[(j, '-')], prob)
-
+        # Set up objective function for the LP
+        if naive_obj:
+            obj = sum([epsilons[(i, j)] for i, j in epsilons])
         else:
-            # NOTE: We need to handle the infinite weight edges. Otherwise the LP would be infeasible
-            upbound = MAX_FLOAT if stnu.get_edge_weight(i, j) == float('inf') \
-                        else stnu.get_edge_weight(i, j)
+            eps = list()
+            # contingent_constraints = stnu.get_contingent_constraints()
 
-            lowbound = MAX_FLOAT if stnu.get_edge_weight(j, i) == float('inf') \
-                        else stnu.get_edge_weight(j, i)
+            for i, j in self.contingent_constraints:
+                c = self.stnu[i][j]['weight'] + self.stnu[j][i]['weight']
 
-            addConstraint(bounds[(j, '+')]-bounds[(i, '-')] <= upbound, prob)
-            addConstraint(bounds[(i, '+')]-bounds[(j, '-')] <= lowbound, prob)
+                eps.append((epsilons[(j, '+')]+epsilons[j, '-'])/c)
+            obj = sum(eps)
 
-    return (bounds, epsilons, prob)
+        prob += obj, "Maximize the Super-Interval/Max-Subinterval for the input STN"
 
-##
-# \fn originalLP(STN, naiveObj=False, debug=False):
-# \brief Runs the LP on the input STN
-#
-# @param STN            An input STNU
-# @param naiveObj       Flag indicating if we are using the naive objective
-#                       function
-# @param debug          Print optional status messages
-#
-# @return   LP status, A dictionary of the LP_variables for the bounds on
-#           timepoints and a dictionary of LP variables for epsilons
+        # write LP into file for debugging (optional)
+        if debug:
+            prob.writeLP('original.lp')
+            pulp.LpSolverDefault.msg = 10
 
+        try:
+            prob.solve()
+        except Exception:
+            print("The model is invalid.")
+            return 'Invalid', None, None
 
-def originalLP(stnu, naiveObj=False, debug=False):
+        # Report status message
+        status = pulp.LpStatus[prob.status]
+        if debug:
+            print("Status: ", status)
 
-    bounds, epsilons, prob = setUp(stnu)
+            for v in prob.variables():
+                print(v.name, '=', v.varValue)
 
-    print("Bounds:")
-    for bound in bounds:
-        print("{}:{}".format(bound, bounds[bound]))
-        print("")
-
-    print("Epsilons:")
-    for epsilon in epsilons:
-        print("{}:{}".format(epsilon, epsilons[epsilon]))
-        print("")
-    print("prob: ", prob)
-
-    # Set up objective function for the LP
-    if naiveObj:
-        Obj = sum([epsilons[(i, j)] for i, j in epsilons])
-    else:
-        eps = []
-        contingent_constraints = stnu.get_contingent_constraints()
-
-        for i, j in contingent_constraints:
-            c = stnu[i][j]['weight'] + stnu[j][i]['weight']
-            # c = stnu.edges[(i,j)].Cij + stnu.edges[(i,j)].Cji
-
-            eps.append((epsilons[(j, '+')]+epsilons[j, '-'])/c )
-        Obj = sum(eps)
-
-    prob += Obj, "Maximize the Super-Interval/Max-Subinterval for the input STN"
-
-    # write LP into file for debugging (optional)
-    if debug:
-        prob.writeLP('original.lp')
-        pulp.LpSolverDefault.msg = 10
-
-    try:
-        prob.solve()
-    except Exception:
-        print("The model is invalid.")
-        return 'Invalid', None, None
-
-    # Report status message
-    status = pulp.LpStatus[prob.status]
-    if debug:
-        print("Status: ", status)
-
-        for v in prob.variables():
-            print(v.name, '=', v.varValue)
-
-    if status != 'Optimal':
-        print("The solution for LP is not optimal")
-        return status, None, None
+        if status != 'Optimal':
+            print("The solution for LP is not optimal")
+            return status, None, None
 
     # print("Status: ", status)
     # print("Bounds: ", bounds)
@@ -226,61 +227,88 @@ def originalLP(stnu, naiveObj=False, debug=False):
     # print("Updated STNU")
     # print(stnu)
 
-    return status, bounds, epsilons
+        return status, bounds, epsilons
 
+    def new_interval(self, epsilons):
+        """ Computes shrinked contingent intervals
+        epsilons     a dictionary of epsilon returned by the LP program
 
-def newInterval(stnu, epsilons):
-    """ Computes shrinked contingent intervals
-    stnu         an input STNU
-    epsilons     a dictionary of epsilon returned by the LP program
+        return      list of original contingent intervals
+                    list of shrinked contingent intervals
+        """
+        original = list()
+        shrinked = list()
+        # constraints = stnu.get_contingent_constraints()
 
-    return      list of original contingent intervals
-                list of shrinked contingent intervals
-    """
-    original = list()
-    shrinked = list()
-    constraints = stnu.get_contingent_constraints()
+        for (i, j) in self.contingent_constraints:
+            orig = (-self.stnu[j][i]['weight'], self.stnu[i][j]['weight'])
+            original.append(orig)
 
-    for (i, j) in constraints:
-        orig = (-stnu[j][i]['weight'], stnu[i][j]['weight'])
-        original.append(orig)
+            low = epsilons[(j, '-')].varValue
+            high = epsilons[(j, '+')].varValue
 
-        low = epsilons[(j, '-')].varValue
-        high = epsilons[(j, '+')].varValue
+            self.stnu.shrink_contingent_constraint(i, j, low, high)
+            new = (-self.stnu[j][i]['weight'], self.stnu[i][j]['weight'])
+            shrinked.append(new)
 
-        stnu.shrink_contingent_constraint(i, j, low, high)
-        new = (-stnu[j][i]['weight'], stnu[i][j]['weight'])
-        shrinked.append(new)
+        return original, shrinked
 
-    return original, shrinked
+    def compute_dsc(self, original, shrinked):
+        """ Computes degreee of strong controllability (DSC)
+        original       A list of original contingent intervals
+        shrinked       A list of shrinked contingent intervals
 
+        return the value of degree of strong controllability
+        """
+        for i in range(len(original)):
+            x, y = original[i]
+            orig = y-x
 
-def calculateMetric(original, shrinked):
-    """ Computes degreee of strong controllability (DSC)
-    original       A list of original contingent intervals
-    shrinked       A list of shrinked contingent intervals
+            a, b = shrinked[i]
+            new = b-a
 
-    return the value of degree of strong controllability
-    """
-    for i in range(len(original)):
-        x, y = original[i]
-        orig = y-x
+        dsc = float(new/orig)
 
-        a, b = shrinked[i]
-        new = b-a
+        return dsc
 
-    dsc = float(new/orig)
+    def get_stnu(self, bounds):
+        for i, sign in bounds:
+            if sign == '+':
+                self.stnu.update_edge_weight(
+                    0, i, ceil(bounds[(i, '+')].varValue))
+            else:
+                self.stnu.update_edge_weight(
+                    i, 0, ceil(-bounds[(i, '-')].varValue))
 
-    return dsc
+        return self.stnu
 
+    # def get_schedule(self, bounds):
+    #     schedule = {}
+    #     # contingent_timepoints = stnu.get_contingent_timepoints()
+    #
+    #     for i in self.stnu.nodes():
+    #         if i not in self.contingent_timepoints:
+    #             time = (bounds[(i, '-')].varValue + bounds[(i, '+')].varValue)/2
+    #             schedule[i] = time
+    #         else:
+    #             time = bounds[(i, '+')].varValue
+    #             schedule[i] = time
+    #
+    #     return schedule
 
-def get_schedule(stnu, bounds):
-    schedule = {}
-    contingent_timepoints = stnu.get_contingent_timepoints()
+    def get_schedule(self, bounds):
+        """ Assigns a dispatching time to each requirement timepoint
+        Contingent timepoints are not assgined a value. The value will be assigned at execution time by "Nature"
+        """
 
-    for i in stnu.nodes():
-        if i not in contingent_timepoints:
-            time = (bounds[(i, '-')].varValue + bounds[(i, '+')].varValue)/2
-            schedule[i] = time
+        for i in self.stnu.nodes():
+            if i not in self.contingent_timepoints:
+                time = (bounds[(i, '-')].varValue + bounds[(i, '+')].varValue)/2
+                self.stnu.update_edge_weight(0, i, time)
+                self.stnu.update_edge_weight(i, 0, -time)
+            else:
+                # time = bounds[(i, '+')].varValue
+                self.stnu.update_edge_weight(0, i, bounds[(i, '+')].varValue)
+                self.stnu.update_edge_weight(i, 0, -bounds[(i, '-')].varValue)
 
-    return schedule
+        return self.stnu

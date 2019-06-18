@@ -3,7 +3,7 @@ from scheduler.temporal_networks.pstn import PSTN
 from scheduler.temporal_networks.stnu import STNU
 from scheduler.srea import srea
 from scheduler.fpc import get_minimal_network
-from scheduler.dsc_lp import originalLP, newInterval, calculateMetric, get_schedule
+from scheduler.dsc_lp import DSC_LP
 
 """ Computes the dispatchable graph (solution space) of an temporal network based on the scheduling method defined in the config file
 
@@ -43,7 +43,6 @@ class Scheduler(object):
             temporal_network = STN()
         elif self.scheduling_method == 'dsc_lp':
             temporal_network = STNU()
-            pass
         elif self.scheduling_method == 'durability':
             temporal_network = STN()
 
@@ -66,6 +65,9 @@ class Scheduler(object):
 
     def get_scheduling_method(self):
         return self.scheduling_method
+
+    def get_scheduled_tasks(self):
+        return self.temporal_network.get_scheduled_tasks()
 
     def add_task(self, task, position):
         self.temporal_network.add_task(task, position)
@@ -94,28 +96,33 @@ class Scheduler(object):
 
     def fpc_algorithm(self) -> tuple:
         dispatch_graph = get_minimal_network(self.temporal_network)
-        risk_level = 1
-        return risk_level, dispatch_graph
+        if dispatch_graph is not None:
+            risk_level = 1
+            return risk_level, dispatch_graph
 
     def dsc_lp_algorithm(self) -> tuple:
-        print("Computing DSC")
-        result = originalLP(self.temporal_network, debug=True)
-        print("Result")
-        print(result)
-        if result is not None:
-            status, bounds, epsilons = result
+        """ Returns a schedule because it is an offline approach
+        """
+        dsc_lp = DSC_LP(self.temporal_network)
+        status, bounds, epsilons = dsc_lp.original_lp(debug=False)
 
-            original, shrinked = newInterval(self.temporal_network, epsilons)
+        if epsilons:
+            original, shrinked = dsc_lp.new_interval(epsilons)
             print("Original: ", original)
             print("Shrinked: ", shrinked)
 
-            dsc = calculateMetric(original, shrinked)
+            dsc = dsc_lp.compute_dsc(original, shrinked)
             print("DSC: ", dsc)
 
-            schedule = get_schedule(self.temporal_network, bounds)
+            stnu = dsc_lp.get_stnu(bounds)
+            print(stnu)
+
+            dispatch_graph = dsc_lp.get_schedule(bounds)
+
+            schedule = dsc_lp.get_schedule(bounds)
             print("Schedule: ", schedule)
 
-        return result
+            return dsc, schedule
 
 
         # minimal_network = self.temporal_network.floyd_warshall()
