@@ -41,7 +41,7 @@ class STNU(STN):
 
         return to_print
 
-    def add_constraint(self, i=0, j=0, wji=0, wij=float('inf'), is_contingent=False):
+    def add_constraint(self, i, j, wji=0, wij=float('inf'), is_contingent=False):
         """
         Adds constraint between nodes i and j
         i: starting node

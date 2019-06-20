@@ -42,7 +42,7 @@ class STN(nx.DiGraph):
         node = Node()
         self.add_node(0, data=node.to_dict())
 
-    def add_constraint(self, i=0, j=0, wji=0, wij=float('inf')):
+    def add_constraint(self, i, j, wji=0, wij=float('inf')):
         """
         Adds constraint between nodes i and j
         i: starting node
@@ -57,7 +57,7 @@ class STN(nx.DiGraph):
         -wji is the lower bound (minimum allocated time between i and j)
          wij is the upper bound (maximum allocated time between i and j)
 
-        If there is no upper bound, its value is set to infinity
+        The default upper and lower bounds are 0 and infinity
         """
         # Minimum allocated time between i and j
         min_time = -wji
@@ -205,7 +205,7 @@ class STN(nx.DiGraph):
 
             elif self.node[i]['data']['type'] == "finish":
                 # wait time between finish of one task and start of the next one. Fixed to [0, inf]
-                self.add_constraint(i, j, 0)
+                self.add_constraint(i, j)
 
     def get_navigation_duration(self, source, destination):
         """ Reads from the database the estimated duration for navigating from source to destination and takes the mean
@@ -261,7 +261,7 @@ class STN(nx.DiGraph):
             for (i, j) in constraints:
                 if self.node[i]['data']['type'] == "finish":
                     # wait time between finish of one task and start of the next one
-                    self.add_constraint(i, j, 0)
+                    self.add_constraint(i, j)
 
     def get_scheduled_tasks(self):
         """
@@ -345,7 +345,7 @@ class STN(nx.DiGraph):
         # LStn = LPtn - TTt(n-1)tn
 
         if type == "navigation":
-            self.add_constraint(0, node_id, 0)
+            self.add_constraint(0, node_id)
 
         if type == "start":
             self.add_constraint(0, node_id, task.earliest_pickup_time, task.latest_pickup_time)

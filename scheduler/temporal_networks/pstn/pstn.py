@@ -66,7 +66,7 @@ class PSTN(STN):
 
         return to_print
 
-    def add_constraint(self, i=0, j=0, wji=0, wij=float('inf'), distribution=""):
+    def add_constraint(self, i, j, wji=0, wij=float('inf'), distribution=""):
         """
         Adds constraint between nodes i and j
         i: starting node
@@ -135,7 +135,7 @@ class PSTN(STN):
 
             elif self.node[i]['data']['type'] == "finish":
                 # wait time between finish of one task and start of the next one. Fixed to [0, inf]
-                self.add_constraint(i, j, 0)
+                self.add_constraint(i, j)
 
     def get_navigation_distribution(self, source, destination):
         """ Reads from the database the probability distribution for navigating from source to destination
