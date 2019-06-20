@@ -2,6 +2,7 @@ import unittest
 import os
 import json
 import collections
+import logging
 import sys
 from scheduler.structs.task import Task
 from scheduler.scheduler import Scheduler
@@ -9,11 +10,16 @@ from scheduler.scheduler import Scheduler
 STNU = "data/stnu_two_tasks.json"
 MAX_FLOAT = sys.float_info.max
 
+logger = logging.getLogger()
+logger.level = logging.DEBUG
+stream_handler = logging.StreamHandler(sys.stdout)
+logger.addHandler(stream_handler)
+
 
 class TestBuildSTNU(unittest.TestCase):
+    logger = logging.getLogger('scheduler.test')
 
     def setUp(self):
-
         # Load the stn as a dictionary
         with open(STNU) as json_file:
             stnu_dict = json.load(json_file)
@@ -24,21 +30,21 @@ class TestBuildSTNU(unittest.TestCase):
         self.scheduler = Scheduler('dsc_lp', json_temporal_network=stnu_json)
 
     def test_build_stn(self):
-        print("STNU: \n", self.scheduler.get_temporal_network())
+        self.logger.info("STNU: \n %s", self.scheduler.get_temporal_network())
 
-        print(type(self.scheduler.temporal_network))
+        self.logger.info("%s", type(self.scheduler.temporal_network))
 
-        print("Getting Schedule...")
+        self.logger.info("Getting Schedule...")
         dsc, schedule = self.scheduler.get_dispatch_graph()
 
-        print("DSC: ", dsc)
-        print("schedule: ", schedule)
+        self.logger.info("DSC: %s ", dsc)
+        self.logger.info("schedule: %s ", schedule)
 
         completion_time = schedule.get_completion_time()
         makespan = schedule.get_makespan()
 
-        print("Completion time: ", completion_time)
-        print("Makespan: ", makespan)
+        self.logger.info("Completion time: %s ", completion_time)
+        self.logger.info("Makespan: %s ", makespan)
 
         self.assertEqual(completion_time, 69)
         self.assertEqual(makespan, 106)

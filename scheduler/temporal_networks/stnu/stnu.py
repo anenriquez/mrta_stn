@@ -3,6 +3,7 @@ from scheduler.temporal_networks.stn import Node
 from json import JSONEncoder
 from networkx.readwrite import json_graph
 import json
+import logging
 
 
 class MyEncoder(JSONEncoder):
@@ -13,6 +14,7 @@ class MyEncoder(JSONEncoder):
 class STNU(STN):
     """ Represents a Simple Temporal Network with Uncertainties (STNU) as a networkx directed graph
     """
+    logger = logging.getLogger('scheduler.stnu')
 
     def __init__(self):
         super().__init__()
@@ -115,7 +117,7 @@ class STNU(STN):
             task (Task): task represented by the constraints
         """
         for (i, j) in constraints:
-            print("Adding constraint: ", (i, j))
+            self.logger.info("Adding constraint: %s ", (i, j))
             if self.node[i]['data']['type'] == "navigation":
                 lower_bound, upper_bound = self.get_navigation_bounded_duration(i, j)
                 self.add_constraint(i, j, lower_bound, upper_bound, is_contingent=True)
@@ -183,7 +185,6 @@ class STNU(STN):
     def from_dict(stnu_json):
         stnu = STNU()
         dict_json = json.load(stnu_json)
-        print("Done with loading")
         graph = json_graph.node_link_graph(dict_json)
         stnu.add_nodes_from(graph.nodes(data=True))
         stnu.add_edges_from(graph.edges(data=True))

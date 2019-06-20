@@ -25,6 +25,7 @@
 
 import pulp
 import sys
+import logging
 from scheduler.temporal_networks.stnu import STNU
 from math import ceil
 
@@ -39,6 +40,7 @@ MAX_FLOAT = sys.float_info.max
 
 
 class DSC_LP(object):
+    logger = logging.getLogger('scheduler.dsc_lp')
 
     def __init__(self, stnu):
         self.stnu = stnu
@@ -167,19 +169,19 @@ class DSC_LP(object):
         try:
             prob.solve()
         except Exception:
-            print("The model is invalid.")
+            self.logger.error("The model is invalid.")
             return 'Invalid', None, None
 
         # Report status message
         status = pulp.LpStatus[prob.status]
         if debug:
-            print("Status: ", status)
+            self.logger.debug("Status: %s", status)
 
             for v in prob.variables():
-                print(v.name, '=', v.varValue)
+                self.logger.debug(v.name, '=', v.varValue)
 
         if status != 'Optimal':
-            print("The solution for LP is not optimal")
+            self.logger.debug("The solution for LP is not optimal")
             return status, None, None
         return status, bounds, epsilons
 

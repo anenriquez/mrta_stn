@@ -28,6 +28,7 @@ from scheduler.temporal_networks.stn import Node
 from json import JSONEncoder
 from networkx.readwrite import json_graph
 import json
+import logging
 
 
 class MyEncoder(JSONEncoder):
@@ -38,6 +39,8 @@ class MyEncoder(JSONEncoder):
 class PSTN(STN):
     """ Represents a Probabilistic Simple Temporal Network (PSTN) as a networkx directed graph
     """
+    logger = logging.getLogger('scheduler.pstn')
+
     def __init__(self):
         super().__init__()
 
@@ -121,7 +124,7 @@ class PSTN(STN):
             task (Task): task represented by the constraints
         """
         for (i, j) in constraints:
-            # print("Adding constraint: ", (i, j))
+            self.logger.debug("Adding constraint: %s ", (i, j))
             if self.node[i]['data']['type'] == "navigation":
                 distribution = self.get_navigation_distribution(i, j)
                 self.add_constraint(i, j, distribution=distribution)
@@ -161,7 +164,6 @@ class PSTN(STN):
     def from_dict(pstn_json):
         pstn = PSTN()
         dict_json = json.load(pstn_json)
-        print("Done with loading")
         graph = json_graph.node_link_graph(dict_json)
         pstn.add_nodes_from(graph.nodes(data=True))
         pstn.add_edges_from(graph.edges(data=True))

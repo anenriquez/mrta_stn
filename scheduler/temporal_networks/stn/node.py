@@ -18,7 +18,6 @@ class Node(object):
         return to_print
 
     def __repr__(self):
-        # return "node {} {}".format(self.task_id, self.type)
         return str(self.to_dict())
 
     def __hash__(self):

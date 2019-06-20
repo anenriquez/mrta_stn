@@ -3,6 +3,7 @@ from scheduler.temporal_networks.stn import Node
 from json import JSONEncoder
 from networkx.readwrite import json_graph
 import json
+import logging
 
 
 class MyEncoder(JSONEncoder):
@@ -13,6 +14,8 @@ class MyEncoder(JSONEncoder):
 class STN(nx.DiGraph):
     """ Represents a Simple Temporal Network (STN) as a networkx directed graph
     """
+    logger = logging.getLogger('scheduler.stn')
+
     def __init__(self):
         super().__init__()
         self.add_zero_timepoint()
@@ -128,7 +131,7 @@ class STN(nx.DiGraph):
         Note: Position 0 is reserved for the zero_timepoint
         Add tasks from postion 1 onwards
         """
-        print("Adding task {} in position {}".format(task.id, position))
+        self.logger.info("Adding task %s in position %s", task.id, position)
 
         navigation_node_id = 2 * position + (position-2)
         start_node_id = navigation_node_id + 1
@@ -136,7 +139,7 @@ class STN(nx.DiGraph):
 
         # Remove constraint linking navigation_node_id and previous node (if any)
         if self.has_edge(navigation_node_id-1, navigation_node_id) and navigation_node_id-1 != 0:
-            # print("Deleting constraint: {} => {}".format(navigation_node_id-1, navigation_node_id))
+            self.logger.debug("Deleting constraint: %s  => %s", navigation_node_id-1, navigation_node_id)
 
             self.remove_constraint(navigation_node_id-1, navigation_node_id)
 
@@ -145,7 +148,7 @@ class STN(nx.DiGraph):
         for node_id, data in self.nodes(data=True):
             if node_id >= navigation_node_id:
                 mapping[node_id] = node_id + 3
-        # print("mapping: ", mapping)
+        self.logger.debug("mapping: %s ", mapping)
         nx.relabel_nodes(self, mapping, copy=False)
 
         # Add new timepoints
@@ -169,10 +172,10 @@ class STN(nx.DiGraph):
         if self.has_node(navigation_node_id-1):
             new_constraints_between.insert(0, navigation_node_id-1)
 
-        # print("New constraints between nodes: ", new_constraints_between)
+        self.logger.debug("New constraints between nodes: %s", new_constraints_between)
 
         constraints = [((i), (i + 1)) for i in new_constraints_between[:-1]]
-        # print("Constraints: ", constraints)
+        self.logger.debug("Constraints: %s", constraints)
 
         self.add_intertimepoints_constraints(constraints, task)
 
@@ -191,7 +194,7 @@ class STN(nx.DiGraph):
             task (Task): task represented by the constraints
         """
         for (i, j) in constraints:
-            # print("Adding constraint: ", (i, j))
+            self.logger.debug("Adding constraint: %s ", (i, j))
             if self.node[i]['data']['type'] == "navigation":
                 duration = self.get_navigation_duration(i, j)
                 self.add_constraint(i, j, duration)
@@ -222,13 +225,13 @@ class STN(nx.DiGraph):
     def show_n_nodes_edges(self):
         """ Prints the number of nodes and edges in the stn
         """
-        print("Nodes: ", self.number_of_nodes())
-        print("Edges: ", self.number_of_edges())
+        self.logger.info("Nodes: %s ", self.number_of_nodes())
+        self.logger.info("Edges: %s ", self.number_of_edges())
 
     def remove_task(self, position):
         """ Removes the task from the given position"""
 
-        print("Removing task at position: ", position)
+        self.logger.info("Removing task at position: %s", position)
         navigation_node_id = 2 * position + (position-2)
         start_node_id = navigation_node_id + 1
         finish_node_id = start_node_id + 1
@@ -248,12 +251,12 @@ class STN(nx.DiGraph):
         for node_id, data in self.nodes(data=True):
             if node_id >= navigation_node_id:
                 mapping[node_id] = node_id - 3
-        # print("mapping: ", mapping)
+        self.logger.debug("mapping: %s", mapping)
         nx.relabel_nodes(self, mapping, copy=False)
 
         if new_constraints_between:
             constraints = [((i), (i + 1)) for i in new_constraints_between[:-1]]
-            # print("Constraints: ", constraints)
+            self.logger.debug("Constraints: %s", constraints)
 
             for (i, j) in constraints:
                 if self.node[i]['data']['type'] == "finish":
@@ -268,8 +271,6 @@ class STN(nx.DiGraph):
         """
         scheduled_tasks = list()
         for i in self.nodes():
-            # if (i-1) % 3 == 0:
-                # The node is a navigation node
             timepoint = Node.from_dict(self.node[i]['data'])
             if timepoint.type == "navigation":
                 scheduled_tasks.append(timepoint.task_id)
@@ -287,7 +288,6 @@ class STN(nx.DiGraph):
     def update_edges(self, shortest_path_array, create=False):
         """Update edges in the STN to reflect the distances in the minimal stn
         """
-        print("Updating edges")
         for column, row in shortest_path_array.items():
             nodes = dict(row)
             for n in nodes:
@@ -356,7 +356,6 @@ class STN(nx.DiGraph):
     def to_json(self):
         dict_json = json_graph.node_link_data(self)
         MyEncoder().encode(dict_json)
-        print(dict_json)
         stn_json = json.dumps(dict_json, cls=MyEncoder)
 
         return stn_json
@@ -374,7 +373,6 @@ class STN(nx.DiGraph):
     def from_dict(stn_json):
         stn = STN()
         dict_json = json.load(stn_json)
-        print("Done with loading")
         graph = json_graph.node_link_graph(dict_json)
         stn.add_nodes_from(graph.nodes(data=True))
         stn.add_edges_from(graph.edges(data=True))

@@ -2,13 +2,21 @@ import unittest
 import os
 import json
 import collections
+import logging
+import sys
 from scheduler.structs.task import Task
 from scheduler.scheduler import Scheduler
 
 STN = "data/pstn_two_tasks.json"
 
+logger = logging.getLogger()
+logger.level = logging.INFO
+stream_handler = logging.StreamHandler(sys.stdout)
+logger.addHandler(stream_handler)
+
 
 class TestBuildPSTN(unittest.TestCase):
+    logger = logging.getLogger('scheduler.test')
 
     def setUp(self):
         # Load the stn as a dictionary
@@ -21,20 +29,19 @@ class TestBuildPSTN(unittest.TestCase):
         self.scheduler = Scheduler('srea', json_temporal_network=pstn_json)
 
     def test_build_stn(self):
-        print("PSTN: \n", self.scheduler.temporal_network)
+        self.logger.info("PSTN: \n %s", self.scheduler.temporal_network)
 
-        print(type(self.scheduler.temporal_network))
 
-        print("Getting GUIDE...")
+        self.logger.info("Getting GUIDE...")
         alpha, guide_stn = self.scheduler.get_dispatch_graph()
-        print("GUIDE")
-        print(guide_stn)
-        print("Alpha: ", alpha)
+        self.logger.info("GUIDE")
+        self.logger.info(guide_stn)
+        self.logger.info("Alpha: %s ", alpha)
 
         completion_time = guide_stn.get_completion_time()
         makespan = guide_stn.get_makespan()
-        print("Completion time: ", completion_time)
-        print("Makespan: ", makespan)
+        self.logger.info("Completion time: %s ", completion_time)
+        self.logger.info("Makespan: %s ", makespan)
 
         self.assertEqual(completion_time, 70)
         self.assertEqual(makespan, 107)

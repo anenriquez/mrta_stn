@@ -1,3 +1,4 @@
+import logging
 from scheduler.temporal_networks.stn import STN
 from scheduler.temporal_networks.pstn import PSTN
 from scheduler.temporal_networks.stnu import STNU
@@ -28,6 +29,8 @@ class Scheduler(object):
 
     def __init__(self, scheduling_method, **kwargs):
         self.scheduling_method = scheduling_method
+
+        self.logger = logging.getLogger('scheduler.scheduler')
 
         json_temporal_network = kwargs.pop('json_temporal_network', None)
 
@@ -90,6 +93,8 @@ class Scheduler(object):
         if result is None:
             return
         risk_level, dispatch_graph = result
+        self.logger.debug("Risk level: %s", risk_level)
+        self.logger.debug("Dispatch graph: %s", dispatch_graph)
         return risk_level, dispatch_graph
 
     def fpc_algorithm(self) -> tuple:
@@ -106,19 +111,19 @@ class Scheduler(object):
         if epsilons is None:
             return
         original, shrinked = dsc_lp.new_interval(epsilons)
-        print("Original: ", original)
-        print("Shrinked: ", shrinked)
+        self.logger.debug("Original intervals: %s", original)
+        self.logger.debug("Shrinked intervals: %s", shrinked)
 
         dsc = dsc_lp.compute_dsc(original, shrinked)
-        print("DSC: ", dsc)
+        self.logger.debug("DSC: %s", dsc)
 
         stnu = dsc_lp.get_stnu(bounds)
-        print(stnu)
+        self.logger.debug("STNU: %s", stnu)
 
         dispatch_graph = dsc_lp.get_schedule(bounds)
 
         # Returns a schedule because it is an offline approach
         schedule = dsc_lp.get_schedule(bounds)
-        print("Schedule: ", schedule)
+        self.logger.debug("Schedule: %s ", schedule)
 
         return dsc, schedule
