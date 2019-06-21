@@ -53,15 +53,12 @@ class Scheduler(object):
 
     def load_temporal_network(self, json_temporal_network):
         if self.scheduling_method == 'srea':
-            pstn = PSTN()
-            temporal_network = PSTN.from_json(json_temporal_network, pstn)
+            temporal_network = PSTN.from_json(json_temporal_network)
         if self.scheduling_method == 'fpc':
-            stn = STN()
-            temporal_network = STN.from_json(json_temporal_network, stn)
+            temporal_network = STN.from_json(json_temporal_network)
 
         elif self.scheduling_method == 'dsc_lp':
-            stnu = STNU()
-            temporal_network = STNU.from_json(json_temporal_network, stnu)
+            temporal_network = STNU.from_json(json_temporal_network)
 
         return temporal_network
 
