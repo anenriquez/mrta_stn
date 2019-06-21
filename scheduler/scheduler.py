@@ -1,10 +1,13 @@
 import logging
+import logging.config
+import yaml
 from scheduler.temporal_networks.stn import STN
 from scheduler.temporal_networks.pstn import PSTN
 from scheduler.temporal_networks.stnu import STNU
 from scheduler.srea import srea
 from scheduler.fpc import get_minimal_network
 from scheduler.dsc_lp import DSC_LP
+from scheduler.utils.config_logger import config_logger
 
 """ Computes the dispatchable graph (solution space) of a temporal network
 
@@ -29,8 +32,8 @@ class Scheduler(object):
 
     def __init__(self, scheduling_method, **kwargs):
         self.scheduling_method = scheduling_method
-
-        self.logger = logging.getLogger('scheduler.scheduler')
+        config_logger('../config/logging.yaml')
+        self.logger = logging.getLogger('scheduler')
 
         json_temporal_network = kwargs.pop('json_temporal_network', None)
 
@@ -38,6 +41,7 @@ class Scheduler(object):
             self.temporal_network = self.load_temporal_network(json_temporal_network)
         else:
             self.temporal_network = self.init_temporal_network()
+
 
     def init_temporal_network(self):
         if self.scheduling_method == 'srea':
@@ -56,7 +60,6 @@ class Scheduler(object):
             temporal_network = PSTN.from_json(json_temporal_network)
         if self.scheduling_method == 'fpc':
             temporal_network = STN.from_json(json_temporal_network)
-
         elif self.scheduling_method == 'dsc_lp':
             temporal_network = STNU.from_json(json_temporal_network)
 
@@ -101,6 +104,7 @@ class Scheduler(object):
         if dispatch_graph is None:
             return
         risk_level = 1
+        self.logger.debug("Risk level %s: ", risk_level)
         return risk_level, dispatch_graph
 
     def dsc_lp_algorithm(self) -> tuple:

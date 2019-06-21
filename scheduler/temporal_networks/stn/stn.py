@@ -4,6 +4,10 @@ from json import JSONEncoder
 from networkx.readwrite import json_graph
 import json
 import logging
+import logging.config
+import yaml
+from pathlib import Path
+from scheduler.utils.config_logger import config_logger
 
 
 class MyEncoder(JSONEncoder):
@@ -14,7 +18,8 @@ class MyEncoder(JSONEncoder):
 class STN(nx.DiGraph):
     """ Represents a Simple Temporal Network (STN) as a networkx directed graph
     """
-    logger = logging.getLogger('scheduler.stn')
+    config_logger('../config/logging.yaml')
+    logger = logging.getLogger('stn')
 
     def __init__(self):
         super().__init__()
@@ -352,6 +357,8 @@ class STN(nx.DiGraph):
 
         elif type == "finish":
             self.add_constraint(0, node_id, task.earliest_delivery_time, task.latest_delivery_time)
+
+
 
     def to_json(self):
         dict_json = json_graph.node_link_data(self)

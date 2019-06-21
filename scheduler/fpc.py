@@ -1,13 +1,14 @@
 import copy
 import logging
 import networkx as nx
-
+from scheduler.utils.config_logger import config_logger
 from scheduler.temporal_networks.stn import STN
 
 """ Achieves full path consistency (fpc) by applying the Floyd Warshall algorithm to the STN"""
 
 
 def get_minimal_network(stn):
+    config_logger('../config/logging.yaml')
     logger = logging.getLogger('scheduler.fpc')
 
     shortest_path_array = nx.floyd_warshall(stn)

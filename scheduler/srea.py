@@ -30,9 +30,12 @@ import logging
 from scheduler.temporal_networks.pstn import PSTN
 from scheduler.temporal_networks.distempirical import invcdf_norm, invcdf_uniform
 from scheduler.fpc import get_minimal_network
+from scheduler.utils.config_logger import config_logger
+
 
 """ SREA algorithm
 """
+config_logger('../config/logging.yaml')
 logger = logging.getLogger('scheduler.srea')
 
 

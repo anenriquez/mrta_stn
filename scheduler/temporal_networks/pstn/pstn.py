@@ -29,6 +29,7 @@ from json import JSONEncoder
 from networkx.readwrite import json_graph
 import json
 import logging
+from scheduler.utils.config_logger import config_logger
 
 
 class MyEncoder(JSONEncoder):
@@ -39,7 +40,8 @@ class MyEncoder(JSONEncoder):
 class PSTN(STN):
     """ Represents a Probabilistic Simple Temporal Network (PSTN) as a networkx directed graph
     """
-    logger = logging.getLogger('scheduler.pstn')
+    config_logger('../config/logging.yaml')
+    logger = logging.getLogger('stn.pstn')
 
     def __init__(self):
         super().__init__()

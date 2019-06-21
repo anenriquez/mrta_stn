@@ -27,6 +27,7 @@ import pulp
 import sys
 import logging
 from scheduler.temporal_networks.stnu import STNU
+from scheduler.utils.config_logger import config_logger
 from math import ceil
 
 """
@@ -40,6 +41,7 @@ MAX_FLOAT = sys.float_info.max
 
 
 class DSC_LP(object):
+    config_logger('../config/logging.yaml')
     logger = logging.getLogger('scheduler.dsc_lp')
 
     def __init__(self, stnu):
