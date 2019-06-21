@@ -150,21 +150,3 @@ class PSTN(STN):
         """
         distribution = "N_4_1"
         return distribution
-
-    @staticmethod
-    def from_json(pstn_json):
-        pstn = PSTN()
-        dict_json = json.loads(pstn_json)
-        graph = json_graph.node_link_graph(dict_json)
-        pstn.add_nodes_from(graph.nodes(data=True))
-        pstn.add_edges_from(graph.edges(data=True))
-
-        return pstn
-
-    def from_dict(pstn_json):
-        pstn = PSTN()
-        dict_json = json.load(pstn_json)
-        graph = json_graph.node_link_graph(dict_json)
-        pstn.add_nodes_from(graph.nodes(data=True))
-        pstn.add_edges_from(graph.edges(data=True))
-        return pstn

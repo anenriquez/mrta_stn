@@ -171,21 +171,3 @@ class STNU(STN):
         upper_bound = mu + 2*sigma
 
         return lower_bound, upper_bound
-
-    @staticmethod
-    def from_json(stnu_json):
-        stnu = STNU()
-        dict_json = json.loads(stnu_json)
-        graph = json_graph.node_link_graph(dict_json)
-        stnu.add_nodes_from(graph.nodes(data=True))
-        stnu.add_edges_from(graph.edges(data=True))
-
-        return stnu
-
-    def from_dict(stnu_json):
-        stnu = STNU()
-        dict_json = json.load(stnu_json)
-        graph = json_graph.node_link_graph(dict_json)
-        stnu.add_nodes_from(graph.nodes(data=True))
-        stnu.add_edges_from(graph.edges(data=True))
-        return stnu

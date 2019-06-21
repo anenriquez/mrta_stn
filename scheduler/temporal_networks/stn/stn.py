@@ -361,8 +361,7 @@ class STN(nx.DiGraph):
         return stn_json
 
     @staticmethod
-    def from_json(stn_json):
-        stn = STN()
+    def from_json(stn_json, stn):
         dict_json = json.loads(stn_json)
         graph = json_graph.node_link_graph(dict_json)
         stn.add_nodes_from(graph.nodes(data=True))
@@ -370,8 +369,8 @@ class STN(nx.DiGraph):
 
         return stn
 
-    def from_dict(stn_json):
-        stn = STN()
+    @staticmethod
+    def from_dict(stn_json, stn):
         dict_json = json.load(stn_json)
         graph = json_graph.node_link_graph(dict_json)
         stn.add_nodes_from(graph.nodes(data=True))
