@@ -1,10 +1,7 @@
 import unittest
-import os
 import json
-import collections
 import logging
 import sys
-from scheduler.structs.task import Task
 from scheduler.scheduler import Scheduler
 
 STNU = "data/stnu_two_tasks.json"
@@ -46,8 +43,8 @@ class TestBuildSTNU(unittest.TestCase):
         self.logger.info("Completion time: %s ", completion_time)
         self.logger.info("Makespan: %s ", makespan)
 
-        self.assertEqual(completion_time, 69)
-        self.assertEqual(makespan, 106)
+        self.assertEqual(completion_time, 61)
+        self.assertEqual(makespan, 98)
 
         expected_dsc = 1.0
         self.assertEqual(dsc, expected_dsc)

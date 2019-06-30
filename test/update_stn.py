@@ -1,13 +1,8 @@
-from scheduler.structs.task import Task
 from scheduler.temporal_networks.stn import STN
-import os
-import yaml
-import collections
 import unittest
 import logging
 import sys
-
-DATASET = "data/three_tasks.yaml"
+from datasets.dataset_loader import load_dataset
 
 logger = logging.getLogger()
 logger.level = logging.INFO
@@ -19,21 +14,7 @@ class UpdateSTN(unittest.TestCase):
     logger = logging.getLogger('scheduler.test')
 
     def setUp(self):
-        self.tasks = self.get_tasks()
-
-    def get_tasks(self):
-        my_dir = os.path.dirname(__file__)
-        dataset_path = os.path.join(my_dir, DATASET)
-
-        with open(dataset_path, 'r') as file:
-            dataset = yaml.safe_load(file)
-
-        tasks = list()
-        ordered_tasks = collections.OrderedDict(sorted(dataset['tasks'].items()))
-
-        for task_id, task in ordered_tasks.items():
-            tasks.append(Task.from_dict(task))
-        return tasks
+        self.tasks = load_dataset('three_tasks.csv')
 
     def test_add_tasks_consecutively(self):
         """ Adds tasks in consecutive positions. Example
@@ -169,17 +150,6 @@ class UpdateSTN(unittest.TestCase):
         self.logger.info("N edges: %s", n_edges)
         self.logger.info(stn)
 
-        # data1 = json_graph.node_link_data(stn)
-        # MyEncoder().encode(data1)
-        # self.logger.info(data1)
-        # self.logger.info("------------")
-        # s1 = json.dumps(data1, cls=MyEncoder)
-        # self.logger.info(s1)
-        # stn1 = json.loads(data1)
-        # self.logger.info(s1)
-        # self.logger.info(json_graph.node_link_graph(data1, directed=True))
-        # self.logger.info("----", H)
-
         self.assertEqual(n_nodes, stn.number_of_nodes())
         self.assertEqual(n_edges, stn.number_of_edges())
 
@@ -194,8 +164,7 @@ class UpdateSTN(unittest.TestCase):
         self.logger.info("%s", stn)
 
         stn_json = stn.to_json()
-        self.logger.info("JSON format")
-        self.logger.info("%s", stn_json)
+        self.logger.info("JSON format", stn_json)
 
 
 if __name__ == '__main__':

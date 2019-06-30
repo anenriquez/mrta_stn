@@ -13,11 +13,8 @@ handlers:
 loggers:
   scheduler:
     level: DEBUG
-    handlers: [console]
   stn:
-    level: INFO
-    handlers: [console]
-
+    level: DEBUG
 root:
   level: DEBUG
   handlers: [console]

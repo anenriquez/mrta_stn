@@ -1,8 +1,6 @@
-import copy
 import logging
 import networkx as nx
-from scheduler.utils.config_logger import config_logger
-from scheduler.temporal_networks.stn import STN
+from allocation.utils.config_logger import config_logger
 
 """ Achieves full path consistency (fpc) by applying the Floyd Warshall algorithm to the STN"""
 

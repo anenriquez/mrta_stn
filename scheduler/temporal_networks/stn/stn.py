@@ -3,11 +3,9 @@ from scheduler.temporal_networks.stn import Node
 from json import JSONEncoder
 from networkx.readwrite import json_graph
 import json
-import logging
-import logging.config
-import yaml
 from pathlib import Path
-from scheduler.utils.config_logger import config_logger
+import logging.config
+from allocation.utils.config_logger import config_logger
 
 
 class MyEncoder(JSONEncoder):
@@ -18,7 +16,8 @@ class MyEncoder(JSONEncoder):
 class STN(nx.DiGraph):
     """ Represents a Simple Temporal Network (STN) as a networkx directed graph
     """
-    config_logger('../config/logging.yaml')
+    p = Path(__file__).parents[3]
+    config_logger(str(p) + '/config/logging.yaml')
     logger = logging.getLogger('stn')
 
     def __init__(self):
@@ -47,7 +46,7 @@ class STN(nx.DiGraph):
         node = Node()
         self.add_node(0, data=node.to_dict())
 
-    def add_constraint(self, i, j, wji=0, wij=float('inf')):
+    def add_constraint(self, i, j, wji=0.0, wij=float('inf')):
         """
         Adds constraint between nodes i and j
         i: starting node
@@ -98,12 +97,12 @@ class STN(nx.DiGraph):
         """
         if type == 'navigation':
             # TODO: initialize the pose with the robot current position (read it from mongo)
-            # this value will be overwriten once the task is allocated
+            # this value will be overwritten once the task is allocated
             pose = ''
         elif type == 'start':
-            pose = task.pickup_pose.name
+            pose = task.pickup_pose_name
         elif type == 'finish':
-            pose = task.delivery_pose.name
+            pose = task.delivery_pose_name
 
         return pose
 
@@ -216,7 +215,7 @@ class STN(nx.DiGraph):
         """ Reads from the database the estimated duration for navigating from source to destination and takes the mean
         """
         # TODO: Read estimated duration from dataset
-        duration = 6
+        duration = 6.0
         return duration
 
     def get_task_duration(self, task):
@@ -224,8 +223,28 @@ class STN(nx.DiGraph):
         In the case of transportation tasks, the estimated duration is the navigation time from the pickup to the delivery location
         """
         # TODO: Read estimated duration from dataset
-        duration = task.estimated_duration
+        duration = 4.0
         return duration
+
+    def get_navigation_start_time(self, task):
+        """ Returns the earliest_start_time and latest start navigation time
+        """
+        navigation_duration = self.get_navigation_duration(task.pickup_pose_name, task.delivery_pose_name)
+
+        earliest_navigation_start_time = task.earliest_start_time - navigation_duration
+        latest_navigation_start_time = task.latest_start_time - navigation_duration
+
+        return earliest_navigation_start_time, latest_navigation_start_time
+
+    def get_finish_time(self, task):
+        """ Returns the earliest and latest finish time
+        """
+        task_duration = self.get_task_duration(task)
+
+        earliest_finish_time = task.earliest_start_time + task_duration
+        latest_finish_time = task.latest_start_time + task_duration
+
+        return earliest_finish_time, latest_finish_time
 
     def show_n_nodes_edges(self):
         """ Prints the number of nodes and edges in the stn
@@ -312,7 +331,7 @@ class STN(nx.DiGraph):
         :parma ending_node: ending_node_id
         """
         if self.has_edge(i, j):
-            return self[i][j]['weight']
+            return float(self[i][j]['weight'])
         else:
             if i == j and self.has_node(i):
                 return 0
@@ -326,39 +345,41 @@ class STN(nx.DiGraph):
 
         start_time_lower_bound = -self[node_first_task][0]['weight']
 
-        finish_time_upper_bound = self[0][node_last_task]['weight']
+        finish_time_lower_bound = -self[node_last_task][0]['weight']
 
-        completion_time = round(finish_time_upper_bound - start_time_lower_bound)
+        self.logger.debug("Start time: %s", start_time_lower_bound)
+        self.logger.debug("Finish time: %s", finish_time_lower_bound)
+
+        completion_time = finish_time_lower_bound - start_time_lower_bound
 
         return completion_time
 
     def get_makespan(self):
         nodes = list(self.nodes())
         node_last_task = nodes[-1]
-        last_task_finish_time = self[0][node_last_task]['weight']
+        last_task_finish_time = - self[node_last_task][0]['weight']
 
         return last_task_finish_time
 
     def add_timepoint_constraints(self, node_id, task, type):
         """ Adds the earliest and latest times to execute a timepoint (node)
-        Navigation timepoint [0, inf]
+        Navigation timepoint [earliest_navigation_start_time, latest_navigation_start_time]
         Start timepoint [earliest_start_time, latest_start_time]
         Finish timepoint [earliest_finish_time, lastest_finish_time]
         """
-        # Maybe ?:
-        # EStn = EPtn - TTt(n-1)tn
-        # LStn = LPtn - TTt(n-1)tn
 
         if type == "navigation":
-            self.add_constraint(0, node_id)
+            earliest_navigation_start_time, latest_navigation_start_time = self.get_navigation_start_time(task)
+
+            self.add_constraint(0, node_id, earliest_navigation_start_time, latest_navigation_start_time)
 
         if type == "start":
-            self.add_constraint(0, node_id, task.earliest_pickup_time, task.latest_pickup_time)
+            self.add_constraint(0, node_id, task.earliest_start_time, task.latest_start_time)
 
         elif type == "finish":
-            self.add_constraint(0, node_id, task.earliest_delivery_time, task.latest_delivery_time)
+            earliest_finish_time, latest_finish_time = self.get_finish_time(task)
 
-
+            self.add_constraint(0, node_id, earliest_finish_time, latest_finish_time)
 
     def to_json(self):
         dict_json = json_graph.node_link_data(self)

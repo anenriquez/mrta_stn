@@ -1,10 +1,9 @@
 from scheduler.temporal_networks.stn import STN
 from scheduler.temporal_networks.stn import Node
 from json import JSONEncoder
-from networkx.readwrite import json_graph
-import json
+from pathlib import Path
 import logging
-from scheduler.utils.config_logger import config_logger
+from allocation.utils.config_logger import config_logger
 
 
 class MyEncoder(JSONEncoder):
@@ -15,7 +14,8 @@ class MyEncoder(JSONEncoder):
 class STNU(STN):
     """ Represents a Simple Temporal Network with Uncertainties (STNU) as a networkx directed graph
     """
-    config_logger('../config/logging.yaml')
+    p = Path(__file__).parents[3]
+    config_logger(str(p) + '/config/logging.yaml')
     logger = logging.getLogger('stn.stnu')
 
     def __init__(self):
@@ -43,7 +43,7 @@ class STNU(STN):
 
         return to_print
 
-    def add_constraint(self, i, j, wji=0, wij=float('inf'), is_contingent=False):
+    def add_constraint(self, i, j, wji=0.0, wij=float('inf'), is_contingent=False):
         """
         Adds constraint between nodes i and j
         i: starting node
@@ -74,6 +74,22 @@ class STNU(STN):
         self.add_edge(i, j, is_contingent=is_contingent)
 
         self.add_edge(j, i, is_contingent=is_contingent)
+
+    def add_timepoint_constraints(self, node_id, task, type):
+        """ Adds the earliest and latest times to execute a timepoint (node)
+        Navigation timepoint [0, inf]
+        Start timepoint [earliest_start_time, latest_start_time]
+        Finish timepoint [0, inf]
+        """
+
+        if type == "navigation":
+            self.add_constraint(0, node_id)
+
+        if type == "start":
+            self.add_constraint(0, node_id, task.earliest_start_time, task.latest_start_time)
+
+        elif type == "finish":
+            self.add_constraint(0, node_id)
 
     def get_contingent_constraints(self):
         """ Returns a dictionary with the contingent constraints in the STNU

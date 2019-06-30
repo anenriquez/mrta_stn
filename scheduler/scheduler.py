@@ -1,13 +1,12 @@
 import logging
 import logging.config
-import yaml
 from scheduler.temporal_networks.stn import STN
 from scheduler.temporal_networks.pstn import PSTN
 from scheduler.temporal_networks.stnu import STNU
 from scheduler.srea import srea
 from scheduler.fpc import get_minimal_network
 from scheduler.dsc_lp import DSC_LP
-from scheduler.utils.config_logger import config_logger
+from allocation.utils.config_logger import config_logger
 
 """ Computes the dispatchable graph (solution space) of a temporal network
 
@@ -122,8 +121,6 @@ class Scheduler(object):
 
         stnu = dsc_lp.get_stnu(bounds)
         self.logger.debug("STNU: %s", stnu)
-
-        dispatch_graph = dsc_lp.get_schedule(bounds)
 
         # Returns a schedule because it is an offline approach
         schedule = dsc_lp.get_schedule(bounds)

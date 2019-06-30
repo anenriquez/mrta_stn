@@ -26,8 +26,7 @@
 import pulp
 import sys
 import logging
-from scheduler.temporal_networks.stnu import STNU
-from scheduler.utils.config_logger import config_logger
+from allocation.utils.config_logger import config_logger
 from math import ceil
 
 """
