@@ -4,5 +4,3 @@ matplotlib
 PuLP
 scipy
 pyYAML
-git+ssh://git@github.com/anenriquez/mrta_allocation.git@feature/task_struct
-git+ssh://git@github.com/anenriquez/mrta_datasets.git@feature/task_struct

@@ -1,6 +1,9 @@
 language: python
 python:
   - "3.5"
+before_install:
+  - pip install git+ssh://git@github.com/anenriquez/mrta_allocation.git@feature/task_struct
+  - pip install git+ssh://git@github.com/anenriquez/mrta_datasets.git@feature/task_struct
 install:
   - pip install -r requirements.txt
 script:
