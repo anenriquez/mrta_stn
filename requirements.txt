@@ -4,3 +4,5 @@ matplotlib
 PuLP
 scipy
 pyYAML
+git+https://github.com/anenriquez/mrta_allocation
+git+https://github.com/anenriquez/mrta_datasets
