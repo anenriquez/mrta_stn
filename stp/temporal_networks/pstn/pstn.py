@@ -1,8 +1,33 @@
-from scheduler.temporal_networks.stn import STN
-from scheduler.temporal_networks.stn import Node
+# Based on: https://github.com/HEATlab/DREAM/blob/master/libheat/stntools/stn.py
+#
+# MIT License
+#
+# Copyright (c) 2019 HEATlab
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+from stp.temporal_networks.pstn import Constraint
+from stp.temporal_networks.stn import STN
+from stp.temporal_networks.stn import Node
 from json import JSONEncoder
-from pathlib import Path
 import logging
+from pathlib import Path
 from allocation.utils.config_logger import config_logger
 
 
@@ -11,12 +36,13 @@ class MyEncoder(JSONEncoder):
         return o.__dict__
 
 
-class STNU(STN):
-    """ Represents a Simple Temporal Network with Uncertainties (STNU) as a networkx directed graph
+class PSTN(STN):
+    """ Represents a Probabilistic Simple Temporal Network (PSTN) as a networkx directed graph
     """
+    # Get directory three levels up
     p = Path(__file__).parents[3]
     config_logger(str(p) + '/config/logging.yaml')
-    logger = logging.getLogger('stn.stnu')
+    logger = logging.getLogger('stn.pstn')
 
     def __init__(self):
         super().__init__()
@@ -33,8 +59,8 @@ class STNU(STN):
                     to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
                 # Constraints between the other timepoints
                 else:
-                    if self[j][i]['is_contingent'] is True:
-                        to_print += "Constraint {} => {}: [{}, {}] (contingent)".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
+                    if 'is_contingent' in self[j][i]:
+                        to_print += "Constraint {} => {}: [{}, {}] ({})".format(i, j, -self[j][i]['weight'], self[i][j]['weight'], self[i][j]['distribution'])
                     else:
 
                         to_print += "Constraint {} => {}: [{}, {}]".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
@@ -43,7 +69,7 @@ class STNU(STN):
 
         return to_print
 
-    def add_constraint(self, i, j, wji=0.0, wij=float('inf'), is_contingent=False):
+    def add_constraint(self, i, j, wji=0.0, wij=float('inf'), distribution=""):
         """
         Adds constraint between nodes i and j
         i: starting node
@@ -60,22 +86,21 @@ class STNU(STN):
 
         If there is no upper bound, its value is set to infinity
 
-        Types of constraints:
-        - contingent constraint
-        - requirement constraint
-
-        A constraint is contingent if it is uncontrollable, i.e., its value is assigned by Nature at execution time.
-
-        I a constraint is not contingent, then it is of type requirement and its value is assigned by the system.
+        distribution is the probability distribution of the constraint between i and j
         """
+
+        # The constraint is contingent if it has a probability distribution
+        is_contingent = distribution is not ""
 
         super().add_constraint(i, j, wji, wij)
 
+        self.add_edge(i, j, distribution=distribution)
         self.add_edge(i, j, is_contingent=is_contingent)
 
+        self.add_edge(j, i, distribution=distribution)
         self.add_edge(j, i, is_contingent=is_contingent)
 
-    def add_timepoint_constraints(self, node_id, task, type):
+    def timepoint_hard_constraints(self, node_id, task, type):
         """ Adds the earliest and latest times to execute a timepoint (node)
         Navigation timepoint [0, inf]
         Start timepoint [earliest_start_time, latest_start_time]
@@ -92,33 +117,16 @@ class STNU(STN):
             self.add_constraint(0, node_id)
 
     def get_contingent_constraints(self):
-        """ Returns a dictionary with the contingent constraints in the STNU
-         {(starting_node, ending_node): self[i][j] }
+        """ Returns a dictionary with the contingent constraints in the PSTN
+         {(starting_node, ending_node): Constraint (object)}
         """
         contingent_constraints = dict()
 
         for (i, j, data) in self.edges.data():
             if self[i][j]['is_contingent'] is True and i < j:
-                contingent_constraints[(i, j)] = self[i][j]
+                contingent_constraints[(i, j)] = Constraint(i, j, self[i][j]['distribution'])
 
         return contingent_constraints
-
-    def get_contingent_timepoints(self):
-        """ Returns a list with the contingent (uncontrollable) timepoints in the STNU
-        """
-        timepoints = list(self.nodes)
-        contingent_timepoints = list()
-
-        for (i, j, data) in self.edges.data():
-            if self[i][j]['is_contingent'] is True and i < j:
-                contingent_timepoints.append(timepoints[j])
-
-        return contingent_timepoints
-
-    def shrink_contingent_constraint(self, i, j, low, high):
-        if self.has_edge(i, j):
-            self[i][j]['weight'] += high
-            self[j][i]['weight'] -= low
 
     def add_intertimepoints_constraints(self, constraints, task):
         """ Adds constraints between the timepoints of a task
@@ -137,55 +145,27 @@ class STNU(STN):
         for (i, j) in constraints:
             self.logger.debug("Adding constraint: %s ", (i, j))
             if self.node[i]['data']['type'] == "navigation":
-                lower_bound, upper_bound = self.get_navigation_bounded_duration(i, j)
-                self.add_constraint(i, j, lower_bound, upper_bound, is_contingent=True)
+                distribution = self.get_navigation_distribution(i, j)
+                self.add_constraint(i, j, distribution=distribution)
 
             elif self.node[i]['data']['type'] == "start":
-                lower_bound, upper_bound = self.get_task_bounded_duration(task)
-                self.add_constraint(i, j, lower_bound, upper_bound, is_contingent=True)
+                distribution = self.get_task_distribution(task)
+                self.add_constraint(i, j, distribution=distribution)
 
             elif self.node[i]['data']['type'] == "finish":
                 # wait time between finish of one task and start of the next one. Fixed to [0, inf]
-                self.add_constraint(i, j, 0)
+                self.add_constraint(i, j)
 
-    def get_navigation_bounded_duration(self, source, destination):
-        """ Reads from the database the probability distribution for navigating from source to destination and converts it to a bounded interval
-        [mu - 2*sigma, mu + 2*sigma]
-        as in:
-        Shyan Akmal, Savana Ammons, Hemeng Li, and James Boerkoel Jr. Quantifying Degrees of Controllability in Temporal Networks with Uncertainty. In
-        Proceedings of the 29th International Conference on Automated Planning and Scheduling, ICAPS 2019, 07 2019.
+    def get_navigation_distribution(self, source, destination):
+        """ Reads from the database the probability distribution for navigating from source to destination
         """
-        # TODO: Read estimated distribution from database
+        # TODO: Read estimated distribution from dataset
         distribution = "N_6_1"
-        name_split = distribution.split("_")
-        # mean
-        mu = float(name_split[1])
-        # standard deviation
-        sigma = float(name_split[2])
+        return distribution
 
-        lower_bound = mu - 2*sigma
-        upper_bound = mu + 2*sigma
-
-        return lower_bound, upper_bound
-
-    def get_task_bounded_duration(self, task):
+    def get_task_distribution(self, task):
         """ Reads from the database the estimated distribution of the task
         In the case of transportation tasks, the estimated distribution is the navigation time from the pickup to the delivery location
-        Converts the estimated distribution to a bounded interval
-        [mu - 2*sigma, mu + 2*sigma]
-        as in:
-        Shyan Akmal, Savana Ammons, Hemeng Li, and James Boerkoel Jr. Quantifying Degrees of Controllability in Temporal Networks with Uncertainty. In
-        Proceedings of the 29th International Conference on Automated Planning and Scheduling, ICAPS 2019, 07 2019.
         """
-        # TODO: Read estimated distribution from database
         distribution = "N_4_1"
-        name_split = distribution.split("_")
-        # mean
-        mu = float(name_split[1])
-        # standard deviation
-        sigma = float(name_split[2])
-
-        lower_bound = mu - 2*sigma
-        upper_bound = mu + 2*sigma
-
-        return lower_bound, upper_bound
+        return distribution

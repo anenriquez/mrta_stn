@@ -11,7 +11,7 @@ handlers:
     formatter: default
     stream: ext://sys.stdout
 loggers:
-  scheduler:
+  stp:
     level: DEBUG
   stn:
     level: DEBUG

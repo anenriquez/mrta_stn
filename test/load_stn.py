@@ -2,7 +2,7 @@ import unittest
 import json
 import logging
 import sys
-from scheduler.scheduler import Scheduler
+from stp.stp import STP
 
 STN = "data/stn_two_tasks.json"
 
@@ -13,7 +13,7 @@ logger.addHandler(stream_handler)
 
 
 class TestLoadSTN(unittest.TestCase):
-    logger = logging.getLogger('scheduler.test')
+    logger = logging.getLogger('stp.test')
 
     def setUp(self):
         # Load the stn as a dictionary
@@ -23,12 +23,13 @@ class TestLoadSTN(unittest.TestCase):
         # Convert the dict to a json string
         stn_json = json.dumps(stn_dict)
 
-        self.scheduler = Scheduler('fpc', json_temporal_network=stn_json)
+        self.stp = STP('fpc')
+        self.stn = self.stp.load_stn(stn_json)
 
     def test_build_stn(self):
-        self.logger.info("STN: \n %s", self.scheduler.temporal_network)
+        self.logger.info("STN: \n %s", self.stn)
 
-        metric, minimal_network = self.scheduler.get_dispatch_graph()
+        metric, minimal_network = self.stp.get_dispatchable_graph(self.stn)
 
         self.logger.info("Minimal STN: \n %s", minimal_network)
 

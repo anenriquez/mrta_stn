@@ -1,4 +1,4 @@
-from scheduler.temporal_networks.stnu import STNU
+from stp.temporal_networks.stnu import STNU
 import unittest
 import logging
 import sys
@@ -12,7 +12,7 @@ logger.addHandler(stream_handler)
 
 
 class UpdateSTNU(unittest.TestCase):
-    logger = logging.getLogger('scheduler.test')
+    logger = logging.getLogger('stp.test')
 
     def setUp(self):
         self.tasks = load_dataset('three_tasks.csv')

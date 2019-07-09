@@ -2,7 +2,7 @@ import unittest
 import json
 import logging
 import sys
-from scheduler.scheduler import Scheduler
+from stp.stp import STP
 
 STNU = "data/stnu_two_tasks.json"
 MAX_FLOAT = sys.float_info.max
@@ -14,7 +14,7 @@ logger.addHandler(stream_handler)
 
 
 class TestBuildSTNU(unittest.TestCase):
-    logger = logging.getLogger('scheduler.test')
+    logger = logging.getLogger('stp.test')
 
     def setUp(self):
         # Load the stn as a dictionary
@@ -24,15 +24,14 @@ class TestBuildSTNU(unittest.TestCase):
         # Convert the dict to a json string
         stnu_json = json.dumps(stnu_dict)
 
-        self.scheduler = Scheduler('dsc_lp', json_temporal_network=stnu_json)
+        self.stp = STP('dsc_lp')
+        self.stn = self.stp.load_stn(stnu_json)
 
     def test_build_stn(self):
-        self.logger.info("STNU: \n %s", self.scheduler.get_temporal_network())
-
-        self.logger.info("%s", type(self.scheduler.temporal_network))
+        self.logger.info("STNU: \n %s", self.stn)
 
         self.logger.info("Getting Schedule...")
-        dsc, schedule = self.scheduler.get_dispatch_graph()
+        dsc, schedule = self.stp.get_dispatchable_graph(self.stn)
 
         self.logger.info("DSC: %s ", dsc)
         self.logger.info("schedule: %s ", schedule)
@@ -107,6 +106,7 @@ class TestBuildSTNU(unittest.TestCase):
                 upper_bound = schedule[i][j]['weight']
                 self.assertEqual(lower_bound, 2)
                 self.assertEqual(upper_bound, 6)
+
 
 if __name__ == '__main__':
     unittest.main()

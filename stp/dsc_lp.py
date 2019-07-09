@@ -41,7 +41,7 @@ MAX_FLOAT = sys.float_info.max
 
 class DSC_LP(object):
     config_logger('../config/logging.yaml')
-    logger = logging.getLogger('scheduler.dsc_lp')
+    logger = logging.getLogger('stp.dsc_lp')
 
     def __init__(self, stnu):
         self.stnu = stnu

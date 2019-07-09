@@ -1,5 +1,5 @@
 import networkx as nx
-from scheduler.temporal_networks.stn import Node
+from stp.temporal_networks.stn import Node
 from json import JSONEncoder
 from networkx.readwrite import json_graph
 import json
@@ -23,6 +23,7 @@ class STN(nx.DiGraph):
     def __init__(self):
         super().__init__()
         self.add_zero_timepoint()
+        self.max_makespan = 150
 
     def __str__(self):
         to_print = ""
@@ -287,7 +288,7 @@ class STN(nx.DiGraph):
                     # wait time between finish of one task and start of the next one
                     self.add_constraint(i, j)
 
-    def get_scheduled_tasks(self):
+    def get_tasks(self):
         """
         Gets the tasks (in order)
         Each timepoint in the STN is associated with a task.
@@ -368,6 +369,12 @@ class STN(nx.DiGraph):
         Finish timepoint [earliest_finish_time, lastest_finish_time]
         """
 
+        if task.hard_constraints:
+            self.timepoint_hard_constraints(node_id, task, type)
+        else:
+            self.timepoint_soft_constraints(node_id, task, type)
+
+    def timepoint_hard_constraints(self, node_id, task, type):
         if type == "navigation":
             earliest_navigation_start_time, latest_navigation_start_time = self.get_navigation_start_time(task)
 
@@ -380,6 +387,17 @@ class STN(nx.DiGraph):
             earliest_finish_time, latest_finish_time = self.get_finish_time(task)
 
             self.add_constraint(0, node_id, earliest_finish_time, latest_finish_time)
+
+    def timepoint_soft_constraints(self, node_id, task, type):
+        if type == "navigation":
+            self.add_constraint(0, node_id)
+
+        if type == "start":
+            self.add_constraint(0, node_id)
+
+        elif type == "finish":
+
+            self.add_constraint(0, node_id, 0, self.max_makespan)
 
     def to_json(self):
         dict_json = json_graph.node_link_data(self)

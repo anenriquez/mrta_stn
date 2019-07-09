@@ -27,18 +27,16 @@ import copy
 import sys
 import logging
 
-from scheduler.temporal_networks.pstn import PSTN
-from scheduler.temporal_networks.distempirical import invcdf_norm, invcdf_uniform
-from scheduler.fpc import get_minimal_network
-from allocation.utils.config_logger import config_logger
+from stp.temporal_networks.pstn import PSTN
+from stp.temporal_networks.distempirical import invcdf_norm, invcdf_uniform
+from stp.fpc import get_minimal_network
 
 
 # \brief A global variable that stores the max float that will be used to deal
 #        with infinite edges.
 MAX_FLOAT = sys.float_info.max
 
-config_logger('../config/logging.yaml')
-logger = logging.getLogger('scheduler.srea')
+logging.getLogger(__name__)
 
 """ SREA algorithm
 """
@@ -58,13 +56,10 @@ def setUpLP(stn, decouple):
 
     prob = pulp.LpProblem('PSTN Robust Execution LP', pulp.LpMaximize)
 
-
     for (i, j) in stn.edges():
         weight = stn.get_edge_weight(i, j)
         if weight == float('inf'):
             stn.update_edge_weight(i, j, MAX_FLOAT)
-
-    logger.debug("Input STN %s: ", stn)
 
     # ##
     # Store Original STN edges and objective variables for easy access.
@@ -99,7 +94,6 @@ def setUpLP(stn, decouple):
             # with the bounds on the LP variables
             # if i != 0 and not decouple:
             if i != 0 and j != 0 and (j, i) not in contingent_constraints and not decouple:
-                print("Adding extra constraints")
                 addConstraint(bounds[(j, '+')] - bounds[(i, '-')]
                               <= stn.get_edge_weight(i, j), prob)
                 addConstraint(bounds[(i, '+')] - bounds[(j, '-')]
@@ -127,6 +121,8 @@ def srea(inputstn,
     or None if there is no solution
     """
 
+    stn = copy.deepcopy(inputstn)
+
     # dictionary of alphas for binary search
     alphas = {i: i / 1000.0 for i in range(1001)}
 
@@ -138,25 +134,25 @@ def srea(inputstn,
 
     # set up LP
     if not decouple:
-        inputstn = get_minimal_network(inputstn)
-        if inputstn is None:
+        stn = get_minimal_network(stn)
+        if stn is None:
             return result
-
-        logger.debug("Minimal STN %s: ", inputstn)
-    bounds, deltas, probBase = setUpLP(inputstn, decouple)
+        if debug:
+            logging.debug("Minimal STN %s: ", stn)
+    bounds, deltas, probBase = setUpLP(stn, decouple)
 
     if debug:
-        logger.debug("probBase: %s ", probBase)
+        logging.debug("probBase: %s ", probBase)
 
     # First run binary search on alpha
     while upper - lower > 1:
         alpha = alphas[(upper + lower) // 2]
         if debug:
-            logger.debug('trying alpha %s', alpha)
+            logging.debug('trying alpha %s', alpha)
 
         # run the LP
         probContainer = (bounds, deltas, probBase.copy())
-        LPbounds = srea_LP(copy.deepcopy(inputstn),
+        LPbounds = srea_LP(stn,
                            alpha,
                            decouple,
                            debug=debugLP,
@@ -175,25 +171,25 @@ def srea(inputstn,
             if result is not None:
                 alpha, LPbounds = result
                 if debug:
-                    logger.debug(
+                    logging.debug(
                         'modifying STN with lowest good alpha, %s', alpha)
 
                 for i, sign in LPbounds:
                     if sign == '+':
-                        inputstn.update_edge_weight(
+                        stn.update_edge_weight(
                             0, i, ceil(bounds[(i, '+')].varValue))
                     else:
-                        inputstn.update_edge_weight(
+                        stn.update_edge_weight(
                             i, 0, ceil(-bounds[(i, '-')].varValue))
 
                 if returnAlpha:
-                    return alpha, inputstn
+                    return alpha, stn
                 else:
-                    return inputstn
+                    return stn
     # skip the rest if there was no decoupling at all
     if result is None:
         if debug:
-            logger.warning('could not produce feasible LP.')
+            logging.warning('could not produce feasible LP.')
         return None
 
     # Fail here
@@ -227,7 +223,7 @@ def srea_LP(inputstn,
 
     if probContainer is None:
         if debug:
-            logger.warning('No saved LP variables, generating all LP variables from current STN')
+            logging.warning('No saved LP variables, generating all LP variables from current STN')
         bounds, deltas, prob = setUpLP(inputstn, decouple)
     else:
         bounds, deltas, prob = probContainer
@@ -274,7 +270,7 @@ def srea_LP(inputstn,
 
     status = pulp.LpStatus[prob.status]
     if debug:
-        logger.debug('Status: %s', status)
+        logging.debug('Status: %s', status)
         # Each of the variables is printed with it's resolved optimum value
         for v in prob.variables():
             print(v.name, '=', v.varValue)

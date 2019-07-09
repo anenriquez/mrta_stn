@@ -1,4 +1,4 @@
-from scheduler.scheduler import Scheduler
+from stp.stp import STP
 import json
 
 PSTN = "data/pstn_one_task.json"
@@ -10,17 +10,18 @@ if __name__ == '__main__':
     # Convert the dict to a json string
     pstn_json = json.dumps(pstn_dict)
 
-    scheduler = Scheduler('srea', json_temporal_network=pstn_json)
+    stp = STP('srea')
+    pstn = stp.load_stn(pstn_json)
 
-    print("PSTN: ", scheduler.temporal_network)
+    print("PSTN: ", pstn)
 
     print("Getting GUIDE...")
-    alpha, guide_stn = scheduler.get_dispatch_graph()
+    alpha, guide = stp.get_dispatchable_graph(pstn)
     print("GUIDE")
-    print(guide_stn)
+    print(guide)
     print("Alpha: ", alpha)
 
-    completion_time = guide_stn.get_completion_time()
-    makespan = guide_stn.get_makespan()
+    completion_time = guide.get_completion_time()
+    makespan = guide.get_makespan()
     print("Completion time: ", completion_time)
     print("Makespan: ", makespan)

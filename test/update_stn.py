@@ -1,4 +1,4 @@
-from scheduler.temporal_networks.stn import STN
+from stp.temporal_networks.stn import STN
 import unittest
 import logging
 import sys
@@ -11,7 +11,7 @@ logger.addHandler(stream_handler)
 
 
 class UpdateSTN(unittest.TestCase):
-    logger = logging.getLogger('scheduler.test')
+    logger = logging.getLogger('stp.test')
 
     def setUp(self):
         self.tasks = load_dataset('three_tasks.csv')

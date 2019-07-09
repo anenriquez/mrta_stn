@@ -2,7 +2,7 @@ import unittest
 import json
 import logging
 import sys
-from scheduler.scheduler import Scheduler
+from stp.stp import STP
 
 # A global variable that stores the max float that will be used to deal with infinite edges.
 MAX_FLOAT = sys.float_info.max
@@ -16,7 +16,7 @@ logger.addHandler(stream_handler)
 
 
 class TestLoadPSTN(unittest.TestCase):
-    logger = logging.getLogger('scheduler.test')
+    logger = logging.getLogger('stp.test')
 
     def setUp(self):
         # Load the stn as a dictionary
@@ -26,14 +26,14 @@ class TestLoadPSTN(unittest.TestCase):
         # Convert the dict to a json string
         pstn_json = json.dumps(pstn_dict)
 
-        self.scheduler = Scheduler('srea', json_temporal_network=pstn_json)
+        self.stp = STP('srea')
+        self.stn = self.stp.load_stn(pstn_json)
 
     def test_build_stn(self):
-        self.logger.info("PSTN: \n %s", self.scheduler.temporal_network)
-
+        self.logger.info("PSTN: \n %s", self.stn)
 
         self.logger.info("Getting GUIDE...")
-        alpha, guide_stn = self.scheduler.get_dispatch_graph()
+        alpha, guide_stn = self.stp.get_dispatchable_graph(self.stn)
         self.logger.info("GUIDE")
         self.logger.info(guide_stn)
         self.logger.info("Alpha: %s ", alpha)
