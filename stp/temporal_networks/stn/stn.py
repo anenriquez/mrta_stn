@@ -3,9 +3,7 @@ from stp.temporal_networks.stn import Node
 from json import JSONEncoder
 from networkx.readwrite import json_graph
 import json
-from pathlib import Path
 import logging.config
-from allocation.utils.config_logger import config_logger
 
 
 class MyEncoder(JSONEncoder):
@@ -16,8 +14,7 @@ class MyEncoder(JSONEncoder):
 class STN(nx.DiGraph):
     """ Represents a Simple Temporal Network (STN) as a networkx directed graph
     """
-    p = Path(__file__).parents[3]
-    config_logger(str(p) + '/config/logging.yaml')
+
     logger = logging.getLogger('stn')
 
     def __init__(self):
