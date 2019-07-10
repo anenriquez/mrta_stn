@@ -1,9 +1,9 @@
 language: python
 python:
   - "3.5"
-before_install:
-  - pip install git+ssh://git@github.com/anenriquez/mrta_allocation.git@develop
-  - pip install git+ssh://git@github.com/anenriquez/mrta_datasets.git@develop
+#before_install:
+#  - pip install git+ssh://git@github.com/anenriquez/mrta_allocation.git@develop
+#  - pip install git+ssh://git@github.com/anenriquez/mrta_datasets.git@develop
 install:
   - pip install -r requirements.txt
   - pip install -e .
