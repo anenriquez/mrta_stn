@@ -4,4 +4,7 @@ matplotlib
 PuLP
 scipy
 pyYAML
-git+ssh://git@github.com/anenriquez/mrta_datasets.git@develop#wheel=datasets
+-e git+ssh://git@github.com/anenriquez/mrta_datasets.git@feature/rename#egg=mrta_datasets
+
+
+

@@ -1,6 +1,6 @@
 from stp.temporal_networks.stn import STN
 import unittest
-from datasets.dataset_loader import load_dataset
+from mrta_datasets.dataset_loader import load_dataset
 
 
 class UpdateSTN(unittest.TestCase):
