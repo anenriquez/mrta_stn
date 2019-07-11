@@ -1,4 +1,3 @@
-from scheduler.structs.task import Task
 
 
 class Node(object):

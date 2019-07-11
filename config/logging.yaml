@@ -11,13 +11,10 @@ handlers:
     formatter: default
     stream: ext://sys.stdout
 loggers:
-  scheduler:
+  stp:
     level: DEBUG
-    handlers: [console]
   stn:
-    level: INFO
-    handlers: [console]
-
+    level: DEBUG
 root:
   level: DEBUG
   handlers: [console]

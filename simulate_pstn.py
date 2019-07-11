@@ -25,9 +25,9 @@
 import json
 import networkx as nx
 import numpy as np
-from scheduler.structs.task import Task
-from scheduler.temporal_networks.pstn import NodePSTN, ConstraintPSTN, PSTN
-from scheduler.temporal_networks.simulator import Simulator
+from stp.structs.task import Task
+from stp.temporal_networks.pstn import NodePSTN, ConstraintPSTN, PSTN
+from stp.temporal_networks.simulator import Simulator
 
 MAX_SEED = 2 ** 31 - 1
 """The maximum number a random seed can be."""

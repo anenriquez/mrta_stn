@@ -22,14 +22,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from scheduler.temporal_networks.pstn import Constraint
-from scheduler.temporal_networks.stn import STN
-from scheduler.temporal_networks.stn import Node
+from stp.temporal_networks.pstn import Constraint
+from stp.temporal_networks.stn import STN
+from stp.temporal_networks.stn import Node
 from json import JSONEncoder
-from networkx.readwrite import json_graph
-import json
 import logging
-from scheduler.utils.config_logger import config_logger
+from pathlib import Path
+from allocation.utils.config_logger import config_logger
 
 
 class MyEncoder(JSONEncoder):
@@ -40,7 +39,9 @@ class MyEncoder(JSONEncoder):
 class PSTN(STN):
     """ Represents a Probabilistic Simple Temporal Network (PSTN) as a networkx directed graph
     """
-    config_logger('../config/logging.yaml')
+    # Get directory three levels up
+    p = Path(__file__).parents[3]
+    config_logger(str(p) + '/config/logging.yaml')
     logger = logging.getLogger('stn.pstn')
 
     def __init__(self):
@@ -68,7 +69,7 @@ class PSTN(STN):
 
         return to_print
 
-    def add_constraint(self, i, j, wji=0, wij=float('inf'), distribution=""):
+    def add_constraint(self, i, j, wji=0.0, wij=float('inf'), distribution=""):
         """
         Adds constraint between nodes i and j
         i: starting node
@@ -98,6 +99,22 @@ class PSTN(STN):
 
         self.add_edge(j, i, distribution=distribution)
         self.add_edge(j, i, is_contingent=is_contingent)
+
+    def timepoint_hard_constraints(self, node_id, task, type):
+        """ Adds the earliest and latest times to execute a timepoint (node)
+        Navigation timepoint [0, inf]
+        Start timepoint [earliest_start_time, latest_start_time]
+        Finish timepoint [0, inf]
+        """
+
+        if type == "navigation":
+            self.add_constraint(0, node_id)
+
+        if type == "start":
+            self.add_constraint(0, node_id, task.earliest_start_time, task.latest_start_time)
+
+        elif type == "finish":
+            self.add_constraint(0, node_id)
 
     def get_contingent_constraints(self):
         """ Returns a dictionary with the contingent constraints in the PSTN

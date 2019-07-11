@@ -1,13 +1,9 @@
 import unittest
-import os
-import yaml
-import collections
 import logging
 import sys
-from scheduler.structs.task import Task
-from scheduler.temporal_networks.pstn import PSTN
+from stp.temporal_networks.pstn import PSTN
+from datasets.dataset_loader import load_dataset
 
-DATASET = "data/three_tasks.yaml"
 
 logger = logging.getLogger()
 logger.level = logging.INFO
@@ -16,24 +12,10 @@ logger.addHandler(stream_handler)
 
 
 class TestBuildPSTN(unittest.TestCase):
-    logger = logging.getLogger('scheduler.test')
+    logger = logging.getLogger('stp.test')
 
     def setUp(self):
-        self.tasks = self.get_tasks()
-
-    def get_tasks(self):
-        my_dir = os.path.dirname(__file__)
-        dataset_path = os.path.join(my_dir, DATASET)
-
-        with open(dataset_path, 'r') as file:
-            dataset = yaml.safe_load(file)
-
-        tasks = list()
-        ordered_tasks = collections.OrderedDict(sorted(dataset['tasks'].items(), reverse=True))
-
-        for task_id, task in ordered_tasks.items():
-            tasks.append(Task.from_dict(task))
-        return tasks
+        self.tasks = load_dataset('three_tasks.csv')
 
     def test_add_tasks_consecutively(self):
         """ Adds tasks in consecutive positions. Example
@@ -51,13 +33,6 @@ class TestBuildPSTN(unittest.TestCase):
         self.logger.info("N nodes: %s ", n_nodes)
         self.logger.info("N edges:%s ", n_edges)
         self.logger.info(pstn)
-
-        # contingent_constraints = ppstn.get_contingent_constraints()
-        # self.logger.info(contingent_constraints)
-        #
-        # ppstn_json = ppstn.to_json()
-        # self.logger.info("Json format")
-        # self.logger.info(ppstn_json)
 
         self.assertEqual(n_nodes, pstn.number_of_nodes())
         self.assertEqual(n_edges, pstn.number_of_edges())
@@ -152,6 +127,7 @@ class TestBuildPSTN(unittest.TestCase):
         self.logger.info("N edges: %s", n_edges)
         self.logger.info(pstn)
 
+
         self.assertEqual(n_nodes, pstn.number_of_nodes())
         self.assertEqual(n_edges, pstn.number_of_edges())
 
@@ -176,41 +152,9 @@ class TestBuildPSTN(unittest.TestCase):
         self.logger.info("N edges: %s", n_edges)
         self.logger.info(pstn)
 
-        # data1 = json_graph.node_link_data(pstn)
-        # MyEncoder().encode(data1)
-        # self.logger.info(data1)
-        # self.logger.info("------------")
-        # s1 = json.dumps(data1, cls=MyEncoder)
-        # self.logger.info(s1)
-        # pstn1 = json.loads(data1)
-        # self.logger.info(s1)
-        # self.logger.info(json_graph.node_link_graph(data1, directed=True))
-        # self.logger.info("----", H)
-
         self.assertEqual(n_nodes, pstn.number_of_nodes())
         self.assertEqual(n_edges, pstn.number_of_edges())
-
-    # def test_add_two_tasks(self):
-    #     self.logger.info("----Adding two tasks")
-    #     pstn = PSTN()
-    #     # Add task in position 1
-    #     pstn.add_task(self.tasks[1], 1)
-    #
-    #     # Adds task in position 2.
-    #     pstn.add_task(self.tasks[0], 2)
-    #     self.logger.info(pstn)
-    #
-    #     # pstn_json = pstn.to_json()
-    #     # self.logger.info("JSON format")
-    #     # self.logger.info(pstn_json)
 
 
 if __name__ == '__main__':
     unittest.main()
-    # test = TestBuildPpstn()
-    # test.test_add_tasks_consecutively()
-    # test.test_add_task_beggining()
-    # test.test_add_task_middle()
-    # test.test_remove_task_beginning()
-    # test.test_remove_task_middle()
-    # test.test_remove_task_end()
