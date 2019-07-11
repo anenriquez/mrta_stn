@@ -5,4 +5,9 @@ install:
   - pip install -r requirements.txt
   - pip install -e .
 script:
-  - python -m unittest discover
+  - python test/update_stn.py
+  - python test/update_stnu.py
+  - python test/update_pstn.py
+  - python test/load_stn.py
+  - python test/load_stnu.py
+  - python test/load_pstn.py
