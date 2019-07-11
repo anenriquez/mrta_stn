@@ -1,5 +1,5 @@
 import networkx as nx
-from stp.temporal_networks.stn import Node
+from stn.node import Node
 from json import JSONEncoder
 from networkx.readwrite import json_graph
 import json

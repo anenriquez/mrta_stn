@@ -1,4 +1,4 @@
-from stp.temporal_networks.stn import STN
+from stn.stn import STN
 import unittest
 from datasets.dataset_loader import load_dataset
 

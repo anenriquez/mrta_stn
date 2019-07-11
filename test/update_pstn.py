@@ -1,7 +1,7 @@
 import unittest
 import logging
 import sys
-from stp.temporal_networks.pstn import PSTN
+from stn.pstn.pstn import PSTN
 from datasets.dataset_loader import load_dataset
 
 
@@ -12,7 +12,7 @@ logger.addHandler(stream_handler)
 
 
 class TestBuildPSTN(unittest.TestCase):
-    logger = logging.getLogger('stp.test')
+    logger = logging.getLogger('stn.test')
 
     def setUp(self):
         self.tasks = load_dataset('three_tasks.csv')

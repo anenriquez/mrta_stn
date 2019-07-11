@@ -1,12 +1,14 @@
 import logging
-from stp.temporal_networks.stn import STN
-from stp.temporal_networks.pstn import PSTN
-from stp.temporal_networks.stnu import STNU
-from stp.srea import srea
-from stp.fpc import get_minimal_network
-from stp.dsc_lp import DSC_LP
+from stn.stn import STN
+from stn.pstn.pstn import PSTN
+from stn.stnu.stnu import STNU
+from stn.methods.srea import srea
+from stn.methods.fpc import get_minimal_network
+from stn.methods.dsc_lp import DSC_LP
 
-""" Computes the dispatchable graph (solution space) of a temporal network
+""" Solves a Simple Temporal Problem (STP) 
+
+Computes the dispatchable graph (solution space) of a STP
 
 The dispatchable graph is not the schedule (assigment of values to timepoints), but the space of solutions to the Simple Temporal Problem (STP).
 
@@ -32,9 +34,9 @@ class STP(object):
     def __init__(self, method):
         self.method = method
 
-    ''' Returns an empty stn of type STN, STNU or PSTN
-    '''
     def init_graph(self):
+        """Returns an empty stn of type STN, STNU or PSTN
+        """
         if self.method == 'srea':
             stn = PSTN()
         elif self.method == 'fpc':
@@ -46,9 +48,9 @@ class STP(object):
 
         return stn
 
-    ''' Converts a json file to a stn (STN, STNU or PSTN)
-    '''
     def load_stn(self, json_stn):
+        """Converts a json file to a stn (STN, STNU or PSTN)
+        """
         if self.method == 'srea':
             stn = PSTN.from_json(json_stn)
         if self.method == 'fpc':

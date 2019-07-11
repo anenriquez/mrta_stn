@@ -2,7 +2,7 @@ import unittest
 import json
 import logging
 import sys
-from stp.stp import STP
+from stn.stp import STP
 import os
 
 # A global variable that stores the max float that will be used to deal with infinite edges.
@@ -18,7 +18,7 @@ logger.addHandler(stream_handler)
 
 
 class TestLoadPSTN(unittest.TestCase):
-    logger = logging.getLogger('stp.test')
+    logger = logging.getLogger('stn.test')
 
     def setUp(self):
         # Load the stn as a dictionary

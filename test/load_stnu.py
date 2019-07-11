@@ -2,7 +2,7 @@ import unittest
 import json
 import logging
 import sys
-from stp.stp import STP
+from stn.stp import STP
 import os
 
 code_dir = os.path.abspath(os.path.dirname(__file__))
@@ -16,7 +16,7 @@ logger.addHandler(stream_handler)
 
 
 class TestBuildSTNU(unittest.TestCase):
-    logger = logging.getLogger('stp.test')
+    logger = logging.getLogger('stn.test')
 
     def setUp(self):
         # Load the stn as a dictionary

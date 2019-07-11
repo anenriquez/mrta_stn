@@ -1,4 +1,4 @@
-from stp.stp import STP
+from stn.stp import STP
 import json
 
 PSTN = "data/pstn_one_task.json"

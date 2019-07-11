@@ -27,9 +27,9 @@ import copy
 import sys
 import logging
 
-from stp.temporal_networks.pstn import PSTN
-from stp.temporal_networks.distempirical import invcdf_norm, invcdf_uniform
-from stp.fpc import get_minimal_network
+from stn.pstn.pstn import PSTN
+from stn.pstn.distempirical import invcdf_norm, invcdf_uniform
+from stn.methods.fpc import get_minimal_network
 
 
 # \brief A global variable that stores the max float that will be used to deal
