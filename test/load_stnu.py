@@ -3,8 +3,10 @@ import json
 import logging
 import sys
 from stp.stp import STP
+import os
 
-STNU = "data/stnu_two_tasks.json"
+code_dir = os.path.abspath(os.path.dirname(__file__))
+STNU = code_dir + "/data/stnu_two_tasks.json"
 MAX_FLOAT = sys.float_info.max
 
 logger = logging.getLogger()

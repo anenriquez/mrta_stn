@@ -3,8 +3,10 @@ import json
 import logging
 import sys
 from stp.stp import STP
+import os
 
-STN = "data/stn_two_tasks.json"
+code_dir = os.path.abspath(os.path.dirname(__file__))
+STN = code_dir + "/data/stn_two_tasks.json"
 
 logger = logging.getLogger()
 logger.level = logging.DEBUG

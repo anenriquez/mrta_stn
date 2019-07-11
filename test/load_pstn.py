@@ -3,11 +3,13 @@ import json
 import logging
 import sys
 from stp.stp import STP
+import os
 
 # A global variable that stores the max float that will be used to deal with infinite edges.
 MAX_FLOAT = sys.float_info.max
 
-STN = "data/pstn_two_tasks.json"
+code_dir = os.path.abspath(os.path.dirname(__file__))
+STN = code_dir + "/data/pstn_two_tasks.json"
 
 logger = logging.getLogger()
 logger.level = logging.INFO
