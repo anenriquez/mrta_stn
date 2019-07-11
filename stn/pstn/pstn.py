@@ -22,9 +22,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from stp.temporal_networks.pstn import Constraint
-from stp.temporal_networks.stn import STN
-from stp.temporal_networks.stn import Node
+from stn.pstn.constraint import Constraint
+from stn.stn import STN
+from stn.stn import Node
 from json import JSONEncoder
 import logging
 from pathlib import Path
@@ -40,7 +40,7 @@ class PSTN(STN):
     """ Represents a Probabilistic Simple Temporal Network (PSTN) as a networkx directed graph
     """
     # Get directory three levels up
-    p = Path(__file__).parents[3]
+    p = Path(__file__).parents[2]
     config_logger(str(p) + '/config/logging.yaml')
     logger = logging.getLogger('stn.pstn')
 

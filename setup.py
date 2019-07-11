@@ -2,7 +2,7 @@
 
 from setuptools import setup
 
-setup(name='mrta_simple_temporal_problem',
+setup(name='mrta_stn',
       version='0.1.0',
       description='Includes simple temporal_networks like STN, STNU and PSTN',
       author='Angela Enriquez Gomez',

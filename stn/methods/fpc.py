@@ -2,16 +2,16 @@ import logging
 import networkx as nx
 import copy
 from allocation.utils.config_logger import config_logger
-import os
+from pathlib import Path
 
 """ Achieves full path consistency (fpc) by applying the Floyd Warshall algorithm to the STN"""
 
 
 def get_minimal_network(stn):
-    code_dir = os.path.abspath(os.path.dirname(__file__))
-    main_dir = os.path.dirname(code_dir)
-    config_logger(main_dir + '/config/logging.yaml')
-    logger = logging.getLogger('stp.fpc')
+
+    p = Path(__file__).parents[2]
+    config_logger(str(p) + '/config/logging.yaml')
+    logger = logging.getLogger('stn.fpc')
     minimal_network = copy.deepcopy(stn)
 
     shortest_path_array = nx.floyd_warshall(stn)

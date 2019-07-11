@@ -1,7 +1,7 @@
 from datasets.dataset_loader import load_dataset
-from stp.temporal_networks.stn import STN
-from stp.temporal_networks.stnu import STNU
-from stp.temporal_networks.pstn import PSTN
+from stn.stn import STN
+from stn.stnu.stnu import STNU
+from stn.pstn.pstn import PSTN
 
 """ Converts a dataset to an STN in json format
 """

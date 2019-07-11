@@ -23,7 +23,7 @@
 # SOFTWARE.
 
 
-from stp.temporal_networks.distempirical import norm_sample, uniform_sample
+from stn.pstn.distempirical import norm_sample, uniform_sample
 
 
 class Constraint(object):
