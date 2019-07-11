@@ -28,6 +28,7 @@ import sys
 import logging
 from allocation.utils.config_logger import config_logger
 from math import ceil
+import os
 
 """
 Computes the Degree of Strong Controllability (DSC) using an LP program as presented in:
@@ -40,7 +41,9 @@ MAX_FLOAT = sys.float_info.max
 
 
 class DSC_LP(object):
-    config_logger('../config/logging.yaml')
+    code_dir = os.path.abspath(os.path.dirname(__file__))
+    main_dir = os.path.dirname(code_dir)
+    config_logger(main_dir + '/config/logging.yaml')
     logger = logging.getLogger('stp.dsc_lp')
 
     def __init__(self, stnu):
