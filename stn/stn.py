@@ -15,7 +15,7 @@ class STN(nx.DiGraph):
     """ Represents a Simple Temporal Network (STN) as a networkx directed graph
     """
 
-    logger = logging.getLogger('stn')
+    logger = logging.getLogger('stn.stn')
 
     def __init__(self):
         super().__init__()

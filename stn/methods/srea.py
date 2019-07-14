@@ -36,7 +36,8 @@ from stn.methods.fpc import get_minimal_network
 #        with infinite edges.
 MAX_FLOAT = sys.float_info.max
 
-logging.getLogger(__name__)
+
+logger = logging.getLogger('stn.srea')
 
 """ SREA algorithm
 """
@@ -138,17 +139,17 @@ def srea(inputstn,
         if stn is None:
             return result
         if debug:
-            logging.debug("Minimal STN %s: ", stn)
+            logger.debug("Minimal STN %s: ", stn)
     bounds, deltas, probBase = setUpLP(stn, decouple)
 
     if debug:
-        logging.debug("probBase: %s ", probBase)
+        logger.debug("probBase: %s ", probBase)
 
     # First run binary search on alpha
     while upper - lower > 1:
         alpha = alphas[(upper + lower) // 2]
         if debug:
-            logging.debug('trying alpha %s', alpha)
+            logger.debug('trying alpha %s', alpha)
 
         # run the LP
         probContainer = (bounds, deltas, probBase.copy())
@@ -171,7 +172,7 @@ def srea(inputstn,
             if result is not None:
                 alpha, LPbounds = result
                 if debug:
-                    logging.debug(
+                    logger.debug(
                         'modifying STN with lowest good alpha, %s', alpha)
 
                 for i, sign in LPbounds:
@@ -189,7 +190,7 @@ def srea(inputstn,
     # skip the rest if there was no decoupling at all
     if result is None:
         if debug:
-            logging.warning('could not produce feasible LP.')
+            logger.warning('could not produce feasible LP.')
         return None
 
     # Fail here
@@ -223,7 +224,7 @@ def srea_LP(inputstn,
 
     if probContainer is None:
         if debug:
-            logging.warning('No saved LP variables, generating all LP variables from current STN')
+            logger.warning('No saved LP variables, generating all LP variables from current STN')
         bounds, deltas, prob = setUpLP(inputstn, decouple)
     else:
         bounds, deltas, prob = probContainer
@@ -270,7 +271,7 @@ def srea_LP(inputstn,
 
     status = pulp.LpStatus[prob.status]
     if debug:
-        logging.debug('Status: %s', status)
+        logger.debug('Status: %s', status)
         # Each of the variables is printed with it's resolved optimum value
         for v in prob.variables():
             print(v.name, '=', v.varValue)

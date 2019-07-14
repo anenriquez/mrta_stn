@@ -26,9 +26,7 @@
 import pulp
 import sys
 import logging
-from allocation.utils.config_logger import config_logger
 from math import ceil
-from pathlib import Path
 
 """
 Computes the Degree of Strong Controllability (DSC) using an LP program as presented in:
@@ -41,8 +39,7 @@ MAX_FLOAT = sys.float_info.max
 
 
 class DSC_LP(object):
-    p = Path(__file__).parents[2]
-    config_logger(str(p) + '/config/logging.yaml')
+
     logger = logging.getLogger('stn.dsc_lp')
 
     def __init__(self, stnu):
@@ -181,7 +178,7 @@ class DSC_LP(object):
             self.logger.debug("Status: %s", status)
 
             for v in prob.variables():
-                self.logger.debug(v.name, '=', v.varValue)
+                self.logger.debug("%s = %s ", v.name, v.varValue)
 
         if status != 'Optimal':
             self.logger.debug("The solution for LP is not optimal")

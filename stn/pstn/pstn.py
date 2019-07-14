@@ -27,8 +27,6 @@ from stn.stn import STN
 from stn.stn import Node
 from json import JSONEncoder
 import logging
-from pathlib import Path
-from allocation.utils.config_logger import config_logger
 
 
 class MyEncoder(JSONEncoder):
@@ -39,9 +37,6 @@ class MyEncoder(JSONEncoder):
 class PSTN(STN):
     """ Represents a Probabilistic Simple Temporal Network (PSTN) as a networkx directed graph
     """
-    # Get directory three levels up
-    p = Path(__file__).parents[2]
-    config_logger(str(p) + '/config/logging.yaml')
     logger = logging.getLogger('stn.pstn')
 
     def __init__(self):
