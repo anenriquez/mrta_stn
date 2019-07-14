@@ -5,5 +5,5 @@ PuLP
 scipy
 pyYAML
 -e git+ssh://git@github.com/anenriquez/mrta_datasets.git@develop#egg=mrta_datasets
-
+-e git+ssh://git@github.com/anenriquez/mrta_allocation.git@develop#egg=mrta_allocation
 
