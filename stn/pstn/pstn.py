@@ -28,7 +28,7 @@ from stn.stn import Node
 from json import JSONEncoder
 import logging
 from pathlib import Path
-from allocation.utils.config_logger import config_logger
+from stn.utils.config_logger import config_logger
 
 
 class MyEncoder(JSONEncoder):

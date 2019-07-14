@@ -3,7 +3,7 @@ from stn.stn import Node
 from json import JSONEncoder
 from pathlib import Path
 import logging
-from allocation.utils.config_logger import config_logger
+from stn.utils.config_logger import config_logger
 
 
 class MyEncoder(JSONEncoder):

@@ -26,7 +26,7 @@
 import pulp
 import sys
 import logging
-from allocation.utils.config_logger import config_logger
+from stn.utils.config_logger import config_logger
 from math import ceil
 from pathlib import Path
 

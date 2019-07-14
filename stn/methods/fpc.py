@@ -1,7 +1,7 @@
 import logging
 import networkx as nx
 import copy
-from allocation.utils.config_logger import config_logger
+from stn.utils.config_logger import config_logger
 from pathlib import Path
 
 """ Achieves full path consistency (fpc) by applying the Floyd Warshall algorithm to the STN"""
