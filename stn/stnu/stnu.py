@@ -1,9 +1,7 @@
 from stn.stn import STN
 from stn.stn import Node
 from json import JSONEncoder
-from pathlib import Path
 import logging
-from stn.utils.config_logger import config_logger
 
 
 class MyEncoder(JSONEncoder):
@@ -14,8 +12,6 @@ class MyEncoder(JSONEncoder):
 class STNU(STN):
     """ Represents a Simple Temporal Network with Uncertainties (STNU) as a networkx directed graph
     """
-    p = Path(__file__).parents[2]
-    config_logger(str(p) + '/config/logging.yaml')
     logger = logging.getLogger('stn.stnu')
 
     def __init__(self):

@@ -5,6 +5,9 @@ from stn.stnu.stnu import STNU
 from stn.methods.srea import srea
 from stn.methods.fpc import get_minimal_network
 from stn.methods.dsc_lp import DSC_LP
+import os
+from stn.utils.config_logger import config_logger
+
 
 """ Solves a Simple Temporal Problem (STP) 
 
@@ -26,10 +29,13 @@ Possible methods:
               withstands unexpected disturbances
 """
 
-logging.getLogger(__name__)
-
 
 class STP(object):
+
+    code_dir = os.path.abspath(os.path.dirname(__file__))
+    main_dir = os.path.dirname(code_dir)
+    config_logger(main_dir + '/config/logging.yaml')
+    logger = logging.getLogger('stn')
 
     def __init__(self, method):
         self.method = method
@@ -73,45 +79,45 @@ class STP(object):
 
         return result
 
-    @staticmethod
-    def srea_algorithm(stn) -> tuple:
+    @classmethod
+    def srea_algorithm(cls, stn) -> tuple:
         result = srea(stn)
         if result is None:
             return
         risk_level, dispatchable_graph = result
-        logging.debug("Risk level: %s", risk_level)
-        logging.debug("Dispatchable graph: %s", dispatchable_graph)
+        cls.logger.debug("Risk level: %s", risk_level)
+        cls.logger.debug("Dispatchable graph: %s", dispatchable_graph)
         return risk_level, dispatchable_graph
 
-    @staticmethod
-    def fpc_algorithm(stn) -> tuple:
+    @classmethod
+    def fpc_algorithm(cls, stn) -> tuple:
         dispatchable_graph = get_minimal_network(stn)
         if dispatchable_graph is None:
             return
         risk_level = 1
-        logging.debug("Risk level %s: ", risk_level)
+        cls.logger.debug("Risk level %s: ", risk_level)
         return risk_level, dispatchable_graph
 
-    @staticmethod
-    def dsc_lp_algorithm(stn) -> tuple:
+    @classmethod
+    def dsc_lp_algorithm(cls, stn) -> tuple:
         dsc_lp = DSC_LP(stn)
         status, bounds, epsilons = dsc_lp.original_lp()
 
         if epsilons is None:
             return
         original, shrinked = dsc_lp.new_interval(epsilons)
-        logging.debug("Original intervals: %s", original)
-        logging.debug("Shrinked intervals: %s", shrinked)
+        cls.logger.debug("Original intervals: %s", original)
+        cls.logger.debug("Shrinked intervals: %s", shrinked)
 
         dsc = dsc_lp.compute_dsc(original, shrinked)
-        logging.debug("DSC: %s", dsc)
+        cls.logger.debug("DSC: %s", dsc)
 
         stnu = dsc_lp.get_stnu(bounds)
-        logging.debug("STNU: %s", stnu)
+        cls.logger.debug("STNU: %s", stnu)
 
         # Returns a schedule because it is an offline approach
         schedule = dsc_lp.get_schedule(bounds)
-        logging.debug("Schedule: %s ", schedule)
+        cls.logger.debug("Schedule: %s ", schedule)
 
         return dsc, schedule
 
