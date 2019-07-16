@@ -1,12 +1,23 @@
 from stn.stn import STN
 import unittest
-from datasets.dataset_loader import load_dataset
+import os
+import json
+from allocation.task import Task
+
+code_dir = os.path.abspath(os.path.dirname(__file__))
+TASKS = code_dir + "/data/three_tasks.json"
 
 
 class UpdateSTN(unittest.TestCase):
 
     def setUp(self):
-        self.tasks = load_dataset('three_tasks.csv')
+        with open(TASKS) as json_file:
+            tasks_dict = json.load(json_file)
+
+        self.tasks = list()
+        for task_dict in tasks_dict['tasks']:
+            task = Task.from_dict(task_dict)
+            self.tasks.append(task)
 
     def test_add_tasks_consecutively(self):
         """ Adds tasks in consecutive positions. Example
@@ -24,6 +35,13 @@ class UpdateSTN(unittest.TestCase):
         print("N nodes: ", n_nodes)
         print("N edges: ", n_edges)
         print(stn)
+
+        list_tasks = list()
+        for task in self.tasks:
+            list_tasks.append(task.to_dict())
+
+        print("list of tasks")
+        print(list_tasks)
 
         self.assertEqual(n_nodes, stn.number_of_nodes())
         self.assertEqual(n_edges, stn.number_of_edges())

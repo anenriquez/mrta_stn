@@ -1,22 +1,24 @@
 from stn.stp import STP
 import json
 
-PSTN = "data/pstn_one_task.json"
 
 if __name__ == '__main__':
-    with open(PSTN) as json_file:
+    with open("data/pstn_one_task.json") as json_file:
         pstn_dict = json.load(json_file)
 
     # Convert the dict to a json string
     pstn_json = json.dumps(pstn_dict)
 
     stp = STP('srea')
-    pstn = stp.load_stn(pstn_json)
 
-    print("PSTN: ", pstn)
+    stn = stp.get_stn(stn_json=pstn_json)
+    dispatchable_graph = stp.get_stn()
+
+    print("STN: ", stn)
+    print("Dispatchable graph: ", dispatchable_graph)
 
     print("Getting GUIDE...")
-    alpha, guide = stp.get_dispatchable_graph(pstn)
+    alpha, guide = stp.compute_dispatchable_graph(stn)
     print("GUIDE")
     print(guide)
     print("Alpha: ", alpha)
