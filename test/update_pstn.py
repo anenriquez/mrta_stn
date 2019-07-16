@@ -1,23 +1,43 @@
 from stn.pstn.pstn import PSTN
 import unittest
-import os
-import json
-from allocation.task import Task
-
-code_dir = os.path.abspath(os.path.dirname(__file__))
-TASKS = code_dir + "/data/three_tasks.json"
 
 
-class TestBuildPSTN(unittest.TestCase):
+class Task(object):
+
+    def __init__(self):
+        self.id = ''
+        self.earliest_start_time = -1
+        self.latest_start_time = -1
+        self.pickup_pose_name = ''
+        self.delivery_pose_name = ''
+        self.hard_constraints = True
+
+
+class UpdatePSTN(unittest.TestCase):
 
     def setUp(self):
-        with open(TASKS) as json_file:
-            tasks_dict = json.load(json_file)
+        task_1 = Task()
+        task_1.id = "616af00-ec3b-4ecd-ae62-c94a3703594c"
+        task_1.earliest_start_time = 96.0
+        task_1.latest_start_time = 102.0
+        task_1.pickup_pose_name = "AMK_TDU-TGR-1_X_14.03_Y_9.55"
+        task_1.delivery_pose_name = "AMK_TDU-TGR-1_X_15.09_Y_5.69"
 
-        self.tasks = list()
-        for task_dict in tasks_dict['tasks']:
-            task = Task.from_dict(task_dict)
-            self.tasks.append(task)
+        task_2 = Task()
+        task_2.id = "207cc8da-2f0e-4538-802b-b8f3954df38d"
+        task_2.earliest_start_time = 71.0
+        task_2.latest_start_time = 76.0
+        task_2.pickup_pose_name = "AMK_TDU-TGR-1_X_7.15_Y_10.55"
+        task_2.delivery_pose_name = "AMK_TDU-TGR-1_X_6.67_Y_14.52"
+
+        task_3 = Task()
+        task_3.id = "0d06fb90-a76d-48b4-b64f-857b7388ab70"
+        task_3.earliest_start_time = 41.0
+        task_3.latest_start_time = 47.0
+        task_3.pickup_pose_name = "AMK_TDU-TGR-1_X_9.7_Y_5.6"
+        task_3.delivery_pose_name = "AMK_TDU-TGR-1_X_5.82_Y_6.57"
+
+        self.tasks = [task_1, task_2, task_3]
 
     def test_add_tasks_consecutively(self):
         """ Adds tasks in consecutive positions. Example

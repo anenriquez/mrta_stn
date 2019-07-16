@@ -14,7 +14,7 @@ stream_handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(stream_handler)
 
 
-class TestLoadSTN(unittest.TestCase):
+class LoadSTN(unittest.TestCase):
     logger = logging.getLogger('stn.test')
 
     def setUp(self):
