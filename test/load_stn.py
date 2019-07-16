@@ -26,12 +26,12 @@ class TestLoadSTN(unittest.TestCase):
         stn_json = json.dumps(stn_dict)
 
         self.stp = STP('fpc')
-        self.stn = self.stp.load_stn(stn_json)
+        self.stn = self.stp.get_stn(stn_json=stn_json)
 
     def test_build_stn(self):
         self.logger.info("STN: \n %s", self.stn)
 
-        metric, minimal_network = self.stp.get_dispatchable_graph(self.stn)
+        metric, minimal_network = self.stp.compute_dispatchable_graph(self.stn)
 
         self.logger.info("Minimal STN: \n %s", minimal_network)
 

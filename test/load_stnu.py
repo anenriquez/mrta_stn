@@ -27,13 +27,13 @@ class TestBuildSTNU(unittest.TestCase):
         stnu_json = json.dumps(stnu_dict)
 
         self.stp = STP('dsc_lp')
-        self.stn = self.stp.load_stn(stnu_json)
+        self.stn = self.stp.get_stn(stn_json=stnu_json)
 
     def test_build_stn(self):
         self.logger.info("STNU: \n %s", self.stn)
 
         self.logger.info("Getting Schedule...")
-        dsc, schedule = self.stp.get_dispatchable_graph(self.stn)
+        dsc, schedule = self.stp.compute_dispatchable_graph(self.stn)
 
         self.logger.info("DSC: %s ", dsc)
         self.logger.info("schedule: %s ", schedule)

@@ -396,6 +396,14 @@ class STN(nx.DiGraph):
 
             self.add_constraint(0, node_id, 0, self.max_makespan)
 
+    def get_task_navigation_start_time(self, task_id):
+        navigation_start_time = None
+        for i, data in self.nodes.data():
+            if task_id in data['data']['task_id'] and data['data']['type'] == 'navigation':
+                navigation_start_time = -self[i][0]['weight']
+
+        return navigation_start_time
+
     def to_json(self):
         dict_json = json_graph.node_link_data(self)
         MyEncoder().encode(dict_json)
@@ -415,7 +423,6 @@ class STN(nx.DiGraph):
 
     @classmethod
     def from_dict(cls, stn_json):
-        stn = cls()
         dict_json = json.load(stn_json)
         graph = json_graph.node_link_graph(dict_json)
         cls.add_nodes_from(graph.nodes(data=True))

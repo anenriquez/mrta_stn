@@ -29,13 +29,13 @@ class TestLoadPSTN(unittest.TestCase):
         pstn_json = json.dumps(pstn_dict)
 
         self.stp = STP('srea')
-        self.stn = self.stp.load_stn(pstn_json)
+        self.stn = self.stp.get_stn(stn_json=pstn_json)
 
     def test_build_stn(self):
         self.logger.info("PSTN: \n %s", self.stn)
 
         self.logger.info("Getting GUIDE...")
-        alpha, guide_stn = self.stp.get_dispatchable_graph(self.stn)
+        alpha, guide_stn = self.stp.compute_dispatchable_graph(self.stn)
         self.logger.info("GUIDE")
         self.logger.info(guide_stn)
         self.logger.info("Alpha: %s ", alpha)
