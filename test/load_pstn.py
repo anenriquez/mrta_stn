@@ -17,7 +17,7 @@ stream_handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(stream_handler)
 
 
-class TestLoadPSTN(unittest.TestCase):
+class LoadPSTN(unittest.TestCase):
     logger = logging.getLogger('stn.test')
 
     def setUp(self):
