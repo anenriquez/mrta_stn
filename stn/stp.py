@@ -13,7 +13,7 @@ Computes the dispatchable graph (solution space) of a STP
 The dispatchable graph is not the schedule (assignment of values to timepoints), 
 but the space of solutions to the Simple Temporal Problem (STP).
 
-Possible methods:
+Possible solvers:
 - fpc:  Full Path Consistency.
         Applies the all-pairs-shortest path algorithm Floyd Warshall to establish 
         minimality and decomposability
@@ -35,60 +35,60 @@ Possible methods:
 class STNFactory(object):
 
     def __init__(self):
-        self._methods = {}
+        self._stns = {}
 
-    def register_stn(self, method_name, stn):
-        """ Registers an stn type
+    def register_stn(self, solver_name, stn):
+        """ Registers an stn type based and the solver that uses it
 
-        Saves the stn type in a dictionary of methods
-        key - name of the method that uses the stn
+        Saves the stn in a dictionary of stns
+        key - name of the solver that uses the stn
         value - stn class
 
-        :param method_name: method name
+        :param solver_name: solver name
         :param stn: stn class
         """
-        self._methods[method_name] = stn
+        self._stns[solver_name] = stn
 
-    def get_stn(self, method_name):
-        """ Returns an stn based on a method name
+    def get_stn(self, solver_name):
+        """ Returns an stn based on a solver name
 
-        :param method_name: method name
+        :param solver_name: solver name
         :return: stn class
         """
-        stn = self._methods.get(method_name)
+        stn = self._stns.get(solver_name)
         if not stn:
-            raise ValueError(method_name)
+            raise ValueError(solver_name)
         return stn()
 
 
-class STPFactory(object):
+class STPSolverFactory(object):
 
     def __init__(self):
-        self._methods = {}
+        self._solvers = {}
 
-    def register_method(self, method_name, method):
-        """ Registers a method to solve an stp problem
+    def register_solver(self, solver_name, solver):
+        """ Registers stp problem solvers
 
-        Saves the method in a dictionary of methods
-        key - method name
-        value - class that implements the method
+        Saves the solver in a dictionary of solvers
+        key - solver name
+        value - class that implements the solver
 
-        :param method_name: method name
-        :param method: method class
+        :param solver_name: solver name
+        :param solver: solver class
         """
-        self._methods[method_name] = method
+        self._solvers[solver_name] = solver
 
-    def get_method(self, method_name):
-        """ Returns the class that implements the method
+    def get_solver(self, solver_name):
+        """ Returns the class that implements the solver
 
-        :param method_name: method name
-        :return: class that implements the method
+        :param solver_name: solver name
+        :return: class that implements the solver
         """
-        method = self._methods.get(method_name)
-        if not method:
-            raise ValueError(method_name)
+        solver = self._solvers.get(solver_name)
+        if not solver:
+            raise ValueError(solver_name)
 
-        return method()
+        return solver()
 
 
 class StaticRobustExecution(object):
@@ -159,37 +159,37 @@ class FullPathConsistency(object):
 
 
 class STP(object):
-    def __init__(self, method_name):
+    def __init__(self, solver_name):
         # Receive the factories ?
         self.stn_factory = STNFactory()
         self.stn_factory.register_stn('fpc', STN)
         self.stn_factory.register_stn('srea', PSTN)
         self.stn_factory.register_stn('dsc_lp', STNU)
 
-        self.stp_factory = STPFactory()
-        self.stp_factory.register_method('fpc', FullPathConsistency)
-        self.stp_factory.register_method('srea', StaticRobustExecution)
-        self.stp_factory.register_method('dsc_lp', DegreeStongControllability)
+        self.stp_solver_factory = STPSolverFactory()
+        self.stp_solver_factory.register_solver('fpc', FullPathConsistency)
+        self.stp_solver_factory.register_solver('srea', StaticRobustExecution)
+        self.stp_solver_factory.register_solver('dsc_lp', DegreeStongControllability)
 
-        self.method_name = method_name
-        self.method = self.stp_factory.get_method(method_name)
+        self.solver_name = solver_name
+        self.solver = self.stp_solver_factory.get_solver(solver_name)
 
-    def get_method_name(self):
-        """ Returns the name of the method used to solve the
+    def get_solver_name(self):
+        """ Returns the name of the solver used to solve the
         stp problem
 
-        :return: method name
+        :return: solver name
         """
-        return self.method_name
+        return self.solver_name
 
     def get_stn(self, **kwargs):
-        """ Returns an stn of the type used by the stp method
+        """ Returns an stn of the type used by the stp solver
 
         :param kwargs: stn in json format
         :return: stn (object)
         """
         stn_json = kwargs.pop('stn_json', None)
-        stn = self.stn_factory.get_stn(self.method_name)
+        stn = self.stn_factory.get_stn(self.solver_name)
         if stn_json:
             stn = stn.from_json(stn_json)
 
@@ -201,7 +201,7 @@ class STP(object):
         :param stn: stn
         :return: (metric, dispatchable_graph)
         """
-        result = self.method.compute_dispatchable_graph(stn)
+        result = self.solver.compute_dispatchable_graph(stn)
         return result
 
 
