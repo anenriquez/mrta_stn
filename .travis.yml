@@ -8,6 +8,6 @@ script:
   - python test/update_stn.py
   - python test/update_stnu.py
   - python test/update_pstn.py
-  - python test/load_stn.py
-  - python test/load_stnu.py
-  - python test/load_pstn.py
+  - python test/test_fpc.py
+  - python test/test_dsc.py
+  - python test/test_srea.py

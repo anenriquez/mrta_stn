@@ -17,7 +17,10 @@ stream_handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(stream_handler)
 
 
-class LoadPSTN(unittest.TestCase):
+class TestSREA(unittest.TestCase):
+    """ Tests the solver Static Robust Execution
+
+    """
     logger = logging.getLogger('stn.test')
 
     def setUp(self):

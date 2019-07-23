@@ -14,7 +14,10 @@ stream_handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(stream_handler)
 
 
-class LoadSTN(unittest.TestCase):
+class TestFPC(unittest.TestCase):
+    """ Tests the solver FullPathConsistency
+
+    """
     logger = logging.getLogger('stn.test')
 
     def setUp(self):
