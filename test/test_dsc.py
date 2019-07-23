@@ -15,7 +15,10 @@ stream_handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(stream_handler)
 
 
-class LoadSTNU(unittest.TestCase):
+class TestDSC(unittest.TestCase):
+    """ Tests the solver Degree of Strong Controllability
+
+    """
     logger = logging.getLogger('stn.test')
 
     def setUp(self):
