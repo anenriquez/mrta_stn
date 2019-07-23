@@ -25,9 +25,9 @@
 import json
 import networkx as nx
 import numpy as np
-from temporal.structs.task import Task
-from temporal.networks.pstn import NodePSTN, ConstraintPSTN, PSTN
-from temporal.networks.simulator import Simulator
+from stp.structs.task import Task
+from stp.temporal_networks.pstn import NodePSTN, ConstraintPSTN, PSTN
+from stp.temporal_networks.simulator import Simulator
 
 MAX_SEED = 2 ** 31 - 1
 """The maximum number a random seed can be."""
@@ -35,7 +35,7 @@ MAX_SEED = 2 ** 31 - 1
 
 def get_pstn_dict():
     """Reads an STNU from a json file and returns it as a dict"""
-    with open('tests/data/pstn_two_tasks.json') as json_file:
+    with open('unittests/data/pstn_two_tasks.json') as json_file:
         stnu_dict = json.load(json_file)
     return stnu_dict
 

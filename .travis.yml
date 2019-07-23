@@ -3,5 +3,11 @@ python:
   - "3.5"
 install:
   - pip install -r requirements.txt
+  - pip install -e .
 script:
-  - python -m unittest discover
+  - python test/update_stn.py
+  - python test/update_stnu.py
+  - python test/update_pstn.py
+  - python test/test_fpc.py
+  - python test/test_dsc.py
+  - python test/test_srea.py
