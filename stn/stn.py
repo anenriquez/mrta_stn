@@ -98,9 +98,9 @@ class STN(nx.DiGraph):
             # this value will be overwritten once the task is allocated
             pose = ''
         elif type == 'start':
-            pose = task.pickup_pose_name
+            pose = task.start_pose_name
         elif type == 'finish':
-            pose = task.delivery_pose_name
+            pose = task.finish_pose_name
 
         return pose
 
@@ -227,7 +227,7 @@ class STN(nx.DiGraph):
     def get_navigation_start_time(self, task):
         """ Returns the earliest_start_time and latest start navigation time
         """
-        navigation_duration = self.get_navigation_duration(task.pickup_pose_name, task.delivery_pose_name)
+        navigation_duration = self.get_navigation_duration(task.start_pose_name, task.finish_pose_name)
 
         earliest_navigation_start_time = task.earliest_start_time - navigation_duration
         latest_navigation_start_time = task.latest_start_time - navigation_duration
