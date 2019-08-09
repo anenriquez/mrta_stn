@@ -404,6 +404,22 @@ class STN(nx.DiGraph):
 
         return navigation_start_time
 
+    def get_earliest_task_id(self):
+        """ Returns the id of the earliest task in the stn
+
+        Returns: task_id (string)
+        """
+        # The first task in the graph is the task with the earliest start time
+        # The first task is in node 1, node 0 is reserved for the zero timepoint
+
+        if self.has_node(1):
+            timepoint = Node.from_dict(self.node[1]['data'])
+            task_id = timepoint.task_id
+            print(task_id)
+            return task_id
+
+        self.logger.debug("STN has no tasks yet")
+
     def to_json(self):
         dict_json = json_graph.node_link_data(self)
         MyEncoder().encode(dict_json)
