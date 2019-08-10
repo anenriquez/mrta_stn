@@ -116,7 +116,7 @@ class STN(nx.DiGraph):
         node = Node(task.id, pose, type)
         self.add_node(id, data=node.to_dict())
 
-    def add_task(self, task, position):
+    def add_task(self, task, position=1):
         """ A task is added as 3 timepoints and 5 constraints in the STN"
         Timepoints:
         - navigation start
@@ -250,7 +250,7 @@ class STN(nx.DiGraph):
         self.logger.info("Nodes: %s ", self.number_of_nodes())
         self.logger.info("Edges: %s ", self.number_of_edges())
 
-    def remove_task(self, position):
+    def remove_task(self, position=1):
         """ Removes the task from the given position"""
 
         self.logger.info("Removing task at position: %s", position)
@@ -322,6 +322,20 @@ class STN(nx.DiGraph):
         """
         if self.has_edge(i, j):
             self[i][j]['weight'] = weight
+
+    def assign_timepoint(self, time, position=1):
+        """
+        Assigns the given time to the earliest and latest time of the
+        timepoint at the given position
+        Args:
+            time: float representing seconds
+            position: int representing the location of the timepoint in the stn
+
+        Returns:
+
+        """
+        self.update_edge_weight(0, position, time)
+        self.update_edge_weight(position, 0, -time)
 
     def get_edge_weight(self, i, j):
         """ Returns the weight of the edge between node starting_node and node ending_node
@@ -419,6 +433,37 @@ class STN(nx.DiGraph):
             return task_id
 
         self.logger.debug("STN has no tasks yet")
+
+    def get_task_node_ids(self, task_id):
+        """ Gets the node_ids in the stn associated with the given task_id
+
+        Args:
+            task_id: (string) id of the task
+
+        Returns: list of node ids
+
+        """
+        node_ids = list()
+        for i in self.nodes():
+            if task_id == self.node[i]['data']['task_id']:
+                node_ids.append(i)
+
+        return node_ids
+
+    def get_subgraph(self, node_ids):
+        """ Returns a subgraph of the stn that includes the nodes in the node_ids list
+        and the zero timepoint
+
+        Args:
+            node_ids: list of node ids
+
+        Returns: graph
+
+        """
+        # The first node in the subgraph is the zero timepoint
+        node_ids.insert(0, 0)
+        subgraph = self.subgraph(node_ids)
+        return subgraph
 
     def to_json(self):
         dict_json = json_graph.node_link_data(self)
