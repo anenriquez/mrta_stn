@@ -418,6 +418,23 @@ class STN(nx.DiGraph):
 
         return navigation_start_time
 
+    def get_task_id(self, position):
+        """ Returns the id of the task in the given position
+
+        Args:
+            position: (int) position in the STN
+
+        Returns: (string) task id
+
+        """
+        if self.has_node(position):
+            task_id = self.node[position]['data']['task_id']
+        else:
+            self.logger.error("There is no task in position %s", position)
+            task_id = None
+
+        return task_id
+
     def get_earliest_task_id(self):
         """ Returns the id of the earliest task in the stn
 
@@ -426,10 +443,8 @@ class STN(nx.DiGraph):
         # The first task in the graph is the task with the earliest start time
         # The first task is in node 1, node 0 is reserved for the zero timepoint
 
-        if self.has_node(1):
-            timepoint = Node.from_dict(self.node[1]['data'])
-            task_id = timepoint.task_id
-            print(task_id)
+        task_id = self.get_task_id(1)
+        if task_id:
             return task_id
 
         self.logger.debug("STN has no tasks yet")
