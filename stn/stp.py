@@ -204,4 +204,13 @@ class STP(object):
         result = self.solver.compute_dispatchable_graph(stn)
         return result
 
+    @staticmethod
+    def propagate_constraints(stn):
+        minimal_network = get_minimal_network(stn)
+        if minimal_network is None:
+            return
+        return minimal_network
+
+
+
 
