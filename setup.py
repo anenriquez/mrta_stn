@@ -2,7 +2,8 @@
 
 from setuptools import setup
 
-setup(name='mrta_stn',
+setup(name='stn',
+      packages=['stn', 'stn.methods', 'stn.pstn', 'stn.stnu', 'stn.utils'],
       version='0.1.0',
       install_requires=[
             'numpy',
