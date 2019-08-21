@@ -481,11 +481,14 @@ class STN(nx.DiGraph):
         return subgraph
 
     def to_json(self):
-        dict_json = json_graph.node_link_data(self)
-        MyEncoder().encode(dict_json)
-        stn_json = json.dumps(dict_json, cls=MyEncoder)
-
+        stn_dict = self.to_dict()
+        MyEncoder().encode(stn_dict)
+        stn_json = json.dumps(stn_dict, cls=MyEncoder)
         return stn_json
+
+    def to_dict(self):
+        stn_dict = json_graph.node_link_data(self)
+        return stn_dict
 
     @classmethod
     def from_json(cls, stn_json):
@@ -498,9 +501,8 @@ class STN(nx.DiGraph):
         return stn
 
     @classmethod
-    def from_dict(cls, stn_json):
-        dict_json = json.load(stn_json)
-        graph = json_graph.node_link_graph(dict_json)
-        cls.add_nodes_from(graph.nodes(data=True))
-        cls.add_edges_from(graph.edges(data=True))
-        return cls
+    def from_dict(cls, stn_dict):
+        stn_json = json.dumps(stn_dict)
+        stn = cls.from_json(stn_json)
+        return stn
+
