@@ -106,8 +106,9 @@ class StaticRobustExecution(object):
         result = srea(stn, debug=True)
         if result is None:
             return
-        risk_level, dispatchable_graph = result
-        return risk_level, dispatchable_graph
+        risk_metric, dispatchable_graph = result
+
+        return risk_metric, dispatchable_graph
 
 
 class DegreeStongControllability(object):
@@ -136,7 +137,11 @@ class DegreeStongControllability(object):
         # Returns a schedule because it is an offline approach
         schedule = dsc_lp.get_schedule(bounds)
 
-        return dsc, schedule
+        # A strongly controllable STNU has a DSC of 1, i.e., a DSC value of 1 is better. We take
+        # 1 − DC to be the risk metric, so that small values are preferable
+        risk_metric = 1 - dsc
+
+        return risk_metric, schedule
 
 
 class FullPathConsistency(object):
@@ -154,8 +159,8 @@ class FullPathConsistency(object):
         dispatchable_graph = get_minimal_network(stn)
         if dispatchable_graph is None:
             return
-        risk_level = 1
-        return risk_level, dispatchable_graph
+        risk_metric = 1
+        return risk_metric, dispatchable_graph
 
 
 class STP(object):
@@ -203,6 +208,17 @@ class STP(object):
         """
         result = self.solver.compute_dispatchable_graph(stn)
         return result
+
+    @staticmethod
+    def compute_temporal_metric(dispatchable_graph, temporal_criterion):
+        if temporal_criterion == 'completion_time':
+            temporal_metric = dispatchable_graph.get_completion_time()
+        elif temporal_criterion == 'makespan':
+            temporal_metric = dispatchable_graph.get_makespan()
+        else:
+            raise ValueError(temporal_criterion)
+
+        return temporal_metric
 
     @staticmethod
     def propagate_constraints(stn):
