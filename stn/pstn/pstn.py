@@ -103,10 +103,10 @@ class PSTN(STN):
         """
 
         if type == "navigation":
-            self.add_constraint(0, node_id)
+            self.add_constraint(0, node_id, task.r_earliest_navigation_start_time)
 
         if type == "start":
-            self.add_constraint(0, node_id, task.earliest_start_time, task.latest_start_time)
+            self.add_constraint(0, node_id, task.r_earliest_start_time, task.r_latest_start_time)
 
         elif type == "finish":
             self.add_constraint(0, node_id)
@@ -155,7 +155,7 @@ class PSTN(STN):
         """ Reads from the database the probability distribution for navigating from source to destination
         """
         # TODO: Read estimated distribution from dataset
-        distribution = "N_6_1"
+        distribution = "N_1_1"
         return distribution
 
     def get_task_distribution(self, task):

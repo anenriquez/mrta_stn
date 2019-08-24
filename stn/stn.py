@@ -1,9 +1,14 @@
-import networkx as nx
-from stn.node import Node
-from json import JSONEncoder
-from networkx.readwrite import json_graph
 import json
 import logging.config
+import sys
+from json import JSONEncoder
+
+import networkx as nx
+from networkx.readwrite import json_graph
+
+from stn.node import Node
+
+MAX_FLOAT = sys.float_info.max
 
 
 class MyEncoder(JSONEncoder):
@@ -20,7 +25,7 @@ class STN(nx.DiGraph):
     def __init__(self):
         super().__init__()
         self.add_zero_timepoint()
-        self.max_makespan = 150
+        self.max_makespan = MAX_FLOAT
 
     def __str__(self):
         to_print = ""
@@ -213,7 +218,7 @@ class STN(nx.DiGraph):
         """ Reads from the database the estimated duration for navigating from source to destination and takes the mean
         """
         # TODO: Read estimated duration from dataset
-        duration = 6.0
+        duration = 1.0
         return duration
 
     def get_task_duration(self, task):
@@ -229,8 +234,8 @@ class STN(nx.DiGraph):
         """
         navigation_duration = self.get_navigation_duration(task.start_pose_name, task.finish_pose_name)
 
-        earliest_navigation_start_time = task.earliest_start_time - navigation_duration
-        latest_navigation_start_time = task.latest_start_time - navigation_duration
+        earliest_navigation_start_time = task.r_earliest_start_time - navigation_duration
+        latest_navigation_start_time = task.r_latest_start_time - navigation_duration
 
         return earliest_navigation_start_time, latest_navigation_start_time
 
@@ -239,8 +244,8 @@ class STN(nx.DiGraph):
         """
         task_duration = self.get_task_duration(task)
 
-        earliest_finish_time = task.earliest_start_time + task_duration
-        latest_finish_time = task.latest_start_time + task_duration
+        earliest_finish_time = task.r_earliest_start_time + task_duration
+        latest_finish_time = task.r_latest_start_time + task_duration
 
         return earliest_finish_time, latest_finish_time
 
@@ -392,7 +397,7 @@ class STN(nx.DiGraph):
             self.add_constraint(0, node_id, earliest_navigation_start_time, latest_navigation_start_time)
 
         if type == "start":
-            self.add_constraint(0, node_id, task.earliest_start_time, task.latest_start_time)
+            self.add_constraint(0, node_id, task.r_earliest_start_time, task.r_latest_start_time)
 
         elif type == "finish":
             earliest_finish_time, latest_finish_time = self.get_finish_time(task)
@@ -401,7 +406,7 @@ class STN(nx.DiGraph):
 
     def timepoint_soft_constraints(self, node_id, task, type):
         if type == "navigation":
-            self.add_constraint(0, node_id)
+            self.add_constraint(0, node_id, task.r_earliest_navigation_start)
 
         if type == "start":
             self.add_constraint(0, node_id)
@@ -410,13 +415,16 @@ class STN(nx.DiGraph):
 
             self.add_constraint(0, node_id, 0, self.max_makespan)
 
-    def get_task_navigation_start_time(self, task_id):
-        navigation_start_time = None
+    def get_task_time(self, task_id, type='navigation', lower_bound=True):
+        _time = None
         for i, data in self.nodes.data():
-            if task_id in data['data']['task_id'] and data['data']['type'] == 'navigation':
-                navigation_start_time = -self[i][0]['weight']
+            if task_id in data['data']['task_id'] and data['data']['type'] == type:
+                if lower_bound:
+                    _time = -self[i][0]['weight']
+                else:  # upper bound
+                    _time = self[0][i]['weight']
 
-        return navigation_start_time
+        return _time
 
     def get_task_id(self, position):
         """ Returns the id of the task in the given position
