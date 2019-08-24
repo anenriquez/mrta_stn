@@ -79,10 +79,10 @@ class STNU(STN):
         """
 
         if type == "navigation":
-            self.add_constraint(0, node_id)
+            self.add_constraint(0, node_id, task.r_earliest_navigation_start_time)
 
         if type == "start":
-            self.add_constraint(0, node_id, task.earliest_start_time, task.latest_start_time)
+            self.add_constraint(0, node_id, task.r_earliest_start_time, task.r_latest_start_time)
 
         elif type == "finish":
             self.add_constraint(0, node_id)
@@ -152,7 +152,7 @@ class STNU(STN):
         Proceedings of the 29th International Conference on Automated Planning and Scheduling, ICAPS 2019, 07 2019.
         """
         # TODO: Read estimated distribution from database
-        distribution = "N_6_1"
+        distribution = "N_1_1"
         name_split = distribution.split("_")
         # mean
         mu = float(name_split[1])
