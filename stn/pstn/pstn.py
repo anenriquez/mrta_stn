@@ -162,5 +162,5 @@ class PSTN(STN):
         """ Reads from the database the estimated distribution of the task
         In the case of transportation tasks, the estimated distribution is the navigation time from the pickup to the delivery location
         """
-        distribution = "N_4_1"
+        distribution = "N_1_1"
         return distribution
