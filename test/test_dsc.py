@@ -36,7 +36,7 @@ class TestDSC(unittest.TestCase):
         self.logger.info("STNU: \n %s", self.stn)
 
         self.logger.info("Getting Schedule...")
-        risk_metric, schedule = self.stp.compute_dispatchable_graph(self.stn)
+        risk_metric, schedule = self.stp.solve(self.stn)
 
         self.logger.info("DSC: %s ", risk_metric)
         self.logger.info("schedule: %s ", schedule)
