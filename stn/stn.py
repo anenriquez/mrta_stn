@@ -226,7 +226,7 @@ class STN(nx.DiGraph):
         In the case of transportation tasks, the estimated duration is the navigation time from the pickup to the delivery location
         """
         # TODO: Read estimated duration from dataset
-        duration = 4.0
+        duration = 1.0
         return duration
 
     def get_navigation_start_time(self, task):
@@ -296,13 +296,13 @@ class STN(nx.DiGraph):
         Each timepoint in the STN is associated with a task.
         return  list of task ids
         """
-        scheduled_tasks = list()
+        tasks = list()
         for i in self.nodes():
             timepoint = Node.from_dict(self.node[i]['data'])
             if timepoint.type == "navigation":
-                scheduled_tasks.append(timepoint.task_id)
+                tasks.append(timepoint.task_id)
 
-        return scheduled_tasks
+        return tasks
 
     def is_consistent(self, shortest_path_array):
         """The STN is not consistent if it has negative cycles"""
@@ -322,11 +322,23 @@ class STN(nx.DiGraph):
 
     def update_edge_weight(self, i, j, weight, create=False):
         """ Updates the weight of the edge between node starting_node and node ending_node
+
+        Updates the weight if the new weight is less than the previous weight
         :param i: starting_node_id
         :parma ending_node: ending_node_id
         """
+        if weight == "inf":
+            weight = float('inf')
+        else:
+            weight = round(float(weight), 2)
+
         if self.has_edge(i, j):
-            self[i][j]['weight'] = weight
+
+            if self[i][j]['weight'] == 'inf':
+                self[i][j]['weight'] = float('inf')
+
+            if weight < self[i][j]['weight']:
+                self[i][j]['weight'] = weight
 
     def assign_timepoint(self, time, position=1):
         """
@@ -415,7 +427,7 @@ class STN(nx.DiGraph):
 
             self.add_constraint(0, node_id, 0, self.max_makespan)
 
-    def get_task_time(self, task_id, type='navigation', lower_bound=True):
+    def get_time(self, task_id, type='navigation', lower_bound=True):
         _time = None
         for i, data in self.nodes.data():
             if task_id in data['data']['task_id'] and data['data']['type'] == type:
@@ -435,11 +447,13 @@ class STN(nx.DiGraph):
         Returns: (string) task id
 
         """
-        if self.has_node(position):
-            task_id = self.node[position]['data']['task_id']
+        navigation_node = 2 * position + (position-2)
+
+        if self.has_node(navigation_node):
+            task_id = self.node[navigation_node]['data']['task_id']
         else:
             self.logger.error("There is no task in position %s", position)
-            task_id = None
+            return
 
         return task_id
 
@@ -473,20 +487,26 @@ class STN(nx.DiGraph):
 
         return node_ids
 
-    def get_subgraph(self, node_ids):
-        """ Returns a subgraph of the stn that includes the nodes in the node_ids list
+    def get_subgraph(self, n_tasks):
+        """ Returns a subgraph of the stn that includes the nodes of the first n_tasks
         and the zero timepoint
 
         Args:
-            node_ids: list of node ids
+            n_tasks (int): number of tasks to include int the subgraph
 
         Returns: graph
 
         """
+        node_ids = list()
+        tasks = self.get_tasks()[0: n_tasks]
+        for task_id in tasks:
+            node_ids += self.get_task_node_ids(task_id)
+
         # The first node in the subgraph is the zero timepoint
         node_ids.insert(0, 0)
-        subgraph = self.subgraph(node_ids)
-        return subgraph
+
+        sub_graph = self.subgraph(node_ids)
+        return sub_graph
 
     def to_json(self):
         stn_dict = self.to_dict()
