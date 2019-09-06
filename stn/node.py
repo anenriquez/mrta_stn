@@ -1,9 +1,10 @@
+from stn.utils.uuid import generate_uuid
 
 
 class Node(object):
     """Represents a timepoint in the STN """
 
-    def __init__(self, task_id='', pose='', type='zero_timepoint'):
+    def __init__(self, task_id=generate_uuid(), pose='', type='zero_timepoint'):
         # id of the task represented by this node
         self.task_id = task_id
         # Pose in the map where the node has to be executed
