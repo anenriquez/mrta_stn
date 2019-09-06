@@ -19,7 +19,7 @@ class STNTask(object):
             hard_constraints (bool): False if the task can be
                                     scheduled ASAP, True if the task is not flexible. Defaults to True
         """
-        self.id = id
+        self.id = str(id)
         self.r_earliest_navigation_start_time = round(r_earliest_navigation_start_time, 2)
         self.r_earliest_start_time = round(r_earliest_start_time, 2)
         self.r_latest_start_time = round(r_latest_start_time, 2)
