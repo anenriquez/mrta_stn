@@ -95,20 +95,20 @@ class PSTN(STN):
         self.add_edge(j, i, distribution=distribution)
         self.add_edge(j, i, is_contingent=is_contingent)
 
-    def timepoint_hard_constraints(self, node_id, task, type):
+    def timepoint_hard_constraints(self, node_id, task, node_type):
         """ Adds the earliest and latest times to execute a timepoint (node)
         Navigation timepoint [0, inf]
         Start timepoint [earliest_start_time, latest_start_time]
         Finish timepoint [0, inf]
         """
 
-        if type == "navigation":
+        if node_type == "navigation":
             self.add_constraint(0, node_id, task.r_earliest_navigation_start_time)
 
-        if type == "start":
+        if node_type == "start":
             self.add_constraint(0, node_id, task.r_earliest_start_time, task.r_latest_start_time)
 
-        elif type == "finish":
+        elif node_type == "finish":
             self.add_constraint(0, node_id)
 
     def get_contingent_constraints(self):
@@ -139,15 +139,15 @@ class PSTN(STN):
         """
         for (i, j) in constraints:
             self.logger.debug("Adding constraint: %s ", (i, j))
-            if self.node[i]['data']['type'] == "navigation":
+            if self.node[i]['data']['node_type'] == "navigation":
                 distribution = self.get_navigation_distribution(i, j)
                 self.add_constraint(i, j, distribution=distribution)
 
-            elif self.node[i]['data']['type'] == "start":
+            elif self.node[i]['data']['node_type'] == "start":
                 distribution = self.get_task_distribution(task)
                 self.add_constraint(i, j, distribution=distribution)
 
-            elif self.node[i]['data']['type'] == "finish":
+            elif self.node[i]['data']['node_type'] == "finish":
                 # wait time between finish of one task and start of the next one. Fixed to [0, inf]
                 self.add_constraint(i, j)
 

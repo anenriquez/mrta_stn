@@ -96,30 +96,30 @@ class STN(nx.DiGraph):
 
         return constraints
 
-    def get_node_pose(self, task, type):
+    def get_node_pose(self, task, node_type):
         """ Returns the pose in the map where the task has to be executed
         """
-        if type == 'navigation':
+        if node_type == 'navigation':
             # TODO: initialize the pose with the robot current position (read it from mongo)
             # this value will be overwritten once the task is allocated
             pose = ''
-        elif type == 'start':
+        elif node_type == 'start':
             pose = task.start_pose_name
-        elif type == 'finish':
+        elif node_type == 'finish':
             pose = task.finish_pose_name
 
         return pose
 
-    def add_timepoint(self, id, task, type):
+    def add_timepoint(self, id, task, node_type):
         """ A timepoint is represented by a node in the STN
-        The node can be of type:
+        The node can be of node_type:
         - zero_timepoint: references the schedule to the origin
         - navigation: time at which the robot starts navigating towards the task
         - start: time at which the robot starts executing the task
         - finish: time at which the robot finishes executing the task
         """
-        pose = self.get_node_pose(task, type)
-        node = Node(task.id, pose, type)
+        pose = self.get_node_pose(task, node_type)
+        node = Node(task.id, pose, node_type)
         self.add_node(id, data=node.to_dict())
 
     def add_task(self, task, position=1):
@@ -203,15 +203,15 @@ class STN(nx.DiGraph):
         """
         for (i, j) in constraints:
             self.logger.debug("Adding constraint: %s ", (i, j))
-            if self.node[i]['data']['type'] == "navigation":
+            if self.node[i]['data']['node_type'] == "navigation":
                 duration = self.get_navigation_duration(i, j)
                 self.add_constraint(i, j, duration)
 
-            elif self.node[i]['data']['type'] == "start":
+            elif self.node[i]['data']['node_type'] == "start":
                 duration = self.get_task_duration(task)
                 self.add_constraint(i, j, duration)
 
-            elif self.node[i]['data']['type'] == "finish":
+            elif self.node[i]['data']['node_type'] == "finish":
                 # wait time between finish of one task and start of the next one. Fixed to [0, inf]
                 self.add_constraint(i, j)
 
@@ -287,7 +287,7 @@ class STN(nx.DiGraph):
             self.logger.debug("Constraints: %s", constraints)
 
             for (i, j) in constraints:
-                if self.node[i]['data']['type'] == "finish":
+                if self.node[i]['data']['node_type'] == "finish":
                     # wait time between finish of one task and start of the next one
                     self.add_constraint(i, j)
 
@@ -300,7 +300,7 @@ class STN(nx.DiGraph):
         tasks = list()
         for i in self.nodes():
             timepoint = Node.from_dict(self.node[i]['data'])
-            if timepoint.type == "navigation":
+            if timepoint.node_type == "navigation":
                 tasks.append(timepoint.task_id)
 
         return tasks
@@ -391,7 +391,7 @@ class STN(nx.DiGraph):
 
         return last_task_finish_time
 
-    def add_timepoint_constraints(self, node_id, task, type):
+    def add_timepoint_constraints(self, node_id, task, node_type):
         """ Adds the earliest and latest times to execute a timepoint (node)
         Navigation timepoint [earliest_navigation_start_time, latest_navigation_start_time]
         Start timepoint [earliest_start_time, latest_start_time]
@@ -399,39 +399,39 @@ class STN(nx.DiGraph):
         """
 
         if task.hard_constraints:
-            self.timepoint_hard_constraints(node_id, task, type)
+            self.timepoint_hard_constraints(node_id, task, node_type)
         else:
-            self.timepoint_soft_constraints(node_id, task, type)
+            self.timepoint_soft_constraints(node_id, task, node_type)
 
-    def timepoint_hard_constraints(self, node_id, task, type):
-        if type == "navigation":
+    def timepoint_hard_constraints(self, node_id, task, node_type):
+        if node_type == "navigation":
             earliest_navigation_start_time, latest_navigation_start_time = self.get_navigation_start_time(task)
 
             self.add_constraint(0, node_id, earliest_navigation_start_time, latest_navigation_start_time)
 
-        if type == "start":
+        if node_type == "start":
             self.add_constraint(0, node_id, task.r_earliest_start_time, task.r_latest_start_time)
 
-        elif type == "finish":
+        elif node_type == "finish":
             earliest_finish_time, latest_finish_time = self.get_finish_time(task)
 
             self.add_constraint(0, node_id, earliest_finish_time, latest_finish_time)
 
-    def timepoint_soft_constraints(self, node_id, task, type):
-        if type == "navigation":
+    def timepoint_soft_constraints(self, node_id, task, node_type):
+        if node_type == "navigation":
             self.add_constraint(0, node_id, task.r_earliest_navigation_start)
 
-        if type == "start":
+        if node_type == "start":
             self.add_constraint(0, node_id)
 
-        elif type == "finish":
+        elif node_type == "finish":
 
             self.add_constraint(0, node_id, 0, self.max_makespan)
 
-    def get_time(self, task_id, type='navigation', lower_bound=True):
+    def get_time(self, task_id, node_type='navigation', lower_bound=True):
         _time = None
         for i, data in self.nodes.data():
-            if task_id == data['data']['task_id'] and data['data']['type'] == type:
+            if task_id == data['data']['task_id'] and data['data']['node_type'] == node_type:
                 if lower_bound:
                     _time = -self[i][0]['weight']
                 else:  # upper bound
