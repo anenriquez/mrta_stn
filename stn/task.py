@@ -10,7 +10,7 @@ class STNTask(object):
         """ Constructor for the Task object
 
         Args:
-            id (str): A string of the format UUID
+            id (UUID): An instance of an UUID object
             r_earliest_navigation_start_time (float): earliest navigation start time relative to the ztp
             r_earliest_start_time (float): earliest start time relative to the ztp
             r_latest_start_time (float): latest start time relative to the ztp

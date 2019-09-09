@@ -163,9 +163,9 @@
       {
          "id":0,
          "data":{
-            "task_id":"",
+            "task_id":"d9ac9b88-8035-42dd-8c80-fc006d7923ce",
             "pose":"",
-            "type":"zero_timepoint"
+            "node_type":"zero_timepoint"
          }
       },
       {
@@ -173,7 +173,7 @@
          "data":{
             "task_id":"0d06fb90-a76d-48b4-b64f-857b7388ab70",
             "pose":"",
-            "type":"navigation"
+            "node_type":"navigation"
          }
       },
       {
@@ -181,7 +181,7 @@
          "data":{
             "task_id":"0d06fb90-a76d-48b4-b64f-857b7388ab70",
             "pose":"AMK_TDU-TGR-1_X_9.7_Y_5.6",
-            "type":"start"
+            "node_type":"start"
          }
       },
       {
@@ -189,7 +189,7 @@
          "data":{
             "task_id":"0d06fb90-a76d-48b4-b64f-857b7388ab70",
             "pose":"AMK_TDU-TGR-1_X_5.82_Y_6.57",
-            "type":"finish"
+            "node_type":"finish"
          }
       },
       {
@@ -197,7 +197,7 @@
          "data":{
             "task_id":"0616af00-ec3b-4ecd-ae62-c94a3703594c",
             "pose":"",
-            "type":"navigation"
+            "node_type":"navigation"
          }
       },
       {
@@ -205,7 +205,7 @@
          "data":{
             "task_id":"0616af00-ec3b-4ecd-ae62-c94a3703594c",
             "pose":"AMK_TDU-TGR-1_X_14.03_Y_9.55",
-            "type":"start"
+            "node_type":"start"
          }
       },
       {
@@ -213,7 +213,7 @@
          "data":{
             "task_id":"0616af00-ec3b-4ecd-ae62-c94a3703594c",
             "pose":"AMK_TDU-TGR-1_X_15.09_Y_5.69",
-            "type":"finish"
+            "node_type":"finish"
          }
       }
    ],
