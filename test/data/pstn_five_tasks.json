@@ -4,15 +4,15 @@
       {
          "data":{
             "pose":"",
-            "type":"zero_timepoint",
-            "task_id":""
+            "node_type":"zero_timepoint",
+            "task_id":"6db74331-b4e8-4884-8d65-e37eb0a1e297"
          },
          "id":0
       },
       {
          "data":{
             "pose":"",
-            "type":"navigation",
+            "node_type":"navigation",
             "task_id":"002767db-01f3-4e0c-af4e-52c4d81bd713"
          },
          "id":1
@@ -20,7 +20,7 @@
       {
          "data":{
             "pose":"table",
-            "type":"start",
+            "node_type":"start",
             "task_id":"002767db-01f3-4e0c-af4e-52c4d81bd713"
          },
          "id":2
@@ -28,7 +28,7 @@
       {
          "data":{
             "pose":"second_door_outside",
-            "type":"finish",
+            "node_type":"finish",
             "task_id":"002767db-01f3-4e0c-af4e-52c4d81bd713"
          },
          "id":3
@@ -36,7 +36,7 @@
       {
          "data":{
             "pose":"",
-            "type":"navigation",
+            "node_type":"navigation",
             "task_id":"173d27eb-d0a4-4b94-986b-1e9b8eca0579"
          },
          "id":4
@@ -44,7 +44,7 @@
       {
          "data":{
             "pose":"inspection_area",
-            "type":"start",
+            "node_type":"start",
             "task_id":"173d27eb-d0a4-4b94-986b-1e9b8eca0579"
          },
          "id":5
@@ -52,7 +52,7 @@
       {
          "data":{
             "pose":"second_door_outside",
-            "type":"finish",
+            "node_type":"finish",
             "task_id":"173d27eb-d0a4-4b94-986b-1e9b8eca0579"
          },
          "id":6
@@ -60,7 +60,7 @@
       {
          "data":{
             "pose":"",
-            "type":"navigation",
+            "node_type":"navigation",
             "task_id":"4076f78b-16d8-4057-a1ad-d16d239764fa"
          },
          "id":7
@@ -68,7 +68,7 @@
       {
          "data":{
             "pose":"cupboard",
-            "type":"start",
+            "node_type":"start",
             "task_id":"4076f78b-16d8-4057-a1ad-d16d239764fa"
          },
          "id":8
@@ -76,7 +76,7 @@
       {
          "data":{
             "pose":"shelf",
-            "type":"finish",
+            "node_type":"finish",
             "task_id":"4076f78b-16d8-4057-a1ad-d16d239764fa"
          },
          "id":9
@@ -84,7 +84,7 @@
       {
          "data":{
             "pose":"",
-            "type":"navigation",
+            "node_type":"navigation",
             "task_id":"6d17963b-10b5-4143-b279-84d8e93aaaa3"
          },
          "id":10
@@ -92,7 +92,7 @@
       {
          "data":{
             "pose":"living_room",
-            "type":"start",
+            "node_type":"start",
             "task_id":"6d17963b-10b5-4143-b279-84d8e93aaaa3"
          },
          "id":11
@@ -100,7 +100,7 @@
       {
          "data":{
             "pose":"observation_pose",
-            "type":"finish",
+            "node_type":"finish",
             "task_id":"6d17963b-10b5-4143-b279-84d8e93aaaa3"
          },
          "id":12
@@ -108,7 +108,7 @@
       {
          "data":{
             "pose":"",
-            "type":"navigation",
+            "node_type":"navigation",
             "task_id":"73ace543-260e-474a-9112-3abd470ed5b5"
          },
          "id":13
@@ -116,7 +116,7 @@
       {
          "data":{
             "pose":"shelf",
-            "type":"start",
+            "node_type":"start",
             "task_id":"73ace543-260e-474a-9112-3abd470ed5b5"
          },
          "id":14
@@ -124,7 +124,7 @@
       {
          "data":{
             "pose":"kitchen",
-            "type":"finish",
+            "node_type":"finish",
             "task_id":"73ace543-260e-474a-9112-3abd470ed5b5"
          },
          "id":15

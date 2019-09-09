@@ -62,7 +62,7 @@ class STNU(STN):
 
         A constraint is contingent if it is uncontrollable, i.e., its value is assigned by Nature at execution time.
 
-        I a constraint is not contingent, then it is of type requirement and its value is assigned by the system.
+        I a constraint is not contingent, then it is of node_type requirement and its value is assigned by the system.
         """
 
         super().add_constraint(i, j, wji, wij)
@@ -71,20 +71,20 @@ class STNU(STN):
 
         self.add_edge(j, i, is_contingent=is_contingent)
 
-    def timepoint_hard_constraints(self, node_id, task, type):
+    def timepoint_hard_constraints(self, node_id, task, node_type):
         """ Adds the earliest and latest times to execute a timepoint (node)
         Navigation timepoint [0, inf]
         Start timepoint [earliest_start_time, latest_start_time]
         Finish timepoint [0, inf]
         """
 
-        if type == "navigation":
+        if node_type == "navigation":
             self.add_constraint(0, node_id, task.r_earliest_navigation_start_time)
 
-        if type == "start":
+        if node_type == "start":
             self.add_constraint(0, node_id, task.r_earliest_start_time, task.r_latest_start_time)
 
-        elif type == "finish":
+        elif node_type == "finish":
             self.add_constraint(0, node_id)
 
     def get_contingent_constraints(self):
@@ -132,15 +132,15 @@ class STNU(STN):
         """
         for (i, j) in constraints:
             self.logger.debug("Adding constraint: %s ", (i, j))
-            if self.node[i]['data']['type'] == "navigation":
+            if self.node[i]['data']['node_type'] == "navigation":
                 lower_bound, upper_bound = self.get_navigation_bounded_duration(i, j)
                 self.add_constraint(i, j, lower_bound, upper_bound, is_contingent=True)
 
-            elif self.node[i]['data']['type'] == "start":
+            elif self.node[i]['data']['node_type'] == "start":
                 lower_bound, upper_bound = self.get_task_bounded_duration(task)
                 self.add_constraint(i, j, lower_bound, upper_bound, is_contingent=True)
 
-            elif self.node[i]['data']['type'] == "finish":
+            elif self.node[i]['data']['node_type'] == "finish":
                 # wait time between finish of one task and start of the next one. Fixed to [0, inf]
                 self.add_constraint(i, j, 0)
 
