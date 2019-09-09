@@ -2,6 +2,7 @@ import json
 import logging.config
 import sys
 from json import JSONEncoder
+from stn.utils.uuid import generate_uuid
 
 import networkx as nx
 from networkx.readwrite import json_graph
@@ -46,7 +47,7 @@ class STN(nx.DiGraph):
         return to_print
 
     def add_zero_timepoint(self):
-        node = Node()
+        node = Node(generate_uuid(), '', 'zero_timepoint')
         self.add_node(0, data=node.to_dict())
 
     def add_constraint(self, i, j, wji=0.0, wij=float('inf')):

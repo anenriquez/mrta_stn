@@ -4,7 +4,7 @@ from stn.utils.uuid import generate_uuid
 class Node(object):
     """Represents a timepoint in the STN """
 
-    def __init__(self, task_id=generate_uuid(), pose='', type='zero_timepoint'):
+    def __init__(self, task_id, pose, type):
         # id of the task represented by this node
         self.task_id = task_id
         # Pose in the map where the node has to be executed
@@ -39,8 +39,8 @@ class Node(object):
 
     @staticmethod
     def from_dict(node_dict):
-        node = Node()
-        node.task_id = node_dict['task_id']
-        node.pose = node_dict['pose']
-        node.type = node_dict['type']
+        task_id = node_dict['task_id']
+        pose = node_dict['pose']
+        type = node_dict['type']
+        node = Node(task_id, pose, type)
         return node
