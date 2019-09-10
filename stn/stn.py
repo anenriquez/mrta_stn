@@ -8,13 +8,16 @@ import networkx as nx
 from networkx.readwrite import json_graph
 
 from stn.node import Node
+from uuid import UUID
 
 MAX_FLOAT = sys.float_info.max
 
 
 class MyEncoder(JSONEncoder):
-    def default(self, o):
-        return o.__dict__
+    def default(self, obj):
+        if isinstance(obj, UUID):
+            return obj.hex
+        return obj.__dict__
 
 
 class STN(nx.DiGraph):
@@ -531,7 +534,7 @@ class STN(nx.DiGraph):
 
     @classmethod
     def from_dict(cls, stn_dict):
-        stn_json = json.dumps(stn_dict)
+        stn_json = json.dumps(stn_dict, cls=MyEncoder)
         stn = cls.from_json(stn_json)
         return stn
 
