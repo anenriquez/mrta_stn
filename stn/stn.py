@@ -394,6 +394,17 @@ class STN(nx.DiGraph):
 
         return last_task_finish_time
 
+    def get_idle_time(self):
+        idle_time = 0
+        task_ids = self.get_tasks()
+
+        for i, task_id in enumerate(task_ids):
+            if i > 0:
+                r_earliest_finish_time_previous_task = self.get_time(task_ids[i-1], "finish")
+                r_earliest_start_time = self.get_time(task_ids[i], "start")
+                idle_time += round(r_earliest_start_time - r_earliest_finish_time_previous_task)
+        return idle_time
+
     def add_timepoint_constraints(self, node_id, task, node_type):
         """ Adds the earliest and latest times to execute a timepoint (node)
         Navigation timepoint [earliest_navigation_start_time, latest_navigation_start_time]
