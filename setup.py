@@ -3,8 +3,8 @@
 from setuptools import setup
 
 setup(name='stn',
-      packages=['stn', 'stn.methods', 'stn.pstn', 'stn.stnu', 'stn.utils'],
-      version='0.1.0',
+      packages=['stn', 'stn.config', 'stn.methods', 'stn.pstn', 'stn.stnu', 'stn.utils'],
+      version='0.2.0',
       install_requires=[
             'numpy',
             'networkx',
