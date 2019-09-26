@@ -38,7 +38,7 @@ class TestSREA(unittest.TestCase):
         self.logger.info("PSTN: \n %s", self.stn)
 
         self.logger.info("Getting GUIDE...")
-        alpha, guide_stn = self.stp.compute_dispatchable_graph(self.stn)
+        alpha, guide_stn = self.stp.solve(self.stn)
         self.logger.info("GUIDE")
         self.logger.info(guide_stn)
         self.logger.info("Alpha: %s ", alpha)

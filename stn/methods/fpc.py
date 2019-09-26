@@ -17,4 +17,4 @@ def get_minimal_network(stn):
         minimal_network.update_edges(shortest_path_array)
         return minimal_network
     else:
-        logger.error("The minimal network is inconsistent")
+        logger.warning("The minimal network is inconsistent")
