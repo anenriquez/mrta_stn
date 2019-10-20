@@ -37,7 +37,7 @@ class STN(nx.DiGraph):
             if self.has_edge(j, i) and i < j:
                 # Constraints with the zero timepoint
                 if i == 0:
-                    timepoint = Node.from_dict(self.node[j]['data'])
+                    timepoint = Node.from_dict(self.nodes[j]['data'])
                     lower_bound = -self[j][i]['weight']
                     upper_bound = self[i][j]['weight']
                     to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
@@ -206,15 +206,15 @@ class STN(nx.DiGraph):
         """
         for (i, j) in constraints:
             self.logger.debug("Adding constraint: %s ", (i, j))
-            if self.node[i]['data']['node_type'] == "navigation":
+            if self.nodes[i]['data']['node_type'] == "navigation":
                 duration = self.get_navigation_duration(i, j)
                 self.add_constraint(i, j, duration)
 
-            elif self.node[i]['data']['node_type'] == "start":
+            elif self.nodes[i]['data']['node_type'] == "start":
                 duration = self.get_task_duration(task)
                 self.add_constraint(i, j, duration)
 
-            elif self.node[i]['data']['node_type'] == "finish":
+            elif self.nodes[i]['data']['node_type'] == "finish":
                 # wait time between finish of one task and start of the next one. Fixed to [0, inf]
                 self.add_constraint(i, j)
 
@@ -290,7 +290,7 @@ class STN(nx.DiGraph):
             self.logger.debug("Constraints: %s", constraints)
 
             for (i, j) in constraints:
-                if self.node[i]['data']['node_type'] == "finish":
+                if self.nodes[i]['data']['node_type'] == "finish":
                     # wait time between finish of one task and start of the next one
                     self.add_constraint(i, j)
 
@@ -302,7 +302,7 @@ class STN(nx.DiGraph):
         """
         tasks = list()
         for i in self.nodes():
-            timepoint = Node.from_dict(self.node[i]['data'])
+            timepoint = Node.from_dict(self.nodes[i]['data'])
             if timepoint.node_type == "navigation":
                 tasks.append(timepoint.task_id)
 
@@ -465,7 +465,7 @@ class STN(nx.DiGraph):
         navigation_node = 2 * position + (position-2)
 
         if self.has_node(navigation_node):
-            task_id = self.node[navigation_node]['data']['task_id']
+            task_id = self.nodes[navigation_node]['data']['task_id']
         else:
             self.logger.error("There is no task in position %s", position)
             return
@@ -497,7 +497,7 @@ class STN(nx.DiGraph):
         """
         node_ids = list()
         for i in self.nodes():
-            if task_id == self.node[i]['data']['task_id']:
+            if task_id == self.nodes[i]['data']['task_id']:
                 node_ids.append(i)
 
         return node_ids

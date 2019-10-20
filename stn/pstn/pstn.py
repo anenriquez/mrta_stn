@@ -48,7 +48,7 @@ class PSTN(STN):
             if self.has_edge(j, i) and i < j:
                 # Constraints with the zero timepoint
                 if i == 0:
-                    timepoint = Node.from_dict(self.node[j]['data'])
+                    timepoint = Node.from_dict(self.nodes[j]['data'])
                     lower_bound = -self[j][i]['weight']
                     upper_bound = self[i][j]['weight']
                     to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
@@ -139,15 +139,15 @@ class PSTN(STN):
         """
         for (i, j) in constraints:
             self.logger.debug("Adding constraint: %s ", (i, j))
-            if self.node[i]['data']['node_type'] == "navigation":
+            if self.nodes[i]['data']['node_type'] == "navigation":
                 distribution = self.get_navigation_distribution(i, j)
                 self.add_constraint(i, j, distribution=distribution)
 
-            elif self.node[i]['data']['node_type'] == "start":
+            elif self.nodes[i]['data']['node_type'] == "start":
                 distribution = self.get_task_distribution(task)
                 self.add_constraint(i, j, distribution=distribution)
 
-            elif self.node[i]['data']['node_type'] == "finish":
+            elif self.nodes[i]['data']['node_type'] == "finish":
                 # wait time between finish of one task and start of the next one. Fixed to [0, inf]
                 self.add_constraint(i, j)
 

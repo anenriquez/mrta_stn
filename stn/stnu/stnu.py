@@ -23,7 +23,7 @@ class STNU(STN):
             if self.has_edge(j, i) and i < j:
                 # Constraints with the zero timepoint
                 if i == 0:
-                    timepoint = Node.from_dict(self.node[j]['data'])
+                    timepoint = Node.from_dict(self.nodes[j]['data'])
                     lower_bound = -self[j][i]['weight']
                     upper_bound = self[i][j]['weight']
                     to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
@@ -132,15 +132,15 @@ class STNU(STN):
         """
         for (i, j) in constraints:
             self.logger.debug("Adding constraint: %s ", (i, j))
-            if self.node[i]['data']['node_type'] == "navigation":
+            if self.nodes[i]['data']['node_type'] == "navigation":
                 lower_bound, upper_bound = self.get_navigation_bounded_duration(i, j)
                 self.add_constraint(i, j, lower_bound, upper_bound, is_contingent=True)
 
-            elif self.node[i]['data']['node_type'] == "start":
+            elif self.nodes[i]['data']['node_type'] == "start":
                 lower_bound, upper_bound = self.get_task_bounded_duration(task)
                 self.add_constraint(i, j, lower_bound, upper_bound, is_contingent=True)
 
-            elif self.node[i]['data']['node_type'] == "finish":
+            elif self.nodes[i]['data']['node_type'] == "finish":
                 # wait time between finish of one task and start of the next one. Fixed to [0, inf]
                 self.add_constraint(i, j, 0)
 
