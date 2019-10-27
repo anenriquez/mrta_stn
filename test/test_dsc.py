@@ -70,7 +70,7 @@ class TestDSC(unittest.TestCase):
                 lower_bound = -schedule[j][i]['weight']
                 upper_bound = schedule[i][j]['weight']
                 self.assertEqual(lower_bound, 43)
-                self.assertEqual(upper_bound, 51)
+                self.assertEqual(upper_bound, 49)
             if i == 0 and j == 4:
                 lower_bound = -schedule[j][i]['weight']
                 upper_bound = schedule[i][j]['weight']
@@ -85,7 +85,7 @@ class TestDSC(unittest.TestCase):
                 lower_bound = -schedule[j][i]['weight']
                 upper_bound = schedule[i][j]['weight']
                 self.assertEqual(lower_bound, 98)
-                self.assertEqual(upper_bound, 106)
+                self.assertEqual(upper_bound, 104)
             if i == 1 and j == 2:
                 lower_bound = -schedule[j][i]['weight']
                 upper_bound = schedule[i][j]['weight']
@@ -95,7 +95,7 @@ class TestDSC(unittest.TestCase):
                 lower_bound = -schedule[j][i]['weight']
                 upper_bound = schedule[i][j]['weight']
                 self.assertEqual(lower_bound, 2)
-                self.assertEqual(upper_bound, 6)
+                self.assertEqual(upper_bound, 4)
             if i == 3 and j == 4:
                 lower_bound = -schedule[j][i]['weight']
                 upper_bound = schedule[i][j]['weight']
@@ -110,7 +110,7 @@ class TestDSC(unittest.TestCase):
                 lower_bound = -schedule[j][i]['weight']
                 upper_bound = schedule[i][j]['weight']
                 self.assertEqual(lower_bound, 2)
-                self.assertEqual(upper_bound, 6)
+                self.assertEqual(upper_bound, 4)
 
 
 if __name__ == '__main__':
