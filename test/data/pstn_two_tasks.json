@@ -45,7 +45,7 @@
       {
          "distribution":"",
          "target":0,
-         "weight":-0.0,
+         "weight":-33.0,
          "source":1,
          "is_contingent":false
       },
@@ -101,7 +101,7 @@
       {
          "distribution":"",
          "target":0,
-         "weight":-0.0,
+         "weight":-88.0,
          "source":4,
          "is_contingent":false
       },

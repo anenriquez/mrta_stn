@@ -49,6 +49,7 @@ class TestSREA(unittest.TestCase):
         self.logger.info("Makespan: %s ", makespan)
 
         self.assertEqual(completion_time, 60)
+
         self.assertEqual(makespan, 97)
 
         expected_alpha = 0.0
@@ -62,7 +63,7 @@ class TestSREA(unittest.TestCase):
                 lower_bound = -guide_stn[j][i]['weight']
                 upper_bound = guide_stn[i][j]['weight']
                 self.assertEqual(lower_bound, 37)
-                self.assertEqual(upper_bound, 38)
+                self.assertEqual(upper_bound, 39)
             if i == 0 and j == 2:
                 lower_bound = -guide_stn[j][i]['weight']
                 upper_bound = guide_stn[i][j]['weight']
@@ -92,7 +93,7 @@ class TestSREA(unittest.TestCase):
                 lower_bound = -guide_stn[j][i]['weight']
                 upper_bound = guide_stn[i][j]['weight']
                 self.assertEqual(lower_bound, 0)
-                self.assertEqual(upper_bound, 47)
+                self.assertEqual(upper_bound, 14)
             if i == 2 and j == 3:
                 lower_bound = -guide_stn[j][i]['weight']
                 upper_bound = guide_stn[i][j]['weight']
@@ -107,7 +108,7 @@ class TestSREA(unittest.TestCase):
                 lower_bound = -guide_stn[j][i]['weight']
                 upper_bound = guide_stn[i][j]['weight']
                 self.assertEqual(lower_bound, 0)
-                self.assertEqual(upper_bound, 61)
+                self.assertEqual(upper_bound, 14)
             if i == 5 and j == 6:
                 lower_bound = -guide_stn[j][i]['weight']
                 upper_bound = guide_stn[i][j]['weight']
