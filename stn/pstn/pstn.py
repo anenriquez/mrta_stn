@@ -155,12 +155,12 @@ class PSTN(STN):
         """ Reads from the database the probability distribution for navigating from source to destination
         """
         # TODO: Read estimated distribution from dataset
-        distribution = "N_1_1"
+        distribution = "N_2_1"
         return distribution
 
     def get_task_distribution(self, task):
         """ Reads from the database the estimated distribution of the task
         In the case of transportation tasks, the estimated distribution is the navigation time from the pickup to the delivery location
         """
-        distribution = "N_1_1"
+        distribution = "N_2_1"
         return distribution

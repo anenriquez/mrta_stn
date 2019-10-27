@@ -152,7 +152,7 @@ class STNU(STN):
         Proceedings of the 29th International Conference on Automated Planning and Scheduling, ICAPS 2019, 07 2019.
         """
         # TODO: Read estimated distribution from database
-        distribution = "N_1_1"
+        distribution = "N_2_1"
         name_split = distribution.split("_")
         # mean
         mu = float(name_split[1])
@@ -174,7 +174,7 @@ class STNU(STN):
         Proceedings of the 29th International Conference on Automated Planning and Scheduling, ICAPS 2019, 07 2019.
         """
         # TODO: Read estimated distribution from database
-        distribution = "N_4_1"
+        distribution = "N_2_1"
         name_split = distribution.split("_")
         # mean
         mu = float(name_split[1])

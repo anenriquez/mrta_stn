@@ -222,7 +222,7 @@ class STN(nx.DiGraph):
         """ Reads from the database the estimated duration for navigating from source to destination and takes the mean
         """
         # TODO: Read estimated duration from dataset
-        duration = 1.0
+        duration = 2.0
         return duration
 
     def get_task_duration(self, task):
@@ -230,7 +230,7 @@ class STN(nx.DiGraph):
         In the case of transportation tasks, the estimated duration is the navigation time from the pickup to the delivery location
         """
         # TODO: Read estimated duration from dataset
-        duration = 1.0
+        duration = 2.0
         return duration
 
     def get_navigation_start_time(self, task):
