@@ -30,6 +30,8 @@ class STN(nx.DiGraph):
         super().__init__()
         self.add_zero_timepoint()
         self.max_makespan = MAX_FLOAT
+        self.risk_metric = None
+        self.temporal_metric = None
 
     def __str__(self):
         to_print = ""
@@ -122,7 +124,7 @@ class STN(nx.DiGraph):
         - finish: time at which the robot finishes executing the task
         """
         pose = self.get_node_pose(task, node_type)
-        node = Node(task.id, pose, node_type)
+        node = Node(task.task_id, pose, node_type)
         self.add_node(id, data=node.to_dict())
 
     def add_task(self, task, position=1):
@@ -142,7 +144,7 @@ class STN(nx.DiGraph):
         Note: Position 0 is reserved for the zero_timepoint
         Add tasks from postion 1 onwards
         """
-        self.logger.info("Adding task %s in position %s", task.id, position)
+        self.logger.info("Adding task %s in position %s", task.task_id, position)
 
         navigation_node_id = 2 * position + (position-2)
         start_node_id = navigation_node_id + 1
@@ -370,6 +372,16 @@ class STN(nx.DiGraph):
                 return 0
             else:
                 return float('inf')
+
+    def compute_temporal_metric(self, temporal_criterion):
+        if temporal_criterion == 'completion_time':
+            self.temporal_metric = self.get_completion_time()
+        elif temporal_criterion == 'makespan':
+            self.temporal_metric = self.get_makespan()
+        elif temporal_criterion == 'idle_time':
+            self.temporal_metric = self.get_idle_time()
+        else:
+            raise ValueError(temporal_criterion)
 
     def get_completion_time(self):
         nodes = list(self.nodes())
