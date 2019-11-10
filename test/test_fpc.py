@@ -34,7 +34,7 @@ class TestFPC(unittest.TestCase):
     def test_build_stn(self):
         self.logger.info("STN: \n %s", self.stn)
 
-        metric, minimal_network = self.stp.solve(self.stn)
+        minimal_network = self.stp.solve(self.stn)
 
         self.logger.info("Minimal STN: \n %s", minimal_network)
 

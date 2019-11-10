@@ -36,9 +36,9 @@ class TestDSC(unittest.TestCase):
         self.logger.info("STNU: \n %s", self.stn)
 
         self.logger.info("Getting Schedule...")
-        risk_metric, schedule = self.stp.solve(self.stn)
+        schedule = self.stp.solve(self.stn)
 
-        self.logger.info("DSC: %s ", risk_metric)
+        self.logger.info("DSC: %s ", schedule.risk_metric)
         self.logger.info("schedule: %s ", schedule)
 
         completion_time = schedule.get_completion_time()
@@ -51,7 +51,7 @@ class TestDSC(unittest.TestCase):
         self.assertEqual(makespan, 98)
 
         expected_risk_metric = 0.0
-        self.assertEqual(risk_metric, expected_risk_metric)
+        self.assertEqual(schedule.risk_metric, expected_risk_metric)
 
         constraints = schedule.get_constraints()
 
