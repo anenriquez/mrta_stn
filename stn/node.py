@@ -1,5 +1,3 @@
-from stn.utils.uuid import generate_uuid
-
 
 class Node(object):
     """Represents a timepoint in the STN """
