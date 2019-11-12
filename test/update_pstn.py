@@ -1,5 +1,6 @@
 from stn.pstn.pstn import PSTN
 import unittest
+from stn.utils.uuid import from_str
 
 
 class Task(object):
@@ -17,7 +18,7 @@ class UpdatePSTN(unittest.TestCase):
 
     def setUp(self):
         task_1 = Task()
-        task_1.task_id = "616af00-ec3b-4ecd-ae62-c94a3703594c"
+        task_1.task_id = from_str("0616af00-ec3b-4ecd-ae62-c94a3703594c")
         task_1.r_earliest_navigation_start_time = 0.0
         task_1.r_earliest_start_time = 96.0
         task_1.r_latest_start_time = 102.0
@@ -25,7 +26,7 @@ class UpdatePSTN(unittest.TestCase):
         task_1.finish_pose_name = "AMK_TDU-TGR-1_X_15.09_Y_5.69"
 
         task_2 = Task()
-        task_2.task_id = "207cc8da-2f0e-4538-802b-b8f3954df38d"
+        task_2.task_id = from_str("207cc8da-2f0e-4538-802b-b8f3954df38d")
         task_2.r_earliest_navigation_start_time = 0.0
         task_2.r_earliest_start_time = 71.0
         task_2.r_latest_start_time = 76.0
@@ -33,7 +34,7 @@ class UpdatePSTN(unittest.TestCase):
         task_2.finish_pose_name = "AMK_TDU-TGR-1_X_6.67_Y_14.52"
 
         task_3 = Task()
-        task_3.task_id = "0d06fb90-a76d-48b4-b64f-857b7388ab70"
+        task_3.task_id = from_str("0d06fb90-a76d-48b4-b64f-857b7388ab70")
         task_3.r_earliest_navigation_start_time = 0.0
         task_3.r_earliest_start_time = 41.0
         task_3.r_latest_start_time = 47.0
