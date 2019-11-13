@@ -1,4 +1,4 @@
-from stn.utils.uuid import generate_uuid
+from stn.utils.uuid import from_str
 
 
 class Node(object):
@@ -6,6 +6,8 @@ class Node(object):
 
     def __init__(self, task_id, pose, node_type):
         # id of the task represented by this node
+        if isinstance(task_id, str):
+            task_id = from_str(task_id)
         self.task_id = task_id
         # Pose in the map where the node has to be executed
         self.pose = pose
@@ -32,7 +34,7 @@ class Node(object):
 
     def to_dict(self):
         node_dict = dict()
-        node_dict['task_id'] = self.task_id
+        node_dict['task_id'] = str(self.task_id)
         node_dict['pose'] = self.pose
         node_dict['node_type'] = self.node_type
         return node_dict
@@ -40,6 +42,8 @@ class Node(object):
     @staticmethod
     def from_dict(node_dict):
         task_id = node_dict['task_id']
+        if isinstance(task_id, str):
+            task_id = from_str(task_id)
         pose = node_dict['pose']
         node_type = node_dict['node_type']
         node = Node(task_id, pose, node_type)

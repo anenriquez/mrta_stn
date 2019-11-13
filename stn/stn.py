@@ -9,6 +9,7 @@ from networkx.readwrite import json_graph
 
 from stn.node import Node
 from uuid import UUID
+import copy
 
 MAX_FLOAT = sys.float_info.max
 
@@ -39,7 +40,7 @@ class STN(nx.DiGraph):
             if self.has_edge(j, i) and i < j:
                 # Constraints with the zero timepoint
                 if i == 0:
-                    timepoint = Node.from_dict(self.nodes[j]['data'])
+                    timepoint = self.nodes[j]['data']
                     lower_bound = -self[j][i]['weight']
                     upper_bound = self[i][j]['weight']
                     to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
@@ -53,7 +54,7 @@ class STN(nx.DiGraph):
 
     def add_zero_timepoint(self):
         node = Node(generate_uuid(), '', 'zero_timepoint')
-        self.add_node(0, data=node.to_dict())
+        self.add_node(0, data=node)
 
     def add_constraint(self, i, j, wji=0.0, wij=float('inf')):
         """
@@ -125,7 +126,7 @@ class STN(nx.DiGraph):
         """
         pose = self.get_node_pose(task, node_type)
         node = Node(task.task_id, pose, node_type)
-        self.add_node(id, data=node.to_dict())
+        self.add_node(id, data=node)
 
     def add_task(self, task, position=1):
         """ A task is added as 3 timepoints and 5 constraints in the STN"
@@ -208,15 +209,15 @@ class STN(nx.DiGraph):
         """
         for (i, j) in constraints:
             self.logger.debug("Adding constraint: %s ", (i, j))
-            if self.nodes[i]['data']['node_type'] == "navigation":
+            if self.nodes[i]['data'].node_type == "navigation":
                 duration = self.get_navigation_duration(i, j)
                 self.add_constraint(i, j, duration)
 
-            elif self.nodes[i]['data']['node_type'] == "start":
+            elif self.nodes[i]['data'].node_type == "start":
                 duration = self.get_task_duration(task)
                 self.add_constraint(i, j, duration)
 
-            elif self.nodes[i]['data']['node_type'] == "finish":
+            elif self.nodes[i]['data'].node_type == "finish":
                 # wait time between finish of one task and start of the next one. Fixed to [0, inf]
                 self.add_constraint(i, j)
 
@@ -292,7 +293,7 @@ class STN(nx.DiGraph):
             self.logger.debug("Constraints: %s", constraints)
 
             for (i, j) in constraints:
-                if self.nodes[i]['data']['node_type'] == "finish":
+                if self.nodes[i]['data'].node_type == "finish":
                     # wait time between finish of one task and start of the next one
                     self.add_constraint(i, j)
 
@@ -304,9 +305,8 @@ class STN(nx.DiGraph):
         """
         tasks = list()
         for i in self.nodes():
-            timepoint = Node.from_dict(self.nodes[i]['data'])
-            if timepoint.node_type == "navigation":
-                tasks.append(timepoint.task_id)
+            if self.nodes[i]['data'].node_type == "navigation":
+                tasks.append(self.nodes[i]['data'].task_id)
 
         return tasks
 
@@ -457,7 +457,8 @@ class STN(nx.DiGraph):
     def get_time(self, task_id, node_type='navigation', lower_bound=True):
         _time = None
         for i, data in self.nodes.data():
-            if task_id == data['data']['task_id'] and data['data']['node_type'] == node_type:
+
+            if task_id == data['data'].task_id and data['data'].node_type == node_type:
                 if lower_bound:
                     _time = -self[i][0]['weight']
                 else:  # upper bound
@@ -477,7 +478,7 @@ class STN(nx.DiGraph):
         navigation_node = 2 * position + (position-2)
 
         if self.has_node(navigation_node):
-            task_id = self.nodes[navigation_node]['data']['task_id']
+            task_id = self.nodes[navigation_node]['data'].task_id
         else:
             self.logger.error("There is no task in position %s", position)
             return
@@ -509,7 +510,7 @@ class STN(nx.DiGraph):
         """
         node_ids = list()
         for i in self.nodes():
-            if task_id == self.nodes[i]['data']['task_id']:
+            if task_id == self.nodes[i]['data'].task_id:
                 node_ids.append(i)
 
         return node_ids
@@ -542,7 +543,10 @@ class STN(nx.DiGraph):
         return stn_json
 
     def to_dict(self):
-        stn_dict = json_graph.node_link_data(self)
+        stn = copy.deepcopy(self)
+        for i, data in self.nodes.data():
+            stn.nodes[i]['data'] = self.nodes[i]['data'].to_dict()
+        stn_dict = json_graph.node_link_data(stn)
         return stn_dict
 
     @classmethod
@@ -550,7 +554,7 @@ class STN(nx.DiGraph):
         stn = cls()
         dict_json = json.loads(stn_json)
         graph = json_graph.node_link_graph(dict_json)
-        stn.add_nodes_from(graph.nodes(data=True))
+        stn.add_nodes_from([(i, {'data': Node.from_dict(graph.nodes[i]['data'])}) for i in graph.nodes()])
         stn.add_edges_from(graph.edges(data=True))
 
         return stn
