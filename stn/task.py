@@ -1,5 +1,5 @@
 class STNTask(object):
-    def __init__(self, id,
+    def __init__(self, task_id,
                  r_earliest_navigation_start_time,
                  r_earliest_start_time,
                  r_latest_start_time,
@@ -19,7 +19,7 @@ class STNTask(object):
             hard_constraints (bool): False if the task can be
                                     scheduled ASAP, True if the task is not flexible. Defaults to True
         """
-        self.id = id
+        self.task_id = task_id
         self.r_earliest_navigation_start_time = round(r_earliest_navigation_start_time, 2)
         self.r_earliest_start_time = round(r_earliest_start_time, 2)
         self.r_latest_start_time = round(r_latest_start_time, 2)
