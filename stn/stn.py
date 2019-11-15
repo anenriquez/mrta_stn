@@ -448,7 +448,7 @@ class STN(nx.DiGraph):
 
     def timepoint_soft_constraints(self, node_id, task, node_type):
         if node_type == "navigation":
-            self.add_constraint(0, node_id, task.r_earliest_navigation_start)
+            self.add_constraint(0, node_id, task.r_earliest_navigation_start_time)
 
         if node_type == "start":
             self.add_constraint(0, node_id)
