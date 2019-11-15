@@ -346,19 +346,22 @@ class STN(nx.DiGraph):
             if weight < self[i][j]['weight']:
                 self[i][j]['weight'] = weight
 
-    def assign_timepoint(self, time, position=1):
+    def assign_timepoint(self, allotted_time, task_id, node_type):
         """
-        Assigns the given time to the earliest and latest time of the
-        timepoint at the given position
+        Assigns the allotted time to the earliest and latest time of the timepoint
+        of task_id of type node_type
         Args:
-            time: float representing seconds
-            position: int representing the location of the timepoint in the stn
-
-        Returns:
+            allotted_time (float): seconds after zero timepoint
+            task_id(UUID): id of the task
+            node_type(string): can be "navigation", "start" of "finish"
 
         """
-        self.update_edge_weight(0, position, time)
-        self.update_edge_weight(position, 0, -time)
+        for i in self.nodes():
+            node_data = self.nodes[i]['data']
+            if node_data.task_id == task_id and node_data.node_type == node_type:
+                self.update_edge_weight(0, i, allotted_time)
+                self.update_edge_weight(i, 0, -allotted_time)
+                break
 
     def get_edge_weight(self, i, j):
         """ Returns the weight of the edge between node starting_node and node ending_node

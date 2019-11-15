@@ -1,5 +1,6 @@
+import networkx as nx
+
 from stn.config.config import stn_factory, stp_solver_factory
-from stn.methods.fpc import get_minimal_network
 from stn.exceptions.stp import NoSTPSolution
 
 """ Solves a Simple Temporal Problem (STP)
@@ -58,10 +59,9 @@ class STP(object):
 
     @staticmethod
     def is_consistent(stn):
-        minimal_network = get_minimal_network(stn)
-        if minimal_network:
+        shortest_path_array = nx.floyd_warshall(stn)
+        if stn.is_consistent(shortest_path_array):
             return True
-        else:
-            return False
+        return False
 
 
