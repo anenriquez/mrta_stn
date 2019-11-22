@@ -10,6 +10,7 @@ from networkx.readwrite import json_graph
 from stn.node import Node
 from uuid import UUID
 import copy
+import math
 
 MAX_FLOAT = sys.float_info.max
 
@@ -314,7 +315,7 @@ class STN(nx.DiGraph):
         """The STN is not consistent if it has negative cycles"""
         consistent = True
         for node, nodes in shortest_path_array.items():
-            if nodes[node] != 0:
+            if not math.isclose(nodes[node], 0.0, abs_tol=1e-09):
                 consistent = False
         return consistent
 
