@@ -4,14 +4,12 @@ from stn.utils.uuid import from_str
 class Node(object):
     """Represents a timepoint in the STN """
 
-    def __init__(self, task_id, pose, node_type):
+    def __init__(self, task_id, node_type):
         # id of the task represented by this node
         if isinstance(task_id, str):
             task_id = from_str(task_id)
         self.task_id = task_id
-        # Pose in the map where the node has to be executed
-        self.pose = pose
-        # The node can be of node_type zero_timepoint, navigation, start or finish
+        # The node can be of node_type zero_timepoint, start, pickup or delivery
         self.node_type = node_type
 
     def __str__(self):
@@ -23,19 +21,17 @@ class Node(object):
         return str(self.to_dict())
 
     def __hash__(self):
-        return hash((self.task_id, self.pose, self.node_type))
+        return hash((self.task_id, self.node_type))
 
     def __eq__(self, other):
         if other is None:
             return False
         return (self.task_id == other.task_id and
-                self.pose == other.pose and
                 self.node_type == other.node_type)
 
     def to_dict(self):
         node_dict = dict()
         node_dict['task_id'] = str(self.task_id)
-        node_dict['pose'] = self.pose
         node_dict['node_type'] = self.node_type
         return node_dict
 
@@ -44,7 +40,6 @@ class Node(object):
         task_id = node_dict['task_id']
         if isinstance(task_id, str):
             task_id = from_str(task_id)
-        pose = node_dict['pose']
         node_type = node_dict['node_type']
-        node = Node(task_id, pose, node_type)
+        node = Node(task_id, node_type)
         return node
