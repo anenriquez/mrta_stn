@@ -26,6 +26,8 @@ from stn.pstn.constraint import Constraint
 from stn.stn import STN
 from json import JSONEncoder
 import logging
+from stn.task import TimepointConstraint
+import numpy as np
 
 
 class MyEncoder(JSONEncoder):
@@ -94,22 +96,22 @@ class PSTN(STN):
         self.add_edge(j, i, distribution=distribution)
         self.add_edge(j, i, is_contingent=is_contingent)
 
-    def timepoint_hard_constraints(self, node_id, task, node_type):
-        """ Adds the earliest and latest times to execute a timepoint (node)
-        Navigation timepoint [0, inf]
-        Start timepoint [earliest_start_time, latest_start_time]
-        Finish timepoint [0, inf]
-        """
-
-        if node_type == "navigation":
-            self.add_constraint(0, node_id, task.r_earliest_navigation_start_time)
-
-        if node_type == "start":
-            self.add_constraint(0, node_id, task.r_earliest_start_time, task.r_latest_start_time)
-
-        elif node_type == "finish":
-            self.add_constraint(0, node_id)
-
+    # def timepoint_hard_constraints(self, node_id, task, node_type):
+    #     """ Adds the earliest and latest times to execute a timepoint (node)
+    #     Navigation timepoint [0, inf]
+    #     Start timepoint [earliest_start_time, latest_start_time]
+    #     Finish timepoint [0, inf]
+    #     """
+    #
+    #     if node_type == "navigation":
+    #         self.add_constraint(0, node_id, task.r_earliest_navigation_start_time)
+    #
+    #     if node_type == "start":
+    #         self.add_constraint(0, node_id, task.r_earliest_start_time, task.r_latest_start_time)
+    #
+    #     elif node_type == "finish":
+    #         self.add_constraint(0, node_id)
+    #
     def get_contingent_constraints(self):
         """ Returns a dictionary with the contingent constraints in the PSTN
          {(starting_node, ending_node): Constraint (object)}
@@ -125,9 +127,9 @@ class PSTN(STN):
     def add_intertimepoints_constraints(self, constraints, task):
         """ Adds constraints between the timepoints of a task
         Constraints between:
-        - navigation start and start (contingent)
-        - start and finish (contingent)
-        - finish and next task (if any) (requirement)
+        - start and pickup (contingent)
+        - pickup and delivery (contingent)
+        - delivery and next task (if any) (requirement)
         Args:
             constraints (list) : list of tuples that defines the pair of nodes between which a new constraint should be added
             Example:
@@ -138,28 +140,55 @@ class PSTN(STN):
         """
         for (i, j) in constraints:
             self.logger.debug("Adding constraint: %s ", (i, j))
-            if self.nodes[i]['data'].node_type == "navigation":
-                distribution = self.get_navigation_distribution(i, j)
+            if self.nodes[i]['data'].node_type == "start":
+                distribution = self.get_travel_time_distribution(task)
+                if distribution == "N_0.0_0.0":
+                    self.add_constraint(i, j, 0, 0)
+                else:
+                    self.add_constraint(i, j, distribution=distribution)
+
+            elif self.nodes[i]['data'].node_type == "pickup":
+                distribution = self.get_work_time_distribution(task)
                 self.add_constraint(i, j, distribution=distribution)
 
-            elif self.nodes[i]['data'].node_type == "start":
-                distribution = self.get_task_distribution(task)
-                self.add_constraint(i, j, distribution=distribution)
-
-            elif self.nodes[i]['data'].node_type == "finish":
+            elif self.nodes[i]['data'].node_type == "delivery":
                 # wait time between finish of one task and start of the next one. Fixed to [0, inf]
                 self.add_constraint(i, j)
 
-    def get_navigation_distribution(self, source, destination):
-        """ Reads from the database the probability distribution for navigating from source to destination
-        """
-        # TODO: Read estimated distribution from dataset
-        distribution = "N_1_1"
-        return distribution
+    @staticmethod
+    def get_travel_time_distribution(task):
+        travel_time = task.get_inter_timepoint_constraint("travel_time")
+        travel_time_distribution = "N_" + str(travel_time.mean) + "_" + str(travel_time.standard_dev)
+        return travel_time_distribution
 
-    def get_task_distribution(self, task):
-        """ Reads from the database the estimated distribution of the task
-        In the case of transportation tasks, the estimated distribution is the navigation time from the pickup to the delivery location
-        """
-        distribution = "N_1_1"
-        return distribution
+    @staticmethod
+    def get_work_time_distribution(task):
+        work_time = task.get_inter_timepoint_constraint("work_time")
+        work_time_distribution = "N_" + str(work_time.mean) + "_" + str(work_time.standard_dev)
+        return work_time_distribution
+
+    @staticmethod
+    def get_prev_timepoint_constraint(constraint_name, next_timepoint_constraint, inter_timepoint_constraint):
+        r_earliest_time = next_timepoint_constraint.r_earliest_time - \
+                          (inter_timepoint_constraint.mean - 2*inter_timepoint_constraint.standard_dev)
+        r_latest_time = np.inf
+        return TimepointConstraint(constraint_name, r_earliest_time, r_latest_time)
+
+    @staticmethod
+    def get_next_timepoint_constraint(constraint_name, prev_timepoint_constraint, inter_timepoint_constraint):
+        r_earliest_time = 0
+        r_latest_time = np.inf
+        return TimepointConstraint(constraint_name, r_earliest_time, r_latest_time)
+
+    @staticmethod
+    def create_timepoint_constraints(r_earliest_pickup, r_latest_pickup, travel_time, work_time):
+        start_constraint = TimepointConstraint(name="start",
+                                               r_earliest_time=r_earliest_pickup - (travel_time.mean - 2*work_time.standard_dev),
+                                               r_latest_time=np.inf)
+        pickup_constraint = TimepointConstraint(name="pickup",
+                                                r_earliest_time=r_earliest_pickup,
+                                                r_latest_time=r_latest_pickup)
+        delivery_constraint = TimepointConstraint(name="delivery",
+                                                  r_earliest_time= 0,
+                                                  r_latest_time=np.inf)
+        return [start_constraint, pickup_constraint, delivery_constraint]
