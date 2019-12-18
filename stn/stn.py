@@ -176,7 +176,7 @@ class STN(nx.DiGraph):
         self.logger.debug("New constraints between nodes: %s", new_constraints_between)
 
         constraints = [((i), (i + 1)) for i in new_constraints_between[:-1]]
-        print("Constraints: %s", constraints)
+        self.logger.debug("Constraints: %s", constraints)
 
         self.add_intertimepoints_constraints(constraints, task)
 
@@ -449,6 +449,9 @@ class STN(nx.DiGraph):
             return
 
         return task_id
+
+    def get_pickup_constraint(self, task_id):
+        task_position = self.get_task_position(task_id)
 
     def get_task_position(self, task_id):
         for i, data in self.nodes.data():

@@ -96,22 +96,6 @@ class PSTN(STN):
         self.add_edge(j, i, distribution=distribution)
         self.add_edge(j, i, is_contingent=is_contingent)
 
-    # def timepoint_hard_constraints(self, node_id, task, node_type):
-    #     """ Adds the earliest and latest times to execute a timepoint (node)
-    #     Navigation timepoint [0, inf]
-    #     Start timepoint [earliest_start_time, latest_start_time]
-    #     Finish timepoint [0, inf]
-    #     """
-    #
-    #     if node_type == "navigation":
-    #         self.add_constraint(0, node_id, task.r_earliest_navigation_start_time)
-    #
-    #     if node_type == "start":
-    #         self.add_constraint(0, node_id, task.r_earliest_start_time, task.r_latest_start_time)
-    #
-    #     elif node_type == "finish":
-    #         self.add_constraint(0, node_id)
-    #
     def get_contingent_constraints(self):
         """ Returns a dictionary with the contingent constraints in the PSTN
          {(starting_node, ending_node): Constraint (object)}
