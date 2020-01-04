@@ -456,7 +456,7 @@ class STN(nx.DiGraph):
     def get_task_position(self, task_id):
         for i, data in self.nodes.data():
             if task_id == data['data'].task_id and data['data'].node_type == 'start':
-                return i
+                return math.ceil(i/3)
 
     def get_earliest_task_id(self):
         """ Returns the id of the earliest task in the stn
