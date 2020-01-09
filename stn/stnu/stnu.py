@@ -27,13 +27,19 @@ class STNU(STN):
                     lower_bound = -self[j][i]['weight']
                     upper_bound = self[i][j]['weight']
                     to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
+                    if timepoint.is_executed:
+                        to_print += " Ex"
                 # Constraints between the other timepoints
                 else:
                     if self[j][i]['is_contingent'] is True:
                         to_print += "Constraint {} => {}: [{}, {}] (contingent)".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
+                        if self[i][j]['is_executed']:
+                            to_print += " Ex"
                     else:
 
                         to_print += "Constraint {} => {}: [{}, {}]".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
+                        if self[i][j]['is_executed']:
+                            to_print += " Ex"
 
                 to_print += "\n"
 
@@ -68,7 +74,6 @@ class STNU(STN):
         super().add_constraint(i, j, wji, wij)
 
         self.add_edge(i, j, is_contingent=is_contingent)
-
         self.add_edge(j, i, is_contingent=is_contingent)
 
     def get_contingent_constraints(self):

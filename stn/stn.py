@@ -46,9 +46,13 @@ class STN(nx.DiGraph):
                     lower_bound = -self[j][i]['weight']
                     upper_bound = self[i][j]['weight']
                     to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
+                    if timepoint.is_executed:
+                        to_print += " Ex"
                 # Constraints between the other timepoints
                 else:
                     to_print += "Constraint {} => {}: [{}, {}]".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
+                    if self[i][j]['is_executed']:
+                        to_print += " Ex"
 
                 to_print += "\n"
 
@@ -80,8 +84,8 @@ class STN(nx.DiGraph):
         # Maximum allocated time between i and j
         max_time = wij
 
-        self.add_edge(j, i, weight=min_time)
-        self.add_edge(i, j, weight=max_time)
+        self.add_edge(j, i, weight=min_time, is_executed=False)
+        self.add_edge(i, j, weight=max_time, is_executed=False)
 
     def remove_constraint(self, i, j):
         """ i : starting node id
@@ -276,6 +280,18 @@ class STN(nx.DiGraph):
                     # wait time between finish of one task and start of the next one
                     self.add_constraint(i, j)
 
+    def remove_node_ids(self, node_ids):
+        # Assumes that the node_ids are in consecutive order from node_id 1 onwards
+        for node_id in node_ids:
+            self.remove_node(node_id)
+
+        # Displace all remaining nodes by 3
+        mapping = {}
+        for node_id, data in self.nodes(data=True):
+            if node_id > 0:
+                mapping[node_id] = node_id - 3
+        nx.relabel_nodes(self, mapping, copy=False)
+
     def get_tasks(self):
         """
         Gets the tasks (in order)
@@ -284,9 +300,8 @@ class STN(nx.DiGraph):
         """
         tasks = list()
         for i in self.nodes():
-            if self.nodes[i]['data'].node_type == "start":
+            if self.nodes[i]['data'].task_id not in tasks and self.nodes[i]['data'].node_type != 'zero_timepoint':
                 tasks.append(self.nodes[i]['data'].task_id)
-
         return tasks
 
     def is_consistent(self, shortest_path_array):
@@ -450,9 +465,6 @@ class STN(nx.DiGraph):
 
         return task_id
 
-    def get_pickup_constraint(self, task_id):
-        task_position = self.get_task_position(task_id)
-
     def get_task_position(self, task_id):
         for i, data in self.nodes.data():
             if task_id == data['data'].task_id and data['data'].node_type == 'start':
@@ -488,6 +500,12 @@ class STN(nx.DiGraph):
 
         return node_ids
 
+    def get_task_graph(self, task_id):
+        node_ids = self.get_task_node_ids(task_id)
+        node_ids.insert(0, 0)
+        task_graph = self.subgraph(node_ids)
+        return task_graph
+
     def get_subgraph(self, n_tasks):
         """ Returns a subgraph of the stn that includes the nodes of the first n_tasks
         and the zero timepoint
@@ -508,6 +526,56 @@ class STN(nx.DiGraph):
 
         sub_graph = self.subgraph(node_ids)
         return sub_graph
+
+    def execute_timepoint(self, task_id, node_type):
+        for i in self.nodes():
+            node_data = self.nodes[i]['data']
+            if node_data.task_id == task_id and node_data.node_type == node_type:
+                node_data.is_executed = True
+
+    def execute_edge(self, node_1, node_2):
+        nx.set_edge_attributes(self, {(node_1, node_2): {'is_executed': True},
+                                      (node_2, node_1): {'is_executed': True}})
+
+    def execute_incoming_edge(self, task_id, node_type):
+        finish_node_idx = self.get_edge_node_idx(task_id, node_type)
+        if node_type == "start":
+            return
+        elif node_type == "pickup":
+            start_node_idx = self.get_edge_node_idx(task_id, "start")
+        elif node_type == "delivery":
+            start_node_idx = self.get_edge_node_idx(task_id, "pickup")
+        self.execute_edge(start_node_idx, finish_node_idx)
+
+    def remove_old_timepoints(self):
+        nodes_to_remove = list()
+        for i in self.nodes():
+            node_data = self.nodes[i]['data']
+            if not node_data.is_executed:
+                continue
+            if node_data.is_executed and (self.has_edge(i, i+1) and self[i][i+1]['is_executed']):
+                nodes_to_remove.append(i)
+            elif node_data.is_executed and not self.has_edge(i, i+1):
+                nodes_to_remove.append(i)
+
+        for node in nodes_to_remove:
+            self.remove_node(node)
+
+    def get_edge_node_idx(self, task_id, node_type):
+        for i in self.nodes():
+            node_data = self.nodes[i]['data']
+            if node_data.task_id == task_id and node_data.node_type == node_type:
+                return i
+
+    def get_edge_nodes_idx(self, task_id, node_type_1, node_type_2):
+        for i in self.nodes():
+            node_data = self.nodes[i]['data']
+            if node_data.task_id == task_id and node_data.node_type == node_type_1:
+                start_node_idx = i
+            elif node_data.task_id == task_id and node_data.node_type == node_type_2:
+                finish_node_idx = i
+
+        return start_node_idx, finish_node_idx
 
     def to_json(self):
         stn_dict = self.to_dict()
