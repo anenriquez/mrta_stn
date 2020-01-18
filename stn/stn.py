@@ -320,7 +320,7 @@ class STN(nx.DiGraph):
             for n in nodes:
                 self.update_edge_weight(column, n, shortest_path_array[column][n])
 
-    def update_edge_weight(self, i, j, weight, create=False):
+    def update_edge_weight(self, i, j, weight, force=False):
         """ Updates the weight of the edge between node starting_node and node ending_node
 
         Updates the weight if the new weight is less than the previous weight
@@ -340,7 +340,10 @@ class STN(nx.DiGraph):
             if weight < self[i][j]['weight']:
                 self[i][j]['weight'] = weight
 
-    def assign_timepoint(self, allotted_time, task_id, node_type):
+            if force:
+                self[i][j]['weight'] = weight
+
+    def assign_timepoint(self, allotted_time, task_id, node_type, force=False):
         """
         Assigns the allotted time to the earliest and latest time of the timepoint
         of task_id of type node_type
@@ -353,8 +356,8 @@ class STN(nx.DiGraph):
         for i in self.nodes():
             node_data = self.nodes[i]['data']
             if node_data.task_id == task_id and node_data.node_type == node_type:
-                self.update_edge_weight(0, i, allotted_time)
-                self.update_edge_weight(i, 0, -allotted_time)
+                self.update_edge_weight(0, i, allotted_time, force)
+                self.update_edge_weight(i, 0, -allotted_time, force)
                 break
 
     def get_edge_weight(self, i, j):
@@ -455,10 +458,16 @@ class STN(nx.DiGraph):
         Returns: (string) task id
 
         """
-        start_node = 2 * position + (position-2)
+        start_node_id = 2 * position + (position-2)
+        pickup_node_id = start_node_id + 1
+        delivery_node_id = pickup_node_id + 1
 
-        if self.has_node(start_node):
-            task_id = self.nodes[start_node]['data'].task_id
+        if self.has_node(start_node_id):
+            task_id = self.nodes[start_node_id]['data'].task_id
+        elif self.has_node(pickup_node_id):
+            task_id = self.nodes[pickup_node_id]['data'].task_id
+        elif self.has_node(delivery_node_id):
+            task_id = self.nodes[delivery_node_id]['data'].task_id
         else:
             self.logger.error("There is no task in position %s", position)
             return
