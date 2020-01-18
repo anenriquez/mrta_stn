@@ -3,112 +3,134 @@
       {
          "source":0,
          "target":1,
-         "weight":41.0
+         "weight":41.0,
+         "is_executed": false
       },
       {
          "source":0,
          "target":2,
-         "weight":47.0
+         "weight":47.0,
+         "is_executed": false
       },
       {
          "source":0,
          "target":3,
-         "weight":51.0
+         "weight":51.0,
+         "is_executed": false
       },
       {
          "source":0,
          "target":4,
-         "weight":96.0
+         "weight":96.0,
+         "is_executed": false
       },
       {
          "source":0,
          "target":5,
-         "weight":102.0
+         "weight":102.0,
+         "is_executed": false
       },
       {
          "source":0,
          "target":6,
-         "weight":106.0
+         "weight":106.0,
+         "is_executed": false
       },
       {
          "source":1,
          "target":0,
-         "weight":-35.0
+         "weight":-35.0,
+         "is_executed": false
       },
       {
          "source":1,
          "target":2,
-         "weight":Infinity
+         "weight":Infinity,
+         "is_executed": false
       },
       {
          "source":2,
          "target":0,
-         "weight":-41.0
+         "weight":-41.0,
+         "is_executed": false
       },
       {
          "source":2,
          "target":1,
-         "weight":-6.0
+         "weight":-6.0,
+         "is_executed": false
       },
       {
          "source":2,
          "target":3,
-         "weight":Infinity
+         "weight":Infinity,
+         "is_executed": false
       },
       {
          "source":3,
          "target":0,
-         "weight":-45.0
+         "weight":-45.0,
+         "is_executed": false
       },
       {
          "source":3,
          "target":2,
-         "weight":-4.0
+         "weight":-4.0,
+         "is_executed": false
       },
       {
          "source":3,
          "target":4,
-         "weight":Infinity
+         "weight":Infinity,
+         "is_executed": false
       },
       {
          "source":4,
          "target":0,
-         "weight":-90.0
+         "weight":-90.0,
+         "is_executed": false
       },
       {
          "source":4,
          "target":3,
-         "weight":-0.0
+         "weight":-0.0,
+         "is_executed": false
       },
       {
          "source":4,
          "target":5,
-         "weight":Infinity
+         "weight":Infinity,
+         "is_executed": false
       },
       {
          "source":5,
          "target":0,
-         "weight":-96.0
+         "weight":-96.0,
+         "is_executed": false
       },
       {
          "source":5,
          "target":4,
-         "weight":-6.0
+         "weight":-6.0,
+         "is_executed": false
       },
       {
          "source":5,
          "target":6,
-         "weight":Infinity
+         "weight":Infinity,
+         "is_executed": false
       },
       {
          "source":6,
          "target":0,
-         "weight":-100.0
+         "weight":-100.0,
+         "is_executed": false
       },
       {
          "source":6,
          "target":5,
-         "weight":-4.0
+         "weight":-4.0,
+         "is_executed": false
       }
    ],
    "graph":{

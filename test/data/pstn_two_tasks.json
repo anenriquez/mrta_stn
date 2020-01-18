@@ -5,154 +5,176 @@
          "target":1,
          "weight":Infinity,
          "source":0,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":2,
          "weight":47.0,
          "source":0,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":3,
          "weight":Infinity,
          "source":0,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":4,
          "weight":Infinity,
          "source":0,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":5,
          "weight":102.0,
          "source":0,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":6,
          "weight":Infinity,
          "source":0,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":0,
          "weight":-0.0,
          "source":1,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"N_6_1",
          "target":2,
          "weight":Infinity,
          "source":1,
-         "is_contingent":true
+         "is_contingent":true,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":0,
          "weight":-41.0,
          "source":2,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"N_6_1",
          "target":1,
          "weight":-0.0,
          "source":2,
-         "is_contingent":true
+         "is_contingent":true,
+         "is_executed": false
       },
       {
          "distribution":"N_4_1",
          "target":3,
          "weight":Infinity,
          "source":2,
-         "is_contingent":true
+         "is_contingent":true,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":0,
          "weight":-0.0,
          "source":3,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"N_4_1",
          "target":2,
          "weight":-0.0,
          "source":3,
-         "is_contingent":true
+         "is_contingent":true,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":4,
          "weight":Infinity,
          "source":3,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":0,
          "weight":-0.0,
          "source":4,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":3,
          "weight":-0.0,
          "source":4,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"N_6_1",
          "target":5,
          "weight":Infinity,
          "source":4,
-         "is_contingent":true
+         "is_contingent":true,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":0,
          "weight":-96.0,
          "source":5,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"N_6_1",
          "target":4,
          "weight":-0.0,
          "source":5,
-         "is_contingent":true
+         "is_contingent":true,
+         "is_executed": false
       },
       {
          "distribution":"N_4_1",
          "target":6,
          "weight":Infinity,
          "source":5,
-         "is_contingent":true
+         "is_contingent":true,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":0,
          "weight":-0.0,
          "source":6,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"N_4_1",
          "target":5,
          "weight":-0.0,
          "source":6,
-         "is_contingent":true
+         "is_contingent":true,
+         "is_executed": false
       }
    ],
    "graph":{

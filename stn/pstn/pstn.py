@@ -53,13 +53,19 @@ class PSTN(STN):
                     lower_bound = -self[j][i]['weight']
                     upper_bound = self[i][j]['weight']
                     to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
+                    if timepoint.is_executed:
+                        to_print += " Ex"
                 # Constraints between the other timepoints
                 else:
                     if 'is_contingent' in self[j][i]:
                         to_print += "Constraint {} => {}: [{}, {}] ({})".format(i, j, -self[j][i]['weight'], self[i][j]['weight'], self[i][j]['distribution'])
+                        if self[i][j]['is_executed']:
+                            to_print += " Ex"
                     else:
 
                         to_print += "Constraint {} => {}: [{}, {}]".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
+                        if self[i][j]['is_executed']:
+                            to_print += " Ex"
 
                 to_print += "\n"
 
@@ -90,11 +96,8 @@ class PSTN(STN):
 
         super().add_constraint(i, j, wji, wij)
 
-        self.add_edge(i, j, distribution=distribution)
-        self.add_edge(i, j, is_contingent=is_contingent)
-
-        self.add_edge(j, i, distribution=distribution)
-        self.add_edge(j, i, is_contingent=is_contingent)
+        self.add_edge(i, j, distribution=distribution, is_contingent=is_contingent)
+        self.add_edge(j, i, distribution=distribution, is_contingent=is_contingent)
 
     def get_contingent_constraints(self):
         """ Returns a dictionary with the contingent constraints in the PSTN
