@@ -245,6 +245,31 @@ class STN(nx.DiGraph):
         self.logger.info("Nodes: %s ", self.number_of_nodes())
         self.logger.info("Edges: %s ", self.number_of_edges())
 
+    def update_task(self, task):
+        position = self.get_task_position(task.task_id)
+        start_node_id = 2 * position + (position-2)
+        pickup_node_id = start_node_id + 1
+        delivery_node_id = pickup_node_id + 1
+
+        # Adding an existing timepoint constraint updates the constraint
+        self.add_timepoint_constraint(start_node_id, task.get_timepoint_constraint("start"))
+        self.add_timepoint_constraint(pickup_node_id, task.get_timepoint_constraint("pickup"))
+        self.add_timepoint_constraint(delivery_node_id, task.get_timepoint_constraint("delivery"))
+
+        # Add constraints between new nodes
+        new_constraints_between = [start_node_id, pickup_node_id, delivery_node_id]
+
+        # Check if there is a node after the new delivery node
+        if self.has_node(delivery_node_id+1):
+            new_constraints_between.append(delivery_node_id+1)
+
+        # Check if there is a node before the new start node
+        if self.has_node(start_node_id-1):
+            new_constraints_between.insert(0, start_node_id-1)
+
+        constraints = [((i), (i + 1)) for i in new_constraints_between[:-1]]
+        self.add_intertimepoints_constraints(constraints, task)
+
     def remove_task(self, position=1):
         """ Removes the task from the given position"""
 

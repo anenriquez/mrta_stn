@@ -1,7 +1,8 @@
 import numpy as np
+from stn.utils.as_dict import AsDictMixin
 
 
-class InterTimepointConstraint:
+class InterTimepointConstraint(AsDictMixin):
     def __init__(self, name, mean, variance, **kwargs):
         self.name = name
         self.mean = round(mean, 3)
@@ -14,7 +15,7 @@ class InterTimepointConstraint:
         return to_print
 
 
-class TimepointConstraint:
+class TimepointConstraint(AsDictMixin):
     """
         r_earliest_time (float): earliest time relative to a ztp
         r_latest_time (float): latest time relative to a ztp
@@ -31,7 +32,7 @@ class TimepointConstraint:
         return to_print
 
 
-class Task(object):
+class Task(AsDictMixin):
     def __init__(self, task_id, timepoint_constraints, inter_timepoint_constraints):
 
         """ Constructor for the Task object
@@ -83,3 +84,27 @@ class Task(object):
                                                                   r_earliest_time,
                                                                   r_latest_time))
 
+    def to_dict(self):
+        dict_repr = super().to_dict()
+        timepoint_constraints = list()
+        inter_timepoint_constraints = list()
+        for c in self.timepoint_constraints:
+            timepoint_constraints.append(c.to_dict())
+        for c in self.inter_timepoint_constraints:
+            inter_timepoint_constraints.append(c.to_dict())
+        dict_repr.update(timepoint_constraints=timepoint_constraints)
+        dict_repr.update(inter_timepoint_constraints=inter_timepoint_constraints)
+        return dict_repr
+
+    @classmethod
+    def to_attrs(cls, dict_repr):
+        attrs = super().to_attrs(dict_repr)
+        timepoint_constraints = list()
+        inter_timepoint_constraints = list()
+        for c in attrs.get("timepoint_constraints"):
+            timepoint_constraints.append(TimepointConstraint.from_dict(c))
+        for c in attrs.get("inter_timepoint_constraints"):
+            inter_timepoint_constraints.append(InterTimepointConstraint.from_dict(c))
+        attrs.update(timepoint_constraints=timepoint_constraints)
+        attrs.update(inter_timepoint_constraints=inter_timepoint_constraints)
+        return attrs
