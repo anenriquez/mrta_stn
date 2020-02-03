@@ -589,8 +589,6 @@ class STN(nx.DiGraph):
                 continue
             if node_data.is_executed and (self.has_edge(i, i+1) and self[i][i+1]['is_executed']):
                 nodes_to_remove.append(i)
-            elif node_data.is_executed and not self.has_edge(i, i+1):
-                nodes_to_remove.append(i)
 
         for node in nodes_to_remove:
             self.remove_node(node)
