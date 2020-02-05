@@ -29,7 +29,7 @@ class TestDSC(unittest.TestCase):
         # Convert the dict to a json string
         stnu_json = json.dumps(stnu_dict)
 
-        self.stp = STP('dsc_lp')
+        self.stp = STP('dsc')
         self.stn = self.stp.get_stn(stn_json=stnu_json)
 
     def test_build_stn(self):

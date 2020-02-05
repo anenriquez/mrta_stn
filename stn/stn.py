@@ -333,7 +333,9 @@ class STN(nx.DiGraph):
         """The STN is not consistent if it has negative cycles"""
         consistent = True
         for node, nodes in shortest_path_array.items():
-            if not math.isclose(nodes[node], 0.0, abs_tol=1e-09):
+            # Check if the tolerance is too large. Maybe it is better to use
+            # only integers and change the resolution to seconds
+            if not math.isclose(nodes[node], 0.0, abs_tol=1e-01):
                 consistent = False
         return consistent
 

@@ -91,12 +91,11 @@ class STNU(STN):
     def get_contingent_timepoints(self):
         """ Returns a list with the contingent (uncontrollable) timepoints in the STNU
         """
-        timepoints = list(self.nodes)
         contingent_timepoints = list()
 
         for (i, j, data) in self.edges.data():
             if self[i][j]['is_contingent'] is True and i < j:
-                contingent_timepoints.append(timepoints[j])
+                contingent_timepoints.append(j)
 
         return contingent_timepoints
 
@@ -123,7 +122,10 @@ class STNU(STN):
             self.logger.debug("Adding constraint: %s ", (i, j))
             if self.nodes[i]['data'].node_type == "start":
                 lower_bound, upper_bound = self.get_travel_time_bounded_duration(task)
-                self.add_constraint(i, j, lower_bound, upper_bound, is_contingent=True)
+                if lower_bound == upper_bound:
+                    self.add_constraint(i, j, 0, 0)
+                else:
+                    self.add_constraint(i, j, lower_bound, upper_bound, is_contingent=True)
 
             elif self.nodes[i]['data'].node_type == "pickup":
                 lower_bound, upper_bound = self.get_work_time_bounded_duration(task)

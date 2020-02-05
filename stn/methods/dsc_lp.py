@@ -22,6 +22,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import copy
 
 import pulp
 import sys
@@ -43,7 +44,7 @@ class DSC_LP(object):
     logger = logging.getLogger('stn.dsc_lp')
 
     def __init__(self, stnu):
-        self.stnu = stnu
+        self.stnu = copy.deepcopy(stnu)
         self.constraints = stnu.get_constraints()
         self.contingent_constraints = stnu.get_contingent_constraints()
         self.contingent_timepoints = stnu.get_contingent_timepoints()
