@@ -147,10 +147,10 @@ class FullPathConsistency(object):
 stn_factory = STNFactory()
 stn_factory.register_stn('fpc', STN)
 stn_factory.register_stn('srea', PSTN)
-stn_factory.register_stn('dsc_lp', STNU)
+stn_factory.register_stn('dsc', STNU)
 
 stp_solver_factory = STPSolverFactory()
 stp_solver_factory.register_solver('fpc', FullPathConsistency)
 stp_solver_factory.register_solver('srea', StaticRobustExecution)
 stp_solver_factory.register_solver('drea', StaticRobustExecution)
-stp_solver_factory.register_solver('dsc_lp', DegreeStongControllability)
+stp_solver_factory.register_solver('dsc', DegreeStongControllability)
