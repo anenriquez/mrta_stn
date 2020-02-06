@@ -31,6 +31,9 @@ class Node(object):
                 self.node_type == other.node_type and
                 self.is_executed == other.is_executed)
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def execute(self):
         self.is_executed = True
 
