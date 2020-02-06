@@ -58,6 +58,27 @@ class STN(nx.DiGraph):
 
         return to_print
 
+    def __eq__(self, other):
+        if other is None:
+            return False
+        if len(other.nodes()) != len(self.nodes()):
+            return False
+        for (i, j, data) in self.edges.data():
+            if other.has_edge(i, j):
+                if other[i][j]['weight'] != self[i][j]['weight']:
+                    return False
+            else:
+                return False
+            if other.has_node(i):
+                if other.nodes[i]['data'] != self.nodes[i]['data'] :
+                    return False
+            else:
+                return False
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def add_zero_timepoint(self):
         node = Node(generate_uuid(), 'zero_timepoint')
         self.add_node(0, data=node)
