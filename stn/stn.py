@@ -460,9 +460,9 @@ class STN(nx.DiGraph):
 
         for i, task_id in enumerate(task_ids):
             if i > 0:
-                r_earliest_finish_time_previous_task = self.get_time(task_ids[i-1], "delivery")
-                r_earliest_start_time = self.get_time(task_ids[i], "pickup")
-                idle_time += round(r_earliest_start_time - r_earliest_finish_time_previous_task)
+                r_earliest_delivery_time_previous_task = self.get_time(task_ids[i-1], "delivery")
+                r_earliest_start_time = self.get_time(task_ids[i], "start")
+                idle_time += round(r_earliest_start_time - r_earliest_delivery_time_previous_task)
         return idle_time
 
     def add_timepoint_constraint(self, node_id, timepoint_constraint):
