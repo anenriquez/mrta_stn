@@ -129,8 +129,10 @@ class PSTN(STN):
             self.logger.debug("Adding constraint: %s ", (i, j))
             if self.nodes[i]['data'].node_type == "start":
                 distribution = self.get_travel_time_distribution(task)
-                if distribution == "N_0.0_0.0":
-                    self.add_constraint(i, j, 0, 0)
+                if distribution.endswith("_0.0"):  # the distribution has no variation (stdev is 0)
+                    # Make the constraint a requirement constraint
+                    mean = float(distribution.split("_")[1])
+                    self.add_constraint(i, j, mean, 0)
                 else:
                     self.add_constraint(i, j, distribution=distribution)
 
