@@ -408,6 +408,13 @@ class STN(nx.DiGraph):
                 self.update_edge_weight(i, 0, -allotted_time, force)
                 break
 
+    def assign_earliest_time(self, time_, task_id, node_type, force=False):
+        for i in self.nodes():
+            node_data = self.nodes[i]['data']
+            if node_data.task_id == task_id and node_data.node_type == node_type:
+                self.update_edge_weight(i, 0, -time_, force)
+                break
+
     def get_edge_weight(self, i, j):
         """ Returns the weight of the edge between node starting_node and node ending_node
         :param i: starting_node_id
