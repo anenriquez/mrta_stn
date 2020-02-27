@@ -47,7 +47,7 @@ class TestDSC(unittest.TestCase):
         self.logger.info("Completion time: %s ", completion_time)
         self.logger.info("Makespan: %s ", makespan)
 
-        self.assertEqual(completion_time, 61)
+        self.assertEqual(completion_time, 157)
         self.assertEqual(makespan, 98)
 
         expected_risk_metric = 0.0

@@ -48,7 +48,7 @@ class TestSREA(unittest.TestCase):
         self.logger.info("Completion time: %s ", completion_time)
         self.logger.info("Makespan: %s ", makespan)
 
-        self.assertEqual(completion_time, 60)
+        self.assertEqual(completion_time, 163)
         self.assertEqual(makespan, 97)
 
         expected_risk_metric = 0.0

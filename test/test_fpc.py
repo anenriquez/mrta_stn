@@ -43,7 +43,7 @@ class TestFPC(unittest.TestCase):
         self.logger.info("Completion time: %s ", completion_time)
         self.logger.info("Makespan: %s ", makespan)
 
-        self.assertEqual(completion_time, 65)
+        self.assertEqual(completion_time, 157)
         self.assertEqual(makespan, 100)
 
         constraints = minimal_network.get_constraints()
