@@ -166,9 +166,9 @@ class STNU(STN):
     @staticmethod
     def get_prev_timepoint_constraint(constraint_name, next_timepoint_constraint, inter_timepoint_constraint):
         r_earliest_time = next_timepoint_constraint.r_earliest_time - \
-                          (inter_timepoint_constraint.mean - 2*inter_timepoint_constraint.standard_dev)
-        r_latest_time = next_timepoint_constraint.r_latest_time - \
                           (inter_timepoint_constraint.mean + 2*inter_timepoint_constraint.standard_dev)
+        r_latest_time = next_timepoint_constraint.r_latest_time - \
+                          (inter_timepoint_constraint.mean - 2*inter_timepoint_constraint.standard_dev)
 
         return TimepointConstraint(constraint_name, r_earliest_time, r_latest_time)
 

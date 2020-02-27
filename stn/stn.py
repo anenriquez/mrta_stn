@@ -34,7 +34,6 @@ class STN(nx.DiGraph):
         self.add_zero_timepoint()
         self.max_makespan = MAX_FLOAT
         self.risk_metric = None
-        self.temporal_metric = None
 
     def __str__(self):
         to_print = ""
@@ -430,27 +429,20 @@ class STN(nx.DiGraph):
 
     def compute_temporal_metric(self, temporal_criterion):
         if temporal_criterion == 'completion_time':
-            self.temporal_metric = self.get_completion_time()
+            temporal_metric = self.get_completion_time()
         elif temporal_criterion == 'makespan':
-            self.temporal_metric = self.get_makespan()
+            temporal_metric = self.get_makespan()
         elif temporal_criterion == 'idle_time':
-            self.temporal_metric = self.get_idle_time()
+            temporal_metric = self.get_idle_time()
         else:
             raise ValueError(temporal_criterion)
+        return temporal_metric
 
     def get_completion_time(self):
-        nodes = list(self.nodes())
-        node_first_task = nodes[1]
-        node_last_task = nodes[-1]
-
-        start_time_lower_bound = -self[node_first_task][0]['weight']
-
-        finish_time_lower_bound = -self[node_last_task][0]['weight']
-
-        self.logger.debug("Start time: %s", start_time_lower_bound)
-        self.logger.debug("Finish time: %s", finish_time_lower_bound)
-
-        completion_time = finish_time_lower_bound - start_time_lower_bound
+        completion_time = 0
+        task_ids = self.get_tasks()
+        for i, task_id in enumerate(task_ids):
+            completion_time += self.get_time(task_id, "delivery", lower_bound=False)
 
         return completion_time
 
