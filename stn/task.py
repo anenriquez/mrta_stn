@@ -14,6 +14,18 @@ class InterTimepointConstraint(AsDictMixin):
         to_print += "{}: N({}, {})".format(self.name, self.mean, self.standard_dev)
         return to_print
 
+    def __sub__(self, other):
+        # Difference of two independent random variables
+        mean = self.mean - other.mean
+        variance = self.variance + other.variance
+        return mean, variance
+
+    def __add__(self, other):
+        # Addition of two independent random variables
+        mean = self.mean + other.mean
+        variance = self.variance + other.variance
+        return mean, variance
+
 
 class TimepointConstraint(AsDictMixin):
     """
