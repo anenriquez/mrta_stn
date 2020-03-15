@@ -132,7 +132,7 @@ class PSTN(STN):
                 if distribution.endswith("_0.0"):  # the distribution has no variation (stdev is 0)
                     # Make the constraint a requirement constraint
                     mean = float(distribution.split("_")[1])
-                    self.add_constraint(i, j, mean, 0)
+                    self.add_constraint(i, j, mean, mean)
                 else:
                     self.add_constraint(i, j, distribution=distribution)
 
