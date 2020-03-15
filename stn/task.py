@@ -96,6 +96,18 @@ class Task(AsDictMixin):
                                                                   r_earliest_time,
                                                                   r_latest_time))
 
+    def update_inter_timepoint_constraint(self, name, mean, variance):
+        in_list = False
+        for constraint in self.inter_timepoint_constraints:
+            if constraint.name == name:
+                in_list = True
+                constraint.mean = round(mean, 3)
+                constraint.variance = round(variance, 3)
+                constraint.standard_dev = round(variance ** 0.5, 3)
+        if not in_list:
+            self.inter_timepoint_constraints.append(InterTimepointConstraint(name=name, mean=mean,
+                                                                             variance=variance))
+
     def to_dict(self):
         dict_repr = super().to_dict()
         timepoint_constraints = list()
