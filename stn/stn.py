@@ -82,6 +82,19 @@ class STN(nx.DiGraph):
         node = Node(generate_uuid(), 'zero_timepoint')
         self.add_node(0, data=node)
 
+    def get_earliest_time(self):
+        edges = [e for e in self.edges]
+        first_edge = edges[0]
+        return -self[first_edge[1]][0]['weight']
+
+    def get_latest_time(self):
+        edges = [e for e in self.edges]
+        last_edge = edges[-1]
+        return self[0][last_edge[0]]['weight']
+
+    def is_empty(self):
+        return nx.is_empty(self)
+
     def add_constraint(self, i, j, wji=0.0, wij=float('inf')):
         """
         Adds constraint between nodes i and j
