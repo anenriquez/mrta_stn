@@ -82,6 +82,19 @@ class STN(nx.DiGraph):
         node = Node(generate_uuid(), 'zero_timepoint')
         self.add_node(0, data=node)
 
+    def get_earliest_time(self):
+        edges = [e for e in self.edges]
+        first_edge = edges[0]
+        return -self[first_edge[1]][0]['weight']
+
+    def get_latest_time(self):
+        edges = [e for e in self.edges]
+        last_edge = edges[-1]
+        return self[0][last_edge[0]]['weight']
+
+    def is_empty(self):
+        return nx.is_empty(self)
+
     def add_constraint(self, i, j, wji=0.0, wij=float('inf')):
         """
         Adds constraint between nodes i and j
@@ -540,6 +553,22 @@ class STN(nx.DiGraph):
 
         self.logger.debug("STN has no tasks yet")
 
+    def get_task_nodes(self, task_id):
+        """ Gets the nodes in the stn associated with the given task_id
+
+        Args:
+            task_id: (string) id of the task
+
+        Returns: list of node ids
+
+        """
+        nodes = list()
+        for i in self.nodes():
+            if task_id == self.nodes[i]['data'].task_id:
+                nodes.append(self.nodes[i]['data'])
+
+        return nodes
+
     def get_task_node_ids(self, task_id):
         """ Gets the node_ids in the stn associated with the given task_id
 
@@ -580,6 +609,21 @@ class STN(nx.DiGraph):
         # The first node in the subgraph is the zero timepoint
         node_ids.insert(0, 0)
 
+        sub_graph = self.subgraph(node_ids)
+        return sub_graph
+
+    def get_task_graph(self, task_id):
+        """ Returns a graph with the nodes of the task_id
+
+        Args:
+            task_id: ID of the task
+
+        Returns: nx graph with nodes of task_id
+
+        """
+        node_ids = self.get_task_node_ids(task_id)
+        # The first node in the subgraph is the zero timepoint
+        node_ids.insert(0, 0)
         sub_graph = self.subgraph(node_ids)
         return sub_graph
 

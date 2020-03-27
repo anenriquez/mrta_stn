@@ -1,4 +1,3 @@
-import numpy as np
 from stn.utils.as_dict import AsDictMixin
 
 
@@ -84,7 +83,7 @@ class Task(AsDictMixin):
         return [constraint for constraint in self.inter_timepoint_constraints
                 if constraint.name == constraint_name].pop()
 
-    def update_timepoint_constraint(self, constraint_name, r_earliest_time, r_latest_time=np.inf):
+    def update_timepoint_constraint(self, constraint_name, r_earliest_time, r_latest_time=float('inf')):
         in_list = False
         for constraint in self.timepoint_constraints:
             if constraint.name == constraint_name:

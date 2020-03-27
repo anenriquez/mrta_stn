@@ -22,12 +22,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import logging
+from json import JSONEncoder
+
 from stn.pstn.constraint import Constraint
 from stn.stn import STN
-from json import JSONEncoder
-import logging
 from stn.task import TimepointConstraint
-import numpy as np
 
 
 class MyEncoder(JSONEncoder):
@@ -159,24 +159,24 @@ class PSTN(STN):
     @staticmethod
     def get_prev_timepoint_constraint(constraint_name, next_timepoint_constraint, inter_timepoint_constraint):
         r_earliest_time = 0
-        r_latest_time = np.inf
+        r_latest_time = float('inf')
         return TimepointConstraint(constraint_name, r_earliest_time, r_latest_time)
 
     @staticmethod
     def get_next_timepoint_constraint(constraint_name, prev_timepoint_constraint, inter_timepoint_constraint):
         r_earliest_time = 0
-        r_latest_time = np.inf
+        r_latest_time = float('inf')
         return TimepointConstraint(constraint_name, r_earliest_time, r_latest_time)
 
     @staticmethod
     def create_timepoint_constraints(r_earliest_pickup, r_latest_pickup, travel_time, work_time):
         start_constraint = TimepointConstraint(name="start",
                                                r_earliest_time=r_earliest_pickup - (travel_time.mean - 2*work_time.standard_dev),
-                                               r_latest_time=np.inf)
+                                               r_latest_time=float('inf'))
         pickup_constraint = TimepointConstraint(name="pickup",
                                                 r_earliest_time=r_earliest_pickup,
                                                 r_latest_time=r_latest_pickup)
         delivery_constraint = TimepointConstraint(name="delivery",
                                                   r_earliest_time= 0,
-                                                  r_latest_time=np.inf)
+                                                  r_latest_time=float('inf'))
         return [start_constraint, pickup_constraint, delivery_constraint]
