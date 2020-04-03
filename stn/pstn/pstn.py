@@ -27,7 +27,7 @@ from json import JSONEncoder
 
 from stn.pstn.constraint import Constraint
 from stn.stn import STN
-from stn.task import TimepointConstraint
+from stn.task import Timepoint
 
 
 class MyEncoder(JSONEncoder):
@@ -146,37 +146,24 @@ class PSTN(STN):
 
     @staticmethod
     def get_travel_time_distribution(task):
-        travel_time = task.get_inter_timepoint_constraint("travel_time")
+        travel_time = task.get_edge("travel_time")
         travel_time_distribution = "N_" + str(travel_time.mean) + "_" + str(travel_time.standard_dev)
         return travel_time_distribution
 
     @staticmethod
     def get_work_time_distribution(task):
-        work_time = task.get_inter_timepoint_constraint("work_time")
+        work_time = task.get_edge("work_time")
         work_time_distribution = "N_" + str(work_time.mean) + "_" + str(work_time.standard_dev)
         return work_time_distribution
 
     @staticmethod
-    def get_prev_timepoint_constraint(constraint_name, next_timepoint_constraint, inter_timepoint_constraint):
+    def get_prev_timepoint(timepoint_name, next_timepoint, edge_in_between):
         r_earliest_time = 0
         r_latest_time = float('inf')
-        return TimepointConstraint(constraint_name, r_earliest_time, r_latest_time)
+        return Timepoint(timepoint_name, r_earliest_time, r_latest_time)
 
     @staticmethod
-    def get_next_timepoint_constraint(constraint_name, prev_timepoint_constraint, inter_timepoint_constraint):
+    def get_next_timepoint_constraint(timepoint_name, prev_timepoint, edge_in_between):
         r_earliest_time = 0
         r_latest_time = float('inf')
-        return TimepointConstraint(constraint_name, r_earliest_time, r_latest_time)
-
-    @staticmethod
-    def create_timepoint_constraints(r_earliest_pickup, r_latest_pickup, travel_time, work_time):
-        start_constraint = TimepointConstraint(name="start",
-                                               r_earliest_time=r_earliest_pickup - (travel_time.mean - 2*work_time.standard_dev),
-                                               r_latest_time=float('inf'))
-        pickup_constraint = TimepointConstraint(name="pickup",
-                                                r_earliest_time=r_earliest_pickup,
-                                                r_latest_time=r_latest_pickup)
-        delivery_constraint = TimepointConstraint(name="delivery",
-                                                  r_earliest_time= 0,
-                                                  r_latest_time=float('inf'))
-        return [start_constraint, pickup_constraint, delivery_constraint]
+        return Timepoint(timepoint_name, r_earliest_time, r_latest_time)

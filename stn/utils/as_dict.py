@@ -44,7 +44,7 @@ class AsDictMixin:
 
     @classmethod
     def _get_value(cls, key, value):
-        if key == 'task_id':
+        if key in ['task_id', 'pickup_action_id', 'delivery_action_id']:
             return from_str(value)
         else:
             return value

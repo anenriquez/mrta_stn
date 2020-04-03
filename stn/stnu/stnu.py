@@ -1,7 +1,7 @@
 from stn.stn import STN
 from json import JSONEncoder
 import logging
-from stn.task import TimepointConstraint
+from stn.task import Timepoint
 
 
 class MyEncoder(JSONEncoder):
@@ -143,7 +143,7 @@ class STNU(STN):
         Shyan Akmal, Savana Ammons, Hemeng Li, and James Boerkoel Jr. Quantifying Degrees of Controllability in Temporal Networks with Uncertainty. In
         Proceedings of the 29th International Conference on Automated Planning and Scheduling, ICAPS 2019, 07 2019.
         """
-        travel_time = task.get_inter_timepoint_constraint("travel_time")
+        travel_time = task.get_edge("travel_time")
         lower_bound = travel_time.mean - 2*travel_time.standard_dev
         upper_bound = travel_time.mean + 2*travel_time.standard_dev
 
@@ -157,40 +157,26 @@ class STNU(STN):
         Shyan Akmal, Savana Ammons, Hemeng Li, and James Boerkoel Jr. Quantifying Degrees of Controllability in Temporal Networks with Uncertainty. In
         Proceedings of the 29th International Conference on Automated Planning and Scheduling, ICAPS 2019, 07 2019.
         """
-        work_time = task.get_inter_timepoint_constraint("work_time")
+        work_time = task.get_edge("work_time")
         lower_bound = work_time.mean - 2*work_time.standard_dev
         upper_bound = work_time.mean + 2*work_time.standard_dev
 
         return lower_bound, upper_bound
 
     @staticmethod
-    def get_prev_timepoint_constraint(constraint_name, next_timepoint_constraint, inter_timepoint_constraint):
-        r_earliest_time = next_timepoint_constraint.r_earliest_time - \
-                          (inter_timepoint_constraint.mean + 2*inter_timepoint_constraint.standard_dev)
-        r_latest_time = next_timepoint_constraint.r_latest_time - \
-                          (inter_timepoint_constraint.mean - 2*inter_timepoint_constraint.standard_dev)
+    def get_prev_timepoint(timepoint_name, next_timepoint, edge_in_between):
+        r_earliest_time = next_timepoint.r_earliest_time - \
+                          (edge_in_between.mean + 2*edge_in_between.standard_dev)
+        r_latest_time = next_timepoint.r_latest_time - \
+                          (edge_in_between.mean - 2*edge_in_between.standard_dev)
 
-        return TimepointConstraint(constraint_name, r_earliest_time, r_latest_time)
-
-    @staticmethod
-    def get_next_timepoint_constraint(constraint_name, prev_timepoint_constraint, inter_timepoint_constraint):
-        r_earliest_time = prev_timepoint_constraint.r_earliest_time + \
-                          (inter_timepoint_constraint.mean - 2*inter_timepoint_constraint.standard_dev)
-        r_latest_time = prev_timepoint_constraint.r_latest_time + \
-                        (inter_timepoint_constraint.mean + 2*inter_timepoint_constraint.standard_dev)
-
-        return TimepointConstraint(constraint_name, r_earliest_time, r_latest_time)
+        return Timepoint(timepoint_name, r_earliest_time, r_latest_time)
 
     @staticmethod
-    def create_timepoint_constraints(r_earliest_pickup, r_latest_pickup, travel_time, work_time):
-        start_constraint = TimepointConstraint(name="start",
-                                               r_earliest_time=r_earliest_pickup - (travel_time.mean - 2*work_time.standard_dev),
-                                               r_latest_time=r_latest_pickup - (travel_time.mean + 2*work_time.standard_dev))
-        pickup_constraint = TimepointConstraint(name="pickup",
-                                                r_earliest_time=r_earliest_pickup,
-                                                r_latest_time=r_latest_pickup)
-        delivery_constraint = TimepointConstraint(name="delivery",
-                                                  r_earliest_time=r_earliest_pickup + work_time.mean - 2*work_time.standard_dev,
-                                                  r_latest_time=r_latest_pickup + work_time.mean - 2*work_time.standard_dev)
-        return [start_constraint, pickup_constraint, delivery_constraint]
+    def get_next_timepoint(timepoint_name, prev_timepoint, edge_in_between):
+        r_earliest_time = prev_timepoint.r_earliest_time + \
+                          (edge_in_between.mean - 2*edge_in_between.standard_dev)
+        r_latest_time = prev_timepoint.r_latest_time + \
+                        (edge_in_between.mean + 2*edge_in_between.standard_dev)
 
+        return Timepoint(timepoint_name, r_earliest_time, r_latest_time)
