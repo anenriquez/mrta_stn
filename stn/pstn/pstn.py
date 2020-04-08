@@ -163,7 +163,7 @@ class PSTN(STN):
         return Timepoint(timepoint_name, r_earliest_time, r_latest_time)
 
     @staticmethod
-    def get_next_timepoint_constraint(timepoint_name, prev_timepoint, edge_in_between):
+    def get_next_timepoint(timepoint_name, prev_timepoint, edge_in_between):
         r_earliest_time = 0
         r_latest_time = float('inf')
         return Timepoint(timepoint_name, r_earliest_time, r_latest_time)
