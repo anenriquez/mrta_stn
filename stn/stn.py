@@ -575,8 +575,8 @@ class STN(nx.DiGraph):
         # The first task in the graph is the task with the earliest start time
         # The first task is in node 1, node 0 is reserved for the zero timepoint
 
-        task_id = self.get_task_id(1)
-        if task_id:
+        if self.has_node(1):
+            task_id = self.nodes[1]['data'].task_id
             return task_id
 
         self.logger.debug("STN has no tasks yet")
