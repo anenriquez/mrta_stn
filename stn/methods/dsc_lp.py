@@ -216,6 +216,8 @@ class DSC_LP(object):
 
         return the value of degree of strong controllability
         """
+        new = 1
+        orig = 1
         for i in range(len(original)):
             x, y = original[i]
             orig = y-x
