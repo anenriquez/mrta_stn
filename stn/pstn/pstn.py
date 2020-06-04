@@ -22,11 +22,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import logging
+from json import JSONEncoder
+
 from stn.pstn.constraint import Constraint
 from stn.stn import STN
-from stn.stn import Node
-from json import JSONEncoder
-import logging
+from stn.task import Timepoint
 
 
 class MyEncoder(JSONEncoder):
@@ -48,17 +49,23 @@ class PSTN(STN):
             if self.has_edge(j, i) and i < j:
                 # Constraints with the zero timepoint
                 if i == 0:
-                    timepoint = Node.from_dict(self.node[j]['data'])
+                    timepoint = self.nodes[j]['data']
                     lower_bound = -self[j][i]['weight']
                     upper_bound = self[i][j]['weight']
                     to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
+                    if timepoint.is_executed:
+                        to_print += " Ex"
                 # Constraints between the other timepoints
                 else:
                     if 'is_contingent' in self[j][i]:
                         to_print += "Constraint {} => {}: [{}, {}] ({})".format(i, j, -self[j][i]['weight'], self[i][j]['weight'], self[i][j]['distribution'])
+                        if self[i][j]['is_executed']:
+                            to_print += " Ex"
                     else:
 
                         to_print += "Constraint {} => {}: [{}, {}]".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
+                        if self[i][j]['is_executed']:
+                            to_print += " Ex"
 
                 to_print += "\n"
 
@@ -89,27 +96,8 @@ class PSTN(STN):
 
         super().add_constraint(i, j, wji, wij)
 
-        self.add_edge(i, j, distribution=distribution)
-        self.add_edge(i, j, is_contingent=is_contingent)
-
-        self.add_edge(j, i, distribution=distribution)
-        self.add_edge(j, i, is_contingent=is_contingent)
-
-    def timepoint_hard_constraints(self, node_id, task, node_type):
-        """ Adds the earliest and latest times to execute a timepoint (node)
-        Navigation timepoint [0, inf]
-        Start timepoint [earliest_start_time, latest_start_time]
-        Finish timepoint [0, inf]
-        """
-
-        if node_type == "navigation":
-            self.add_constraint(0, node_id, task.r_earliest_navigation_start_time)
-
-        if node_type == "start":
-            self.add_constraint(0, node_id, task.r_earliest_start_time, task.r_latest_start_time)
-
-        elif node_type == "finish":
-            self.add_constraint(0, node_id)
+        self.add_edge(i, j, distribution=distribution, is_contingent=is_contingent)
+        self.add_edge(j, i, distribution=distribution, is_contingent=is_contingent)
 
     def get_contingent_constraints(self):
         """ Returns a dictionary with the contingent constraints in the PSTN
@@ -126,9 +114,9 @@ class PSTN(STN):
     def add_intertimepoints_constraints(self, constraints, task):
         """ Adds constraints between the timepoints of a task
         Constraints between:
-        - navigation start and start (contingent)
-        - start and finish (contingent)
-        - finish and next task (if any) (requirement)
+        - start and pickup (contingent)
+        - pickup and delivery (contingent)
+        - delivery and next task (if any) (requirement)
         Args:
             constraints (list) : list of tuples that defines the pair of nodes between which a new constraint should be added
             Example:
@@ -139,28 +127,43 @@ class PSTN(STN):
         """
         for (i, j) in constraints:
             self.logger.debug("Adding constraint: %s ", (i, j))
-            if self.node[i]['data']['node_type'] == "navigation":
-                distribution = self.get_navigation_distribution(i, j)
+            if self.nodes[i]['data'].node_type == "start":
+                distribution = self.get_travel_time_distribution(task)
+                if distribution.endswith("_0.0"):  # the distribution has no variation (stdev is 0)
+                    # Make the constraint a requirement constraint
+                    mean = float(distribution.split("_")[1])
+                    self.add_constraint(i, j, mean, mean)
+                else:
+                    self.add_constraint(i, j, distribution=distribution)
+
+            elif self.nodes[i]['data'].node_type == "pickup":
+                distribution = self.get_work_time_distribution(task)
                 self.add_constraint(i, j, distribution=distribution)
 
-            elif self.node[i]['data']['node_type'] == "start":
-                distribution = self.get_task_distribution(task)
-                self.add_constraint(i, j, distribution=distribution)
-
-            elif self.node[i]['data']['node_type'] == "finish":
+            elif self.nodes[i]['data'].node_type == "delivery":
                 # wait time between finish of one task and start of the next one. Fixed to [0, inf]
                 self.add_constraint(i, j)
 
-    def get_navigation_distribution(self, source, destination):
-        """ Reads from the database the probability distribution for navigating from source to destination
-        """
-        # TODO: Read estimated distribution from dataset
-        distribution = "N_1_1"
-        return distribution
+    @staticmethod
+    def get_travel_time_distribution(task):
+        travel_time = task.get_edge("travel_time")
+        travel_time_distribution = "N_" + str(travel_time.mean) + "_" + str(travel_time.standard_dev)
+        return travel_time_distribution
 
-    def get_task_distribution(self, task):
-        """ Reads from the database the estimated distribution of the task
-        In the case of transportation tasks, the estimated distribution is the navigation time from the pickup to the delivery location
-        """
-        distribution = "N_1_1"
-        return distribution
+    @staticmethod
+    def get_work_time_distribution(task):
+        work_time = task.get_edge("work_time")
+        work_time_distribution = "N_" + str(work_time.mean) + "_" + str(work_time.standard_dev)
+        return work_time_distribution
+
+    @staticmethod
+    def get_prev_timepoint(timepoint_name, next_timepoint, edge_in_between):
+        r_earliest_time = 0
+        r_latest_time = float('inf')
+        return Timepoint(timepoint_name, r_earliest_time, r_latest_time)
+
+    @staticmethod
+    def get_next_timepoint(timepoint_name, prev_timepoint, edge_in_between):
+        r_earliest_time = 0
+        r_latest_time = float('inf')
+        return Timepoint(timepoint_name, r_earliest_time, r_latest_time)

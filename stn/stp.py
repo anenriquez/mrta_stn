@@ -1,5 +1,7 @@
+import networkx as nx
+
 from stn.config.config import stn_factory, stp_solver_factory
-from stn.methods.fpc import get_minimal_network
+from stn.exceptions.stp import NoSTPSolution
 
 """ Solves a Simple Temporal Problem (STP)
 
@@ -48,26 +50,18 @@ class STP(object):
     def solve(self, stn):
         """ Computes the dispatchable graph and risk metric of the given stn
         """
-        result_stp = self.solver.compute_dispatchable_graph(stn)
-        return result_stp
+        dispatchable_graph = self.solver.compute_dispatchable_graph(stn)
 
-    @staticmethod
-    def compute_temporal_metric(dispatchable_graph, temporal_criterion):
-        if temporal_criterion == 'completion_time':
-            temporal_metric = dispatchable_graph.get_completion_time()
-        elif temporal_criterion == 'makespan':
-            temporal_metric = dispatchable_graph.get_makespan()
-        else:
-            raise ValueError(temporal_criterion)
+        if dispatchable_graph is None:
+            raise NoSTPSolution()
 
-        return temporal_metric
+        return dispatchable_graph
 
     @staticmethod
     def is_consistent(stn):
-        minimal_network = get_minimal_network(stn)
-        if minimal_network:
+        shortest_path_array = nx.floyd_warshall(stn)
+        if stn.is_consistent(shortest_path_array):
             return True
-        else:
-            return False
+        return False
 
 

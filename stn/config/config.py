@@ -82,7 +82,9 @@ class StaticRobustExecution(object):
             return
         risk_metric, dispatchable_graph = result
 
-        return risk_metric, dispatchable_graph
+        dispatchable_graph.risk_metric = risk_metric
+
+        return dispatchable_graph
 
 
 class DegreeStongControllability(object):
@@ -108,14 +110,16 @@ class DegreeStongControllability(object):
 
         stnu = dsc_lp.get_stnu(bounds)
 
-        # Returns a schedule because it is an offline approach
+        # The dispatchable graph is a schedule because it is an offline approach
         schedule = dsc_lp.get_schedule(bounds)
 
         # A strongly controllable STNU has a DSC of 1, i.e., a DSC value of 1 is better. We take
         # 1 − DC to be the risk metric, so that small values are preferable
         risk_metric = 1 - dsc
 
-        return risk_metric, schedule
+        schedule.risk_metric = risk_metric
+
+        return schedule
 
 
 class FullPathConsistency(object):
@@ -134,15 +138,19 @@ class FullPathConsistency(object):
         if dispatchable_graph is None:
             return
         risk_metric = 1
-        return risk_metric, dispatchable_graph
+
+        dispatchable_graph.risk_metric = risk_metric
+
+        return dispatchable_graph
 
 
 stn_factory = STNFactory()
 stn_factory.register_stn('fpc', STN)
 stn_factory.register_stn('srea', PSTN)
-stn_factory.register_stn('dsc_lp', STNU)
+stn_factory.register_stn('dsc', STNU)
 
 stp_solver_factory = STPSolverFactory()
 stp_solver_factory.register_solver('fpc', FullPathConsistency)
 stp_solver_factory.register_solver('srea', StaticRobustExecution)
-stp_solver_factory.register_solver('dsc_lp', DegreeStongControllability)
+stp_solver_factory.register_solver('drea', StaticRobustExecution)
+stp_solver_factory.register_solver('dsc', DegreeStongControllability)

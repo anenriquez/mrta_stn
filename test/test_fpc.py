@@ -34,7 +34,7 @@ class TestFPC(unittest.TestCase):
     def test_build_stn(self):
         self.logger.info("STN: \n %s", self.stn)
 
-        metric, minimal_network = self.stp.solve(self.stn)
+        minimal_network = self.stp.solve(self.stn)
 
         self.logger.info("Minimal STN: \n %s", minimal_network)
 
@@ -43,7 +43,7 @@ class TestFPC(unittest.TestCase):
         self.logger.info("Completion time: %s ", completion_time)
         self.logger.info("Makespan: %s ", makespan)
 
-        self.assertEqual(completion_time, 65)
+        self.assertEqual(completion_time, 157)
         self.assertEqual(makespan, 100)
 
         constraints = minimal_network.get_constraints()

@@ -1,7 +1,7 @@
 from stn.stn import STN
-from stn.stn import Node
 from json import JSONEncoder
 import logging
+from stn.task import Timepoint
 
 
 class MyEncoder(JSONEncoder):
@@ -23,17 +23,23 @@ class STNU(STN):
             if self.has_edge(j, i) and i < j:
                 # Constraints with the zero timepoint
                 if i == 0:
-                    timepoint = Node.from_dict(self.node[j]['data'])
+                    timepoint = self.nodes[j]['data']
                     lower_bound = -self[j][i]['weight']
                     upper_bound = self[i][j]['weight']
                     to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
+                    if timepoint.is_executed:
+                        to_print += " Ex"
                 # Constraints between the other timepoints
                 else:
                     if self[j][i]['is_contingent'] is True:
                         to_print += "Constraint {} => {}: [{}, {}] (contingent)".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
+                        if self[i][j]['is_executed']:
+                            to_print += " Ex"
                     else:
 
                         to_print += "Constraint {} => {}: [{}, {}]".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
+                        if self[i][j]['is_executed']:
+                            to_print += " Ex"
 
                 to_print += "\n"
 
@@ -68,24 +74,7 @@ class STNU(STN):
         super().add_constraint(i, j, wji, wij)
 
         self.add_edge(i, j, is_contingent=is_contingent)
-
         self.add_edge(j, i, is_contingent=is_contingent)
-
-    def timepoint_hard_constraints(self, node_id, task, node_type):
-        """ Adds the earliest and latest times to execute a timepoint (node)
-        Navigation timepoint [0, inf]
-        Start timepoint [earliest_start_time, latest_start_time]
-        Finish timepoint [0, inf]
-        """
-
-        if node_type == "navigation":
-            self.add_constraint(0, node_id, task.r_earliest_navigation_start_time)
-
-        if node_type == "start":
-            self.add_constraint(0, node_id, task.r_earliest_start_time, task.r_latest_start_time)
-
-        elif node_type == "finish":
-            self.add_constraint(0, node_id)
 
     def get_contingent_constraints(self):
         """ Returns a dictionary with the contingent constraints in the STNU
@@ -102,12 +91,11 @@ class STNU(STN):
     def get_contingent_timepoints(self):
         """ Returns a list with the contingent (uncontrollable) timepoints in the STNU
         """
-        timepoints = list(self.nodes)
         contingent_timepoints = list()
 
         for (i, j, data) in self.edges.data():
             if self[i][j]['is_contingent'] is True and i < j:
-                contingent_timepoints.append(timepoints[j])
+                contingent_timepoints.append(j)
 
         return contingent_timepoints
 
@@ -132,56 +120,63 @@ class STNU(STN):
         """
         for (i, j) in constraints:
             self.logger.debug("Adding constraint: %s ", (i, j))
-            if self.node[i]['data']['node_type'] == "navigation":
-                lower_bound, upper_bound = self.get_navigation_bounded_duration(i, j)
+            if self.nodes[i]['data'].node_type == "start":
+                lower_bound, upper_bound = self.get_travel_time_bounded_duration(task)
+                if lower_bound == upper_bound:
+                    self.add_constraint(i, j, 0, 0)
+                else:
+                    self.add_constraint(i, j, lower_bound, upper_bound, is_contingent=True)
+
+            elif self.nodes[i]['data'].node_type == "pickup":
+                lower_bound, upper_bound = self.get_work_time_bounded_duration(task)
                 self.add_constraint(i, j, lower_bound, upper_bound, is_contingent=True)
 
-            elif self.node[i]['data']['node_type'] == "start":
-                lower_bound, upper_bound = self.get_task_bounded_duration(task)
-                self.add_constraint(i, j, lower_bound, upper_bound, is_contingent=True)
-
-            elif self.node[i]['data']['node_type'] == "finish":
+            elif self.nodes[i]['data'].node_type == "delivery":
                 # wait time between finish of one task and start of the next one. Fixed to [0, inf]
                 self.add_constraint(i, j, 0)
 
-    def get_navigation_bounded_duration(self, source, destination):
-        """ Reads from the database the probability distribution for navigating from source to destination and converts it to a bounded interval
+    @staticmethod
+    def get_travel_time_bounded_duration(task):
+        """ Returns the estimated travel time as a bounded interval
         [mu - 2*sigma, mu + 2*sigma]
         as in:
         Shyan Akmal, Savana Ammons, Hemeng Li, and James Boerkoel Jr. Quantifying Degrees of Controllability in Temporal Networks with Uncertainty. In
         Proceedings of the 29th International Conference on Automated Planning and Scheduling, ICAPS 2019, 07 2019.
         """
-        # TODO: Read estimated distribution from database
-        distribution = "N_1_1"
-        name_split = distribution.split("_")
-        # mean
-        mu = float(name_split[1])
-        # standard deviation
-        sigma = float(name_split[2])
-
-        lower_bound = mu - 2*sigma
-        upper_bound = mu + 2*sigma
+        travel_time = task.get_edge("travel_time")
+        lower_bound = travel_time.mean - 2*travel_time.standard_dev
+        upper_bound = travel_time.mean + 2*travel_time.standard_dev
 
         return lower_bound, upper_bound
 
-    def get_task_bounded_duration(self, task):
-        """ Reads from the database the estimated distribution of the task
-        In the case of transportation tasks, the estimated distribution is the navigation time from the pickup to the delivery location
-        Converts the estimated distribution to a bounded interval
+    @staticmethod
+    def get_work_time_bounded_duration(task):
+        """ Returns the estimated work time as a bounded interval
         [mu - 2*sigma, mu + 2*sigma]
         as in:
         Shyan Akmal, Savana Ammons, Hemeng Li, and James Boerkoel Jr. Quantifying Degrees of Controllability in Temporal Networks with Uncertainty. In
         Proceedings of the 29th International Conference on Automated Planning and Scheduling, ICAPS 2019, 07 2019.
         """
-        # TODO: Read estimated distribution from database
-        distribution = "N_4_1"
-        name_split = distribution.split("_")
-        # mean
-        mu = float(name_split[1])
-        # standard deviation
-        sigma = float(name_split[2])
-
-        lower_bound = mu - 2*sigma
-        upper_bound = mu + 2*sigma
+        work_time = task.get_edge("work_time")
+        lower_bound = work_time.mean - 2*work_time.standard_dev
+        upper_bound = work_time.mean + 2*work_time.standard_dev
 
         return lower_bound, upper_bound
+
+    @staticmethod
+    def get_prev_timepoint(timepoint_name, next_timepoint, edge_in_between):
+        r_earliest_time = next_timepoint.r_earliest_time - \
+                          (edge_in_between.mean + 2*edge_in_between.standard_dev)
+        r_latest_time = next_timepoint.r_latest_time - \
+                          (edge_in_between.mean - 2*edge_in_between.standard_dev)
+
+        return Timepoint(timepoint_name, r_earliest_time, r_latest_time)
+
+    @staticmethod
+    def get_next_timepoint(timepoint_name, prev_timepoint, edge_in_between):
+        r_earliest_time = prev_timepoint.r_earliest_time + \
+                          (edge_in_between.mean - 2*edge_in_between.standard_dev)
+        r_latest_time = prev_timepoint.r_latest_time + \
+                        (edge_in_between.mean + 2*edge_in_between.standard_dev)
+
+        return Timepoint(timepoint_name, r_earliest_time, r_latest_time)

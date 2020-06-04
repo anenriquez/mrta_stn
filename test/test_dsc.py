@@ -29,16 +29,16 @@ class TestDSC(unittest.TestCase):
         # Convert the dict to a json string
         stnu_json = json.dumps(stnu_dict)
 
-        self.stp = STP('dsc_lp')
+        self.stp = STP('dsc')
         self.stn = self.stp.get_stn(stn_json=stnu_json)
 
     def test_build_stn(self):
         self.logger.info("STNU: \n %s", self.stn)
 
         self.logger.info("Getting Schedule...")
-        risk_metric, schedule = self.stp.solve(self.stn)
+        schedule = self.stp.solve(self.stn)
 
-        self.logger.info("DSC: %s ", risk_metric)
+        self.logger.info("DSC: %s ", schedule.risk_metric)
         self.logger.info("schedule: %s ", schedule)
 
         completion_time = schedule.get_completion_time()
@@ -47,11 +47,11 @@ class TestDSC(unittest.TestCase):
         self.logger.info("Completion time: %s ", completion_time)
         self.logger.info("Makespan: %s ", makespan)
 
-        self.assertEqual(completion_time, 61)
+        self.assertEqual(completion_time, 157)
         self.assertEqual(makespan, 98)
 
         expected_risk_metric = 0.0
-        self.assertEqual(risk_metric, expected_risk_metric)
+        self.assertEqual(schedule.risk_metric, expected_risk_metric)
 
         constraints = schedule.get_constraints()
 

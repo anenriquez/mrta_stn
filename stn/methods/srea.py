@@ -267,7 +267,13 @@ def srea_LP(inputstn,
         prob.writeLP('STN.lp')
         pulp.LpSolverDefault.msg = 10
 
-    prob.solve()
+    # Based on https://stackoverflow.com/questions/27406858/pulp-solver-error
+    # Sometimes pulp throws an exception instead of returning a problem with unfeasible status
+    try:
+        prob.solve()
+    except pulp.PulpSolverError:
+        print("Problem unfeasible")
+        return None
 
     status = pulp.LpStatus[prob.status]
     if debug:

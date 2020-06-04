@@ -40,7 +40,7 @@ if __name__ == '__main__':
     n_tasks = 3
     print("STN: ", stn)
 
-    alpha, dispatchable_graph = stp.solve(stn)
+    dispatchable_graph = stp.solve(stn)
     print("Guide: ", dispatchable_graph)
 
     schedule = get_schedule(dispatchable_graph, stn)

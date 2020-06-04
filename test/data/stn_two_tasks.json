@@ -3,112 +3,134 @@
       {
          "source":0,
          "target":1,
-         "weight":41.0
+         "weight":41.0,
+         "is_executed": false
       },
       {
          "source":0,
          "target":2,
-         "weight":47.0
+         "weight":47.0,
+         "is_executed": false
       },
       {
          "source":0,
          "target":3,
-         "weight":51.0
+         "weight":51.0,
+         "is_executed": false
       },
       {
          "source":0,
          "target":4,
-         "weight":96.0
+         "weight":96.0,
+         "is_executed": false
       },
       {
          "source":0,
          "target":5,
-         "weight":102.0
+         "weight":102.0,
+         "is_executed": false
       },
       {
          "source":0,
          "target":6,
-         "weight":106.0
+         "weight":106.0,
+         "is_executed": false
       },
       {
          "source":1,
          "target":0,
-         "weight":-35.0
+         "weight":-35.0,
+         "is_executed": false
       },
       {
          "source":1,
          "target":2,
-         "weight":Infinity
+         "weight":Infinity,
+         "is_executed": false
       },
       {
          "source":2,
          "target":0,
-         "weight":-41.0
+         "weight":-41.0,
+         "is_executed": false
       },
       {
          "source":2,
          "target":1,
-         "weight":-6.0
+         "weight":-6.0,
+         "is_executed": false
       },
       {
          "source":2,
          "target":3,
-         "weight":Infinity
+         "weight":Infinity,
+         "is_executed": false
       },
       {
          "source":3,
          "target":0,
-         "weight":-45.0
+         "weight":-45.0,
+         "is_executed": false
       },
       {
          "source":3,
          "target":2,
-         "weight":-4.0
+         "weight":-4.0,
+         "is_executed": false
       },
       {
          "source":3,
          "target":4,
-         "weight":Infinity
+         "weight":Infinity,
+         "is_executed": false
       },
       {
          "source":4,
          "target":0,
-         "weight":-90.0
+         "weight":-90.0,
+         "is_executed": false
       },
       {
          "source":4,
          "target":3,
-         "weight":-0.0
+         "weight":-0.0,
+         "is_executed": false
       },
       {
          "source":4,
          "target":5,
-         "weight":Infinity
+         "weight":Infinity,
+         "is_executed": false
       },
       {
          "source":5,
          "target":0,
-         "weight":-96.0
+         "weight":-96.0,
+         "is_executed": false
       },
       {
          "source":5,
          "target":4,
-         "weight":-6.0
+         "weight":-6.0,
+         "is_executed": false
       },
       {
          "source":5,
          "target":6,
-         "weight":Infinity
+         "weight":Infinity,
+         "is_executed": false
       },
       {
          "source":6,
          "target":0,
-         "weight":-100.0
+         "weight":-100.0,
+         "is_executed": false
       },
       {
          "source":6,
          "target":5,
-         "weight":-4.0
+         "weight":-4.0,
+         "is_executed": false
       }
    ],
    "graph":{
@@ -128,7 +150,7 @@
       {
          "data":{
             "task_id":"0d06fb90-a76d-48b4-b64f-857b7388ab70",
-            "node_type":"navigation",
+            "node_type":"start",
             "pose":""
          },
          "id":1
@@ -136,7 +158,7 @@
       {
          "data":{
             "task_id":"0d06fb90-a76d-48b4-b64f-857b7388ab70",
-            "node_type":"start",
+            "node_type":"pickup",
             "pose":"AMK_TDU-TGR-1_X_9.7_Y_5.6"
          },
          "id":2
@@ -144,7 +166,7 @@
       {
          "data":{
             "task_id":"0d06fb90-a76d-48b4-b64f-857b7388ab70",
-            "node_type":"finish",
+            "node_type":"delivery",
             "pose":"AMK_TDU-TGR-1_X_5.82_Y_6.57"
          },
          "id":3
@@ -152,7 +174,7 @@
       {
          "data":{
             "task_id":"0616af00-ec3b-4ecd-ae62-c94a3703594c",
-            "node_type":"navigation",
+            "node_type":"start",
             "pose":""
          },
          "id":4
@@ -160,7 +182,7 @@
       {
          "data":{
             "task_id":"0616af00-ec3b-4ecd-ae62-c94a3703594c",
-            "node_type":"start",
+            "node_type":"pickup",
             "pose":"AMK_TDU-TGR-1_X_14.03_Y_9.55"
          },
          "id":5
@@ -168,7 +190,7 @@
       {
          "data":{
             "task_id":"0616af00-ec3b-4ecd-ae62-c94a3703594c",
-            "node_type":"finish",
+            "node_type":"delivery",
             "pose":"AMK_TDU-TGR-1_X_15.09_Y_5.69"
          },
          "id":6

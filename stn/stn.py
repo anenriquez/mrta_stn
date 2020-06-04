@@ -9,6 +9,9 @@ from networkx.readwrite import json_graph
 
 from stn.node import Node
 from uuid import UUID
+import copy
+import math
+from stn.task import Timepoint
 
 MAX_FLOAT = sys.float_info.max
 
@@ -30,6 +33,7 @@ class STN(nx.DiGraph):
         super().__init__()
         self.add_zero_timepoint()
         self.max_makespan = MAX_FLOAT
+        self.risk_metric = None
 
     def __str__(self):
         to_print = ""
@@ -37,21 +41,59 @@ class STN(nx.DiGraph):
             if self.has_edge(j, i) and i < j:
                 # Constraints with the zero timepoint
                 if i == 0:
-                    timepoint = Node.from_dict(self.node[j]['data'])
+                    timepoint = self.nodes[j]['data']
                     lower_bound = -self[j][i]['weight']
                     upper_bound = self[i][j]['weight']
                     to_print += "Timepoint {}: [{}, {}]".format(timepoint, lower_bound, upper_bound)
+                    if timepoint.is_executed:
+                        to_print += " Ex"
                 # Constraints between the other timepoints
                 else:
                     to_print += "Constraint {} => {}: [{}, {}]".format(i, j, -self[j][i]['weight'], self[i][j]['weight'])
+                    if self[i][j]['is_executed']:
+                        to_print += " Ex"
 
                 to_print += "\n"
 
         return to_print
 
+    def __eq__(self, other):
+        if other is None:
+            return False
+        if len(other.nodes()) != len(self.nodes()):
+            return False
+        for (i, j, data) in self.edges.data():
+            if other.has_edge(i, j):
+                if other[i][j]['weight'] != self[i][j]['weight']:
+                    return False
+            else:
+                return False
+            if other.has_node(i):
+                if other.nodes[i]['data'] != self.nodes[i]['data'] :
+                    return False
+            else:
+                return False
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def add_zero_timepoint(self):
-        node = Node(generate_uuid(), '', 'zero_timepoint')
-        self.add_node(0, data=node.to_dict())
+        node = Node(generate_uuid(), 'zero_timepoint')
+        self.add_node(0, data=node)
+
+    def get_earliest_time(self):
+        edges = [e for e in self.edges]
+        first_edge = edges[0]
+        return -self[first_edge[1]][0]['weight']
+
+    def get_latest_time(self):
+        edges = [e for e in self.edges]
+        last_edge = edges[-1]
+        return self[0][last_edge[0]]['weight']
+
+    def is_empty(self):
+        return nx.is_empty(self)
 
     def add_constraint(self, i, j, wji=0.0, wij=float('inf')):
         """
@@ -75,8 +117,8 @@ class STN(nx.DiGraph):
         # Maximum allocated time between i and j
         max_time = wij
 
-        self.add_edge(j, i, weight=min_time)
-        self.add_edge(i, j, weight=max_time)
+        self.add_edge(j, i, weight=min_time, is_executed=False)
+        self.add_edge(i, j, weight=max_time, is_executed=False)
 
     def remove_constraint(self, i, j):
         """ i : starting node id
@@ -99,89 +141,74 @@ class STN(nx.DiGraph):
 
         return constraints
 
-    def get_node_pose(self, task, node_type):
-        """ Returns the pose in the map where the task has to be executed
-        """
-        if node_type == 'navigation':
-            # TODO: initialize the pose with the robot current position (read it from mongo)
-            # this value will be overwritten once the task is allocated
-            pose = ''
-        elif node_type == 'start':
-            pose = task.start_pose_name
-        elif node_type == 'finish':
-            pose = task.finish_pose_name
-
-        return pose
-
-    def add_timepoint(self, id, task, node_type):
+    def add_timepoint(self, id, task, node_type, **kwargs):
         """ A timepoint is represented by a node in the STN
         The node can be of node_type:
         - zero_timepoint: references the schedule to the origin
-        - navigation: time at which the robot starts navigating towards the task
-        - start: time at which the robot starts executing the task
-        - finish: time at which the robot finishes executing the task
+        - start : time at which the robot starts navigating towards the pickup location
+        - pickup : time at which the robot arrives starts the pickup action
+        - delivery : time at which the robot finishes the delivery action
         """
-        pose = self.get_node_pose(task, node_type)
-        node = Node(task.id, pose, node_type)
-        self.add_node(id, data=node.to_dict())
+        node = Node(task.task_id, node_type, **kwargs)
+        self.add_node(id, data=node)
 
     def add_task(self, task, position=1):
         """ A task is added as 3 timepoints and 5 constraints in the STN"
         Timepoints:
-        - navigation start
-        - start time
-        - finish time
+        - start
+        - pickup time
+        - delivery time
         Constraints:
-        - earliest and latest navigation times
-        - navigation duration
         - earliest and latest start times
-        - task duration
+        - travel time: time to go from current position to pickup position)
+        - earliest and latest pickup times
+        - work time: time to perform the task (time to transport an object from the pickup to the delivery location)
         - earliest and latest finish times
         If the task is not the first in the STN, add wait time constraint
 
         Note: Position 0 is reserved for the zero_timepoint
         Add tasks from postion 1 onwards
         """
-        self.logger.info("Adding task %s in position %s", task.id, position)
+        self.logger.info("Adding task %s in position %s", task.task_id, position)
 
-        navigation_node_id = 2 * position + (position-2)
-        start_node_id = navigation_node_id + 1
-        finish_node_id = start_node_id + 1
+        start_node_id = 2 * position + (position-2)
+        pickup_node_id = start_node_id + 1
+        delivery_node_id = pickup_node_id + 1
 
-        # Remove constraint linking navigation_node_id and previous node (if any)
-        if self.has_edge(navigation_node_id-1, navigation_node_id) and navigation_node_id-1 != 0:
-            self.logger.debug("Deleting constraint: %s  => %s", navigation_node_id-1, navigation_node_id)
+        # Remove constraint linking start_node_id and previous node (if any)
+        if self.has_edge(start_node_id-1, start_node_id) and start_node_id-1 != 0:
+            self.logger.debug("Deleting constraint: %s  => %s", start_node_id-1, start_node_id)
 
-            self.remove_constraint(navigation_node_id-1, navigation_node_id)
+            self.remove_constraint(start_node_id-1, start_node_id)
 
         # Displace by 3 all nodes and constraints after position
         mapping = {}
         for node_id, data in self.nodes(data=True):
-            if node_id >= navigation_node_id:
+            if node_id >= start_node_id:
                 mapping[node_id] = node_id + 3
         self.logger.debug("mapping: %s ", mapping)
         nx.relabel_nodes(self, mapping, copy=False)
 
         # Add new timepoints
-        self.add_timepoint(navigation_node_id, task, "navigation")
-        self.add_timepoint_constraints(navigation_node_id, task, "navigation")
-
         self.add_timepoint(start_node_id, task, "start")
-        self.add_timepoint_constraints(start_node_id, task, "start")
+        self.add_timepoint_constraint(start_node_id, task.get_timepoint("start"))
 
-        self.add_timepoint(finish_node_id, task, "finish")
-        self.add_timepoint_constraints(finish_node_id, task, "finish")
+        self.add_timepoint(pickup_node_id, task, "pickup", action_id=task.pickup_action_id)
+        self.add_timepoint_constraint(pickup_node_id, task.get_timepoint("pickup"))
+
+        self.add_timepoint(delivery_node_id, task, "delivery", action_id=task.delivery_action_id)
+        self.add_timepoint_constraint(delivery_node_id, task.get_timepoint("delivery"))
 
         # Add constraints between new nodes
-        new_constraints_between = [navigation_node_id, start_node_id, finish_node_id]
+        new_constraints_between = [start_node_id, pickup_node_id, delivery_node_id]
 
         # Check if there is a node after the new delivery node
-        if self.has_node(finish_node_id+1):
-            new_constraints_between.append(finish_node_id+1)
+        if self.has_node(delivery_node_id+1):
+            new_constraints_between.append(delivery_node_id+1)
 
         # Check if there is a node before the new start node
-        if self.has_node(navigation_node_id-1):
-            new_constraints_between.insert(0, navigation_node_id-1)
+        if self.has_node(start_node_id-1):
+            new_constraints_between.insert(0, start_node_id-1)
 
         self.logger.debug("New constraints between nodes: %s", new_constraints_between)
 
@@ -193,9 +220,9 @@ class STN(nx.DiGraph):
     def add_intertimepoints_constraints(self, constraints, task):
         """ Adds constraints between the timepoints of a task
         Constraints between:
-        - navigation start and start
-        - start and finish
-        - finish and next task (if any)
+        - start and pickup
+        - pickup and delivery
+        - delivery and start next task (if any)
         Args:
             constraints (list) : list of tuples that defines the pair of nodes between which a new constraint should be added
             Example:
@@ -206,52 +233,44 @@ class STN(nx.DiGraph):
         """
         for (i, j) in constraints:
             self.logger.debug("Adding constraint: %s ", (i, j))
-            if self.node[i]['data']['node_type'] == "navigation":
-                duration = self.get_navigation_duration(i, j)
-                self.add_constraint(i, j, duration)
+            if self.nodes[i]['data'].node_type == "start":
+                travel_time = self.get_travel_time(task)
+                self.add_constraint(i, j, travel_time, travel_time)
 
-            elif self.node[i]['data']['node_type'] == "start":
-                duration = self.get_task_duration(task)
-                self.add_constraint(i, j, duration)
+            elif self.nodes[i]['data'].node_type == "pickup":
+                work_time = self.get_work_time(task)
+                self.add_constraint(i, j, work_time, work_time)
 
-            elif self.node[i]['data']['node_type'] == "finish":
+            elif self.nodes[i]['data'].node_type == "delivery":
                 # wait time between finish of one task and start of the next one. Fixed to [0, inf]
                 self.add_constraint(i, j)
 
-    def get_navigation_duration(self, source, destination):
-        """ Reads from the database the estimated duration for navigating from source to destination and takes the mean
+    @staticmethod
+    def get_travel_time(task):
+        """ Returns the mean of the travel time (time for going from current pose to pickup pose)
         """
-        # TODO: Read estimated duration from dataset
-        duration = 1.0
-        return duration
+        travel_time = task.get_edge("travel_time")
+        return travel_time.mean
 
-    def get_task_duration(self, task):
-        """ Reads from the database the estimated duration of the task
-        In the case of transportation tasks, the estimated duration is the navigation time from the pickup to the delivery location
+    @staticmethod
+    def get_work_time(task):
+        """ Returns the mean of the work time (time to transport an object from the pickup to the delivery location)
         """
-        # TODO: Read estimated duration from dataset
-        duration = 1.0
-        return duration
+        work_time = task.get_edge("work_time")
+        return work_time.mean
 
-    def get_navigation_start_time(self, task):
-        """ Returns the earliest_start_time and latest start navigation time
-        """
-        navigation_duration = self.get_navigation_duration(task.start_pose_name, task.finish_pose_name)
-
-        earliest_navigation_start_time = task.r_earliest_start_time - navigation_duration
-        latest_navigation_start_time = task.r_latest_start_time - navigation_duration
-
-        return earliest_navigation_start_time, latest_navigation_start_time
-
-    def get_finish_time(self, task):
-        """ Returns the earliest and latest finish time
-        """
-        task_duration = self.get_task_duration(task)
-
-        earliest_finish_time = task.r_earliest_start_time + task_duration
-        latest_finish_time = task.r_latest_start_time + task_duration
-
-        return earliest_finish_time, latest_finish_time
+    @staticmethod
+    def create_timepoint_constraints(r_earliest_pickup, r_latest_pickup, travel_time, work_time):
+        start_constraint = Timepoint(name="start",
+                                     r_earliest_time=r_earliest_pickup - travel_time.mean,
+                                     r_latest_time=r_latest_pickup - travel_time.mean)
+        pickup_constraint = Timepoint(name="pickup",
+                                      r_earliest_time=r_earliest_pickup,
+                                      r_latest_time=r_latest_pickup)
+        delivery_constraint = Timepoint(name="delivery",
+                                        r_earliest_time=r_earliest_pickup + work_time.mean,
+                                        r_latest_time=r_latest_pickup + work_time.mean)
+        return [start_constraint, pickup_constraint, delivery_constraint]
 
     def show_n_nodes_edges(self):
         """ Prints the number of nodes and edges in the stn
@@ -259,28 +278,53 @@ class STN(nx.DiGraph):
         self.logger.info("Nodes: %s ", self.number_of_nodes())
         self.logger.info("Edges: %s ", self.number_of_edges())
 
+    def update_task(self, task):
+        position = self.get_task_position(task.task_id)
+        start_node_id = 2 * position + (position-2)
+        pickup_node_id = start_node_id + 1
+        delivery_node_id = pickup_node_id + 1
+
+        # Adding an existing timepoint constraint updates the constraint
+        self.add_timepoint_constraint(start_node_id, task.get_timepoint("start"))
+        self.add_timepoint_constraint(pickup_node_id, task.get_timepoint("pickup"))
+        self.add_timepoint_constraint(delivery_node_id, task.get_timepoint("delivery"))
+
+        # Add constraints between new nodes
+        new_constraints_between = [start_node_id, pickup_node_id, delivery_node_id]
+
+        # Check if there is a node after the new delivery node
+        if self.has_node(delivery_node_id+1):
+            new_constraints_between.append(delivery_node_id+1)
+
+        # Check if there is a node before the new start node
+        if self.has_node(start_node_id-1):
+            new_constraints_between.insert(0, start_node_id-1)
+
+        constraints = [((i), (i + 1)) for i in new_constraints_between[:-1]]
+        self.add_intertimepoints_constraints(constraints, task)
+
     def remove_task(self, position=1):
         """ Removes the task from the given position"""
 
         self.logger.info("Removing task at position: %s", position)
-        navigation_node_id = 2 * position + (position-2)
-        start_node_id = navigation_node_id + 1
-        finish_node_id = start_node_id + 1
+        start_node_id = 2 * position + (position-2)
+        pickup_node_id = start_node_id + 1
+        delivery_node_id = pickup_node_id + 1
 
         new_constraints_between = list()
 
-        if self.has_node(navigation_node_id-1) and self.has_node(finish_node_id+1):
-            new_constraints_between = [navigation_node_id-1, navigation_node_id]
+        if self.has_node(start_node_id-1) and self.has_node(delivery_node_id+1):
+            new_constraints_between = [start_node_id-1, start_node_id]
 
         # Remove node and all adjacent edges
-        self.remove_node(navigation_node_id)
         self.remove_node(start_node_id)
-        self.remove_node(finish_node_id)
+        self.remove_node(pickup_node_id)
+        self.remove_node(delivery_node_id)
 
         # Displace by -3 all nodes and constraints after position
         mapping = {}
         for node_id, data in self.nodes(data=True):
-            if node_id >= navigation_node_id:
+            if node_id >= start_node_id:
                 mapping[node_id] = node_id - 3
         self.logger.debug("mapping: %s", mapping)
         nx.relabel_nodes(self, mapping, copy=False)
@@ -290,9 +334,21 @@ class STN(nx.DiGraph):
             self.logger.debug("Constraints: %s", constraints)
 
             for (i, j) in constraints:
-                if self.node[i]['data']['node_type'] == "finish":
+                if self.nodes[i]['data'].node_type == "delivery":
                     # wait time between finish of one task and start of the next one
                     self.add_constraint(i, j)
+
+    def remove_node_ids(self, node_ids):
+        # Assumes that the node_ids are in consecutive order from node_id 1 onwards
+        for node_id in node_ids:
+            self.remove_node(node_id)
+
+        # Displace all remaining nodes by 3
+        mapping = {}
+        for node_id, data in self.nodes(data=True):
+            if node_id > 0:
+                mapping[node_id] = node_id - 3
+        nx.relabel_nodes(self, mapping, copy=False)
 
     def get_tasks(self):
         """
@@ -302,17 +358,17 @@ class STN(nx.DiGraph):
         """
         tasks = list()
         for i in self.nodes():
-            timepoint = Node.from_dict(self.node[i]['data'])
-            if timepoint.node_type == "navigation":
-                tasks.append(timepoint.task_id)
-
+            if self.nodes[i]['data'].task_id not in tasks and self.nodes[i]['data'].node_type != 'zero_timepoint':
+                tasks.append(self.nodes[i]['data'].task_id)
         return tasks
 
     def is_consistent(self, shortest_path_array):
         """The STN is not consistent if it has negative cycles"""
         consistent = True
         for node, nodes in shortest_path_array.items():
-            if nodes[node] != 0:
+            # Check if the tolerance is too large. Maybe it is better to use
+            # only integers and change the resolution to seconds
+            if not math.isclose(nodes[node], 0.0, abs_tol=1e-01):
                 consistent = False
         return consistent
 
@@ -324,7 +380,7 @@ class STN(nx.DiGraph):
             for n in nodes:
                 self.update_edge_weight(column, n, shortest_path_array[column][n])
 
-    def update_edge_weight(self, i, j, weight, create=False):
+    def update_edge_weight(self, i, j, weight, force=False):
         """ Updates the weight of the edge between node starting_node and node ending_node
 
         Updates the weight if the new weight is less than the previous weight
@@ -344,19 +400,27 @@ class STN(nx.DiGraph):
             if weight < self[i][j]['weight']:
                 self[i][j]['weight'] = weight
 
-    def assign_timepoint(self, time, position=1):
+            if force:
+                self[i][j]['weight'] = weight
+
+    def assign_timepoint(self, allotted_time, node_id, force=False):
         """
-        Assigns the given time to the earliest and latest time of the
-        timepoint at the given position
+        Assigns the allotted time to the earliest and latest time of the timepoint
+        in node_id
         Args:
-            time: float representing seconds
-            position: int representing the location of the timepoint in the stn
-
-        Returns:
+            allotted_time (float): seconds after zero timepoint
+            node_id (inf): idx of the timepoint in the stn
 
         """
-        self.update_edge_weight(0, position, time)
-        self.update_edge_weight(position, 0, -time)
+        self.update_edge_weight(0, node_id, allotted_time, force)
+        self.update_edge_weight(node_id, 0, -allotted_time, force)
+
+    def assign_earliest_time(self, time_, task_id, node_type, force=False):
+        for i in self.nodes():
+            node_data = self.nodes[i]['data']
+            if node_data.task_id == task_id and node_data.node_type == node_type:
+                self.update_edge_weight(i, 0, -time_, force)
+                break
 
     def get_edge_weight(self, i, j):
         """ Returns the weight of the edge between node starting_node and node ending_node
@@ -371,19 +435,22 @@ class STN(nx.DiGraph):
             else:
                 return float('inf')
 
+    def compute_temporal_metric(self, temporal_criterion):
+        if temporal_criterion == 'completion_time':
+            temporal_metric = self.get_completion_time()
+        elif temporal_criterion == 'makespan':
+            temporal_metric = self.get_makespan()
+        elif temporal_criterion == 'idle_time':
+            temporal_metric = self.get_idle_time()
+        else:
+            raise ValueError(temporal_criterion)
+        return temporal_metric
+
     def get_completion_time(self):
-        nodes = list(self.nodes())
-        node_first_task = nodes[1]
-        node_last_task = nodes[-1]
-
-        start_time_lower_bound = -self[node_first_task][0]['weight']
-
-        finish_time_lower_bound = -self[node_last_task][0]['weight']
-
-        self.logger.debug("Start time: %s", start_time_lower_bound)
-        self.logger.debug("Finish time: %s", finish_time_lower_bound)
-
-        completion_time = finish_time_lower_bound - start_time_lower_bound
+        completion_time = 0
+        task_ids = self.get_tasks()
+        for i, task_id in enumerate(task_ids):
+            completion_time += self.get_time(task_id, "delivery", lower_bound=False)
 
         return completion_time
 
@@ -400,58 +467,75 @@ class STN(nx.DiGraph):
 
         for i, task_id in enumerate(task_ids):
             if i > 0:
-                r_earliest_finish_time_previous_task = self.get_time(task_ids[i-1], "finish")
+                r_earliest_delivery_time_previous_task = self.get_time(task_ids[i-1], "delivery")
                 r_earliest_start_time = self.get_time(task_ids[i], "start")
-                idle_time += round(r_earliest_start_time - r_earliest_finish_time_previous_task)
+                idle_time += round(r_earliest_start_time - r_earliest_delivery_time_previous_task)
         return idle_time
 
-    def add_timepoint_constraints(self, node_id, task, node_type):
+    def add_timepoint_constraint(self, node_id, timepoint_constraint):
         """ Adds the earliest and latest times to execute a timepoint (node)
-        Navigation timepoint [earliest_navigation_start_time, latest_navigation_start_time]
         Start timepoint [earliest_start_time, latest_start_time]
-        Finish timepoint [earliest_finish_time, lastest_finish_time]
+        Pickup timepoint [earliest_pickup_time, latest_pickup_time]
+        Delivery timepoint [earliest_delivery_time, lastest_delivery_time]
         """
+        self.add_constraint(0, node_id, timepoint_constraint.r_earliest_time, timepoint_constraint.r_latest_time)
 
-        if task.hard_constraints:
-            self.timepoint_hard_constraints(node_id, task, node_type)
-        else:
-            self.timepoint_soft_constraints(node_id, task, node_type)
+    @staticmethod
+    def get_prev_timepoint(timepoint_name, next_timepoint, edge_in_between):
+        r_earliest_time = next_timepoint.r_earliest_time - edge_in_between.mean
+        r_latest_time = next_timepoint.r_latest_time - edge_in_between.mean
+        return Timepoint(timepoint_name, r_earliest_time, r_latest_time)
 
-    def timepoint_hard_constraints(self, node_id, task, node_type):
-        if node_type == "navigation":
-            earliest_navigation_start_time, latest_navigation_start_time = self.get_navigation_start_time(task)
+    @staticmethod
+    def get_next_timepoint(timepoint_name, prev_timepoint, edge_in_between):
+        r_earliest_time = prev_timepoint.r_earliest_time + edge_in_between.mean
+        r_latest_time = prev_timepoint.r_latest_time + edge_in_between.mean
+        return Timepoint(timepoint_name, r_earliest_time, r_latest_time)
 
-            self.add_constraint(0, node_id, earliest_navigation_start_time, latest_navigation_start_time)
-
-        if node_type == "start":
-            self.add_constraint(0, node_id, task.r_earliest_start_time, task.r_latest_start_time)
-
-        elif node_type == "finish":
-            earliest_finish_time, latest_finish_time = self.get_finish_time(task)
-
-            self.add_constraint(0, node_id, earliest_finish_time, latest_finish_time)
-
-    def timepoint_soft_constraints(self, node_id, task, node_type):
-        if node_type == "navigation":
-            self.add_constraint(0, node_id, task.r_earliest_navigation_start)
-
-        if node_type == "start":
-            self.add_constraint(0, node_id)
-
-        elif node_type == "finish":
-
-            self.add_constraint(0, node_id, 0, self.max_makespan)
-
-    def get_time(self, task_id, node_type='navigation', lower_bound=True):
+    def get_time(self, task_id, node_type='start', lower_bound=True):
         _time = None
         for i, data in self.nodes.data():
-            if task_id == data['data']['task_id'] and data['data']['node_type'] == node_type:
+
+            if task_id == data['data'].task_id and data['data'].node_type == node_type:
                 if lower_bound:
                     _time = -self[i][0]['weight']
                 else:  # upper bound
                     _time = self[0][i]['weight']
 
         return _time
+
+    def get_node_earliest_time(self, node_id):
+        return -self[node_id][0]['weight']
+
+    def get_node_latest_time(self, node_id):
+        return self[0][node_id]['weight']
+
+    def get_nodes_by_action(self, action_id):
+        nodes = list()
+        for node_id, data in self.nodes.data():
+            if data['data'].action_id == action_id:
+                node = (node_id, self.nodes[node_id]['data'])
+                nodes.append(node)
+        return nodes
+
+    def get_nodes_by_task(self, task_id):
+        nodes = list()
+        for node_id, data in self.nodes.data():
+            if data['data'].task_id == task_id:
+                node = (node_id, self.nodes[node_id]['data'])
+                nodes.append(node)
+        return nodes
+
+    def get_node_by_type(self, task_id, node_type):
+        for node_id, data in self.nodes.data():
+            if data['data'].task_id == task_id and data['data'].node_type == node_type:
+                return node_id, self.nodes[node_id]['data']
+
+    def set_action_id(self, node_id, action_id):
+        self.nodes[node_id]['data'].action_id = action_id
+
+    def get_node(self, node_id):
+        return self.nodes[node_id]['data']
 
     def get_task_id(self, position):
         """ Returns the id of the task in the given position
@@ -462,15 +546,26 @@ class STN(nx.DiGraph):
         Returns: (string) task id
 
         """
-        navigation_node = 2 * position + (position-2)
+        start_node_id = 2 * position + (position-2)
+        pickup_node_id = start_node_id + 1
+        delivery_node_id = pickup_node_id + 1
 
-        if self.has_node(navigation_node):
-            task_id = self.node[navigation_node]['data']['task_id']
+        if self.has_node(start_node_id):
+            task_id = self.nodes[start_node_id]['data'].task_id
+        elif self.has_node(pickup_node_id):
+            task_id = self.nodes[pickup_node_id]['data'].task_id
+        elif self.has_node(delivery_node_id):
+            task_id = self.nodes[delivery_node_id]['data'].task_id
         else:
             self.logger.error("There is no task in position %s", position)
             return
 
         return task_id
+
+    def get_task_position(self, task_id):
+        for i, data in self.nodes.data():
+            if task_id == data['data'].task_id and data['data'].node_type == 'start':
+                return math.ceil(i/3)
 
     def get_earliest_task_id(self):
         """ Returns the id of the earliest task in the stn
@@ -480,11 +575,27 @@ class STN(nx.DiGraph):
         # The first task in the graph is the task with the earliest start time
         # The first task is in node 1, node 0 is reserved for the zero timepoint
 
-        task_id = self.get_task_id(1)
-        if task_id:
+        if self.has_node(1):
+            task_id = self.nodes[1]['data'].task_id
             return task_id
 
         self.logger.debug("STN has no tasks yet")
+
+    def get_task_nodes(self, task_id):
+        """ Gets the nodes in the stn associated with the given task_id
+
+        Args:
+            task_id: (string) id of the task
+
+        Returns: list of node ids
+
+        """
+        nodes = list()
+        for i in self.nodes():
+            if task_id == self.nodes[i]['data'].task_id:
+                nodes.append(self.nodes[i]['data'])
+
+        return nodes
 
     def get_task_node_ids(self, task_id):
         """ Gets the node_ids in the stn associated with the given task_id
@@ -497,10 +608,24 @@ class STN(nx.DiGraph):
         """
         node_ids = list()
         for i in self.nodes():
-            if task_id == self.node[i]['data']['task_id']:
+            if task_id == self.nodes[i]['data'].task_id:
                 node_ids.append(i)
 
         return node_ids
+
+    def get_task_graph(self, task_id):
+        """ Returns a graph with the nodes of the task_id
+
+        Args:
+            task_id: ID of the task
+
+        Returns: nx graph with nodes of task_id
+
+        """
+        node_ids = self.get_task_node_ids(task_id)
+        node_ids.insert(0, 0)
+        task_graph = self.subgraph(node_ids)
+        return task_graph
 
     def get_subgraph(self, n_tasks):
         """ Returns a subgraph of the stn that includes the nodes of the first n_tasks
@@ -523,6 +648,51 @@ class STN(nx.DiGraph):
         sub_graph = self.subgraph(node_ids)
         return sub_graph
 
+    def execute_timepoint(self, node_id):
+        self.nodes[node_id]['data'].is_executed = True
+
+    def execute_edge(self, node_1, node_2):
+        nx.set_edge_attributes(self, {(node_1, node_2): {'is_executed': True},
+                                      (node_2, node_1): {'is_executed': True}})
+
+    def execute_incoming_edge(self, task_id, node_type):
+        finish_node_idx = self.get_edge_node_idx(task_id, node_type)
+        if node_type == "start":
+            return
+        elif node_type == "pickup":
+            start_node_idx = self.get_edge_node_idx(task_id, "start")
+        elif node_type == "delivery":
+            start_node_idx = self.get_edge_node_idx(task_id, "pickup")
+        self.execute_edge(start_node_idx, finish_node_idx)
+
+    def remove_old_timepoints(self):
+        nodes_to_remove = list()
+        for i in self.nodes():
+            node_data = self.nodes[i]['data']
+            if not node_data.is_executed:
+                continue
+            if node_data.is_executed and (self.has_edge(i, i+1) and self[i][i+1]['is_executed']):
+                nodes_to_remove.append(i)
+
+        for node in nodes_to_remove:
+            self.remove_node(node)
+
+    def get_edge_node_idx(self, task_id, node_type):
+        for i in self.nodes():
+            node_data = self.nodes[i]['data']
+            if node_data.task_id == task_id and node_data.node_type == node_type:
+                return i
+
+    def get_edge_nodes_idx(self, task_id, node_type_1, node_type_2):
+        for i in self.nodes():
+            node_data = self.nodes[i]['data']
+            if node_data.task_id == task_id and node_data.node_type == node_type_1:
+                start_node_idx = i
+            elif node_data.task_id == task_id and node_data.node_type == node_type_2:
+                finish_node_idx = i
+
+        return start_node_idx, finish_node_idx
+
     def to_json(self):
         stn_dict = self.to_dict()
         MyEncoder().encode(stn_dict)
@@ -530,7 +700,10 @@ class STN(nx.DiGraph):
         return stn_json
 
     def to_dict(self):
-        stn_dict = json_graph.node_link_data(self)
+        stn = copy.deepcopy(self)
+        for i, data in self.nodes.data():
+            stn.nodes[i]['data'] = self.nodes[i]['data'].to_dict()
+        stn_dict = json_graph.node_link_data(stn)
         return stn_dict
 
     @classmethod
@@ -538,7 +711,7 @@ class STN(nx.DiGraph):
         stn = cls()
         dict_json = json.loads(stn_json)
         graph = json_graph.node_link_graph(dict_json)
-        stn.add_nodes_from(graph.nodes(data=True))
+        stn.add_nodes_from([(i, {'data': Node.from_dict(graph.nodes[i]['data'])}) for i in graph.nodes()])
         stn.add_edges_from(graph.edges(data=True))
 
         return stn

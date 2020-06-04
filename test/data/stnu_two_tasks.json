@@ -10,7 +10,7 @@
       },
       {
          "data":{
-            "node_type":"navigation",
+            "node_type":"start",
             "task_id":"0d06fb90-a76d-48b4-b64f-857b7388ab70",
             "pose":""
          },
@@ -18,7 +18,7 @@
       },
       {
          "data":{
-            "node_type":"start",
+            "node_type":"pickup",
             "task_id":"0d06fb90-a76d-48b4-b64f-857b7388ab70",
             "pose":"AMK_TDU-TGR-1_X_9.7_Y_5.6"
          },
@@ -26,7 +26,7 @@
       },
       {
          "data":{
-            "node_type":"finish",
+            "node_type":"delivery",
             "task_id":"0d06fb90-a76d-48b4-b64f-857b7388ab70",
             "pose":"AMK_TDU-TGR-1_X_5.82_Y_6.57"
          },
@@ -34,7 +34,7 @@
       },
       {
          "data":{
-            "node_type":"navigation",
+            "node_type":"start",
             "task_id":"0616af00-ec3b-4ecd-ae62-c94a3703594c",
             "pose":""
          },
@@ -42,7 +42,7 @@
       },
       {
          "data":{
-            "node_type":"start",
+            "node_type":"pickup",
             "task_id":"0616af00-ec3b-4ecd-ae62-c94a3703594c",
             "pose":"AMK_TDU-TGR-1_X_14.03_Y_9.55"
          },
@@ -50,7 +50,7 @@
       },
       {
          "data":{
-            "node_type":"finish",
+            "node_type":"delivery",
             "task_id":"0616af00-ec3b-4ecd-ae62-c94a3703594c",
             "pose":"AMK_TDU-TGR-1_X_15.09_Y_5.69"
          },
@@ -63,133 +63,155 @@
          "target":1,
          "is_contingent":false,
          "weight":Infinity,
-         "source":0
+         "source":0,
+         "is_executed": false
       },
       {
          "target":2,
          "is_contingent":false,
          "weight":47.0,
-         "source":0
+         "source":0,
+         "is_executed": false
       },
       {
          "target":3,
          "is_contingent":false,
          "weight":Infinity,
-         "source":0
+         "source":0,
+         "is_executed": false
       },
       {
          "target":4,
          "is_contingent":false,
          "weight":Infinity,
-         "source":0
+         "source":0,
+         "is_executed": false
       },
       {
          "target":5,
          "is_contingent":false,
          "weight":102.0,
-         "source":0
+         "source":0,
+         "is_executed": false
       },
       {
          "target":6,
          "is_contingent":false,
          "weight":Infinity,
-         "source":0
+         "source":0,
+         "is_executed": false
       },
       {
          "target":0,
          "is_contingent":false,
          "weight":-0.0,
-         "source":1
+         "source":1,
+         "is_executed": false
       },
       {
          "target":2,
          "is_contingent":true,
          "weight":8.0,
-         "source":1
+         "source":1,
+         "is_executed": false
       },
       {
          "target":0,
          "is_contingent":false,
          "weight":-41.0,
-         "source":2
+         "source":2,
+         "is_executed": false
       },
       {
          "target":1,
          "is_contingent":true,
          "weight":-4.0,
-         "source":2
+         "source":2,
+         "is_executed": false
       },
       {
          "target":3,
          "is_contingent":true,
          "weight":6.0,
-         "source":2
+         "source":2,
+         "is_executed": false
       },
       {
          "target":0,
          "is_contingent":false,
          "weight":-0.0,
-         "source":3
+         "source":3,
+         "is_executed": false
       },
       {
          "target":2,
          "is_contingent":true,
          "weight":-2.0,
-         "source":3
+         "source":3,
+         "is_executed": false
       },
       {
          "target":4,
          "is_contingent":false,
          "weight":Infinity,
-         "source":3
+         "source":3,
+         "is_executed": false
       },
       {
          "target":0,
          "is_contingent":false,
          "weight":-0.0,
-         "source":4
+         "source":4,
+         "is_executed": false
       },
       {
          "target":3,
          "is_contingent":false,
          "weight":0,
-         "source":4
+         "source":4,
+         "is_executed": false
       },
       {
          "target":5,
          "is_contingent":true,
          "weight":8.0,
-         "source":4
+         "source":4,
+         "is_executed": false
       },
       {
          "target":0,
          "is_contingent":false,
          "weight":-96.0,
-         "source":5
+         "source":5,
+         "is_executed": false
       },
       {
          "target":4,
          "is_contingent":true,
          "weight":-4.0,
-         "source":5
+         "source":5,
+         "is_executed": false
       },
       {
          "target":6,
          "is_contingent":true,
          "weight":6.0,
-         "source":5
+         "source":5,
+         "is_executed": false
       },
       {
          "target":0,
          "is_contingent":false,
          "weight":-0.0,
-         "source":6
+         "source":6,
+         "is_executed": false
       },
       {
          "target":5,
          "is_contingent":true,
          "weight":-2.0,
-         "source":6
+         "source":6,
+         "is_executed": false
       }
    ],
    "graph":{

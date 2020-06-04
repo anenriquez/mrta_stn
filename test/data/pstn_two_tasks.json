@@ -5,154 +5,176 @@
          "target":1,
          "weight":Infinity,
          "source":0,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":2,
          "weight":47.0,
          "source":0,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":3,
          "weight":Infinity,
          "source":0,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":4,
          "weight":Infinity,
          "source":0,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":5,
          "weight":102.0,
          "source":0,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":6,
          "weight":Infinity,
          "source":0,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":0,
          "weight":-0.0,
          "source":1,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"N_6_1",
          "target":2,
          "weight":Infinity,
          "source":1,
-         "is_contingent":true
+         "is_contingent":true,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":0,
          "weight":-41.0,
          "source":2,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"N_6_1",
          "target":1,
          "weight":-0.0,
          "source":2,
-         "is_contingent":true
+         "is_contingent":true,
+         "is_executed": false
       },
       {
          "distribution":"N_4_1",
          "target":3,
          "weight":Infinity,
          "source":2,
-         "is_contingent":true
+         "is_contingent":true,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":0,
          "weight":-0.0,
          "source":3,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"N_4_1",
          "target":2,
          "weight":-0.0,
          "source":3,
-         "is_contingent":true
+         "is_contingent":true,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":4,
          "weight":Infinity,
          "source":3,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":0,
          "weight":-0.0,
          "source":4,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":3,
          "weight":-0.0,
          "source":4,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"N_6_1",
          "target":5,
          "weight":Infinity,
          "source":4,
-         "is_contingent":true
+         "is_contingent":true,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":0,
          "weight":-96.0,
          "source":5,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"N_6_1",
          "target":4,
          "weight":-0.0,
          "source":5,
-         "is_contingent":true
+         "is_contingent":true,
+         "is_executed": false
       },
       {
          "distribution":"N_4_1",
          "target":6,
          "weight":Infinity,
          "source":5,
-         "is_contingent":true
+         "is_contingent":true,
+         "is_executed": false
       },
       {
          "distribution":"",
          "target":0,
          "weight":-0.0,
          "source":6,
-         "is_contingent":false
+         "is_contingent":false,
+         "is_executed": false
       },
       {
          "distribution":"N_4_1",
          "target":5,
          "weight":-0.0,
          "source":6,
-         "is_contingent":true
+         "is_contingent":true,
+         "is_executed": false
       }
    ],
    "graph":{
@@ -173,7 +195,7 @@
          "data":{
             "task_id":"0d06fb90-a76d-48b4-b64f-857b7388ab70",
             "pose":"",
-            "node_type":"navigation"
+            "node_type":"start"
          }
       },
       {
@@ -181,7 +203,7 @@
          "data":{
             "task_id":"0d06fb90-a76d-48b4-b64f-857b7388ab70",
             "pose":"AMK_TDU-TGR-1_X_9.7_Y_5.6",
-            "node_type":"start"
+            "node_type":"pickup"
          }
       },
       {
@@ -189,7 +211,7 @@
          "data":{
             "task_id":"0d06fb90-a76d-48b4-b64f-857b7388ab70",
             "pose":"AMK_TDU-TGR-1_X_5.82_Y_6.57",
-            "node_type":"finish"
+            "node_type":"delivery"
          }
       },
       {
@@ -197,7 +219,7 @@
          "data":{
             "task_id":"0616af00-ec3b-4ecd-ae62-c94a3703594c",
             "pose":"",
-            "node_type":"navigation"
+            "node_type":"start"
          }
       },
       {
@@ -205,7 +227,7 @@
          "data":{
             "task_id":"0616af00-ec3b-4ecd-ae62-c94a3703594c",
             "pose":"AMK_TDU-TGR-1_X_14.03_Y_9.55",
-            "node_type":"start"
+            "node_type":"pickup"
          }
       },
       {
@@ -213,7 +235,7 @@
          "data":{
             "task_id":"0616af00-ec3b-4ecd-ae62-c94a3703594c",
             "pose":"AMK_TDU-TGR-1_X_15.09_Y_5.69",
-            "node_type":"finish"
+            "node_type":"delivery"
          }
       }
    ],
